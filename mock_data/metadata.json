@@ -1,0 +1,29 @@
+{
+  "TableName": "WeatherStationData",
+  "ColumnNames": ["StationID", "Date", "Temperature", "Humidity", "WindSpeed"],
+  "ColumnStatistics": {
+    "Temperature": { "Min": 15, "Max": 30, "Average": 22 },
+    "Humidity": { "Min": 60, "Max": 90, "Average": 75 },
+    "WindSpeed": { "Min": 5, "Max": 20, "Average": 12 }
+  },
+  "DataTypes": {
+    "StationID": "string",
+    "Date": "date",
+    "Temperature": "integer",
+    "Humidity": "integer",
+    "WindSpeed": "integer"
+  },
+  "DataLineage": "Derived from raw sensor readings aggregated daily.",
+  "UpdateHistory": "Last updated on 2024-02-14.",
+  "EarliestData": "Data collection started in 2020.",
+  "TableDescription": "Daily weather measurements from various stations.",
+  "TableTags": ["weather", "daily", "sensor", "global"],
+  "LevelOfDetail": "Measurements are aggregated at the daily level.",
+  "GeoTimeGranularity": "Each record represents one day's data per station, global coverage.",
+  "PreviousQueries": [
+    "Select * from WeatherStationData where Date between '2024-01-01' and '2024-01-31'",
+    "Select avg(Temperature) from WeatherStationData where StationID='WS001'"
+  ],
+  "UsageData": "1000 queries last month.",
+  "HighLevelTask": "Can be used for climate change research, local weather forecasting."
+}

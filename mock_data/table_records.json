@@ -1,0 +1,7 @@
+{
+  "StationID": ["WS001", "WS002"],
+  "Date": ["2024-02-14", "2024-02-14"],
+  "Temperature": [25, 22],
+  "Humidity": [80, 85],
+  "WindSpeed": [15, 10]
+}
