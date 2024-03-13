@@ -1,0 +1,337 @@
+{
+  "help": "https://catalog.data.gov/api/3/action/help_show?name=package_search",
+  "success": true,
+  "result": {
+    "count": 22,
+    "facets": {},
+    "results": [
+      {
+        "author": "None",
+        "author_email": "None",
+        "creator_user_id": "1ecd1fb1-1be6-46bb-b90d-07a0762ed104",
+        "id": "50553d0b-9cf7-4b4b-861c-1f5bb2aee88c",
+        "isopen": true,
+        "license_id": "cc-by",
+        "license_title": "Creative Commons Attribution",
+        "license_url": "http://www.opendefinition.org/licenses/cc-by",
+        "maintainer": "Zhaoyun Zeng",
+        "maintainer_email": "zengz@anl.gov",
+        "metadata_created": "2023-10-17T19:25:44.806925",
+        "metadata_modified": "2023-10-18T19:26:49.775365",
+        "name": "dynamically-downscaled-hourly-future-weather-data-with-12-km-resolution-covering-most-of-n",
+        "notes": "This is an hourly future weather dataset for energy modeling applications. The dataset is primarily based on the output of a regional climate model (RCM), i.e., the Weather Research and Forecasting (WRF) model version 3.3.1. The WRF simulations are driven by the output of a general circulation model (GCM), i.e., the Community Climate System Model version 4 (CCSM4).\n\nThis dataset is in the EPW format, which can be read or translated by more than 25 building energy modeling programs (e.g., EnergyPlus, ESP-r, and IESVE), energy system modeling programs (e.g., System Advisor Model (SAM)), indoor air quality analysis programs (e.g., CONTAM), and hygrothermal analysis programs (e.g., WUFI). It contains 13 weather variables, which are the Dry-Bulb Temperature, Dew Point Temperature, Relative Humidity, Atmospheric Pressure, Horizontal Infrared Radiation Intensity from Sky, Global Horizontal Irradiation, Direct Normal Irradiation, Diffuse Horizontal Irradiation, Wind Speed, Wind Direction, Sky Cover, Albedo, and Liquid Precipitation Depth.\n\nThe weather data is created for two emissions scenarios: RCP4.5 and RCP8.5 and spans two 10-year time slices in the future: 2045 - 2054 and 2085 - 2094. It offers a spatial resolution of 12 km by 12 km with extensive coverage across most of North America. Due to the enormous size of the entire dataset, in the first stage of its distribution, we provide 20 years of future weather data for the centroid of each Public Use Microdata Area (PUMA), excluding Hawaii. PUMAs are non-overlapping, statistical geographic areas that partition each state or equivalent entity into geographic areas containing no fewer than 100,000 people each. The 2,378 PUMAs as a whole cover the entirety of the U.S. The weather data can be utilized alongside the large-scale energy analysis tools, ResStock and ComStock, developed by National Renewable Energy Laboratory, whose smallest resolution is at the PUMA scale.\n\nThe data for RCP4.5 is still being processed and will be published soon.",
+        "num_resources": 3,
+        "num_tags": 16,
+        "organization": {
+          "id": "1f2ebc13-fc03-4bcd-b2c0-dad0bb510b65",
+          "name": "doe-gov",
+          "title": "Department of Energy",
+          "type": "organization",
+          "description": "",
+          "image_url": "http://energy.gov/sites/prod/files/styles/imagelink/public/DoE-Logo.jpeg",
+          "created": "2020-11-10T15:11:28.814722",
+          "is_organization": true,
+          "approval_status": "approved",
+          "state": "active"
+        },
+        "owner_org": "1f2ebc13-fc03-4bcd-b2c0-dad0bb510b65",
+        "private": false,
+        "state": "active",
+        "title": "Dynamically Downscaled Hourly Future Weather Data with 12-km Resolution Covering Most of North America",
+        "type": "dataset",
+        "url": "None",
+        "version": "None",
+        "extras": [
+          {
+            "key": "resource-type",
+            "value": "Dataset"
+          },
+          {
+            "key": "source_hash",
+            "value": "d3896adef79ba8d99395607f1cbe40d06dc1ddee251bcc887667aae30bd67c61"
+          },
+          {
+            "key": "source_datajson_identifier",
+            "value": true
+          },
+          {
+            "key": "source_schema_version",
+            "value": "1.1"
+          },
+          {
+            "key": "accessLevel",
+            "value": "public"
+          },
+          {
+            "key": "bureauCode",
+            "value": ["019:20"]
+          },
+          {
+            "key": "dataQuality",
+            "value": true
+          },
+          {
+            "key": "identifier",
+            "value": "https://data.openei.org/submissions/5974"
+          },
+          {
+            "key": "issued",
+            "value": "2023-10-03T06:00:00Z"
+          },
+          {
+            "key": "landingPage",
+            "value": "https://data.openei.org/submissions/5974"
+          },
+          {
+            "key": "license",
+            "value": "https://creativecommons.org/licenses/by/4.0/"
+          },
+          {
+            "key": "modified",
+            "value": "2023-10-18T18:25:01Z"
+          },
+          {
+            "key": "programCode",
+            "value": ["019:023", "019:000"]
+          },
+          {
+            "key": "publisher",
+            "value": "Argonne National Laboratory"
+          },
+          {
+            "key": "DOI",
+            "value": "10.25984/2202668"
+          },
+          {
+            "key": "projectNumber",
+            "value": "FY22 AOP 3.5.5.63"
+          },
+          {
+            "key": "projectTitle",
+            "value": "Future and Extreme Weather Data"
+          },
+          {
+            "key": "catalog_@context",
+            "value": "https://openei.org/data.json"
+          },
+          {
+            "key": "catalog_@id",
+            "value": "https://openei.org/data.json"
+          },
+          {
+            "key": "catalog_conformsTo",
+            "value": "https://project-open-data.cio.gov/v1.1/schema"
+          },
+          {
+            "key": "catalog_describedBy",
+            "value": "https://project-open-data.cio.gov/v1.1/schema/catalog.json"
+          },
+          {
+            "key": "old-spatial",
+            "value": "{\"type\":\"Polygon\",\"coordinates\":[[[-158.4,23.8],[-58.5,23.8],[-58.5,78.2],[-158.4,78.2],[-158.4,23.8]]]}"
+          },
+          {
+            "key": "harvest_object_id",
+            "value": "eb6dd2c1-879e-4015-97ac-be44f0c9a45a"
+          },
+          {
+            "key": "harvest_source_id",
+            "value": "7cbf9085-0290-4e9f-bec1-91653baeddfd"
+          },
+          {
+            "key": "harvest_source_title",
+            "value": "OpenEI data.json"
+          },
+          {
+            "key": "spatial",
+            "value": "{\"type\":\"Polygon\",\"coordinates\":[[[-158.4,23.8],[-58.5,23.8],[-58.5,78.2],[-158.4,78.2],[-158.4,23.8]]]}"
+          }
+        ],
+        "resources": [
+          {
+            "cache_last_updated": "None",
+            "cache_url": "None",
+            "created": "2023-10-17T19:25:44.828808",
+            "description": "Description of the WRF simulations.",
+            "format": "PDF",
+            "hash": "",
+            "id": "7bc66760-19b1-4b64-9b45-3696d60bdc39",
+            "last_modified": "None",
+            "metadata_modified": "2023-10-17T19:25:44.765669",
+            "mimetype": "application/pdf",
+            "mimetype_inner": "None",
+            "name": "WRF Description.pdf",
+            "package_id": "50553d0b-9cf7-4b4b-861c-1f5bb2aee88c",
+            "position": 0,
+            "resource_type": "None",
+            "size": "None",
+            "state": "active",
+            "url": "https://data.openei.org/files/5974/WRF%20Description.pdf",
+            "url_type": "None"
+          },
+          {
+            "cache_last_updated": "None",
+            "cache_url": "None",
+            "created": "2023-10-17T19:25:44.828812",
+            "description": "Geographical information of the centroids of PUMAs.",
+            "format": "CSV",
+            "hash": "",
+            "id": "2a5b16fc-49ed-4bfc-adda-9f19a21bf9a8",
+            "last_modified": "None",
+            "metadata_modified": "2023-10-17T19:25:44.765843",
+            "mimetype": "text/csv",
+            "mimetype_inner": "None",
+            "name": "PUMA Information.csv",
+            "package_id": "50553d0b-9cf7-4b4b-861c-1f5bb2aee88c",
+            "position": 1,
+            "resource_type": "None",
+            "size": "None",
+            "state": "active",
+            "url": "https://data.openei.org/files/5974/PUMA%20information.csv",
+            "url_type": "None"
+          },
+          {
+            "cache_last_updated": "None",
+            "cache_url": "None",
+            "created": "2023-10-17T19:25:44.828813",
+            "description": "EPW weather files for RCP8.5.",
+            "format": "ZIP",
+            "hash": "",
+            "id": "bfb85b39-b836-402e-962f-42a168abc9d4",
+            "last_modified": "None",
+            "metadata_modified": "2023-10-17T19:25:44.765998",
+            "mimetype": "application/zip",
+            "mimetype_inner": "None",
+            "name": "RCP8.5 Data.zip",
+            "package_id": "50553d0b-9cf7-4b4b-861c-1f5bb2aee88c",
+            "position": 2,
+            "resource_type": "None",
+            "size": "None",
+            "state": "active",
+            "url": "https://data.openei.org/files/5974/RCP8.5.zip",
+            "url_type": "None"
+          }
+        ],
+        "tags": [
+          {
+            "display_name": "building-energy-modeling",
+            "id": "66c88b47-886c-4838-b178-8e9428d32ba1",
+            "name": "building-energy-modeling",
+            "state": "active",
+            "vocabulary_id": "None"
+          },
+          {
+            "display_name": "climate-change",
+            "id": "a5bc1c04-d027-471c-a0f7-1a8b20c88620",
+            "name": "climate-change",
+            "state": "active",
+            "vocabulary_id": "None"
+          },
+          {
+            "display_name": "data",
+            "id": "f40f62db-7210-448e-9a77-a028a7e32621",
+            "name": "data",
+            "state": "active",
+            "vocabulary_id": "None"
+          },
+          {
+            "display_name": "dynamical-downscaling",
+            "id": "9a9ca245-0d47-4708-8755-d2beead78ecf",
+            "name": "dynamical-downscaling",
+            "state": "active",
+            "vocabulary_id": "None"
+          },
+          {
+            "display_name": "energy",
+            "id": "7c35fe0d-a745-4f8a-aff7-961189fe994f",
+            "name": "energy",
+            "state": "active",
+            "vocabulary_id": "None"
+          },
+          {
+            "display_name": "future-weather",
+            "id": "64e1809c-03d3-4394-8229-ab703c619763",
+            "name": "future-weather",
+            "state": "active",
+            "vocabulary_id": "None"
+          },
+          {
+            "display_name": "hourly",
+            "id": "c93c27ba-f3a7-4c9a-90c8-a848494dfa84",
+            "name": "hourly",
+            "state": "active",
+            "vocabulary_id": "None"
+          },
+          {
+            "display_name": "model",
+            "id": "a358a082-f0f6-404a-a99e-7d4766bc8d22",
+            "name": "model",
+            "state": "active",
+            "vocabulary_id": "None"
+          },
+          {
+            "display_name": "modeling",
+            "id": "6dab039d-306b-4964-a66a-39a76a295408",
+            "name": "modeling",
+            "state": "active",
+            "vocabulary_id": "None"
+          },
+          {
+            "display_name": "north-america",
+            "id": "67244e7a-ccd6-48a4-8ee8-0548880a180d",
+            "name": "north-america",
+            "state": "active",
+            "vocabulary_id": "None"
+          },
+          {
+            "display_name": "processed-data",
+            "id": "32797c4e-0b49-4a0d-9a37-b6f948932985",
+            "name": "processed-data",
+            "state": "active",
+            "vocabulary_id": "None"
+          },
+          {
+            "display_name": "puma",
+            "id": "f54f0fe3-4121-4263-859f-4e04c6885978",
+            "name": "puma",
+            "state": "active",
+            "vocabulary_id": "None"
+          },
+          {
+            "display_name": "rcp4-5",
+            "id": "32fea5fa-fc5e-46a7-86b7-797c555006a7",
+            "name": "rcp4-5",
+            "state": "active",
+            "vocabulary_id": "None"
+          },
+          {
+            "display_name": "rcp8-5",
+            "id": "05da719f-48ac-40a9-a58f-d290b8c175de",
+            "name": "rcp8-5",
+            "state": "active",
+            "vocabulary_id": "None"
+          },
+          {
+            "display_name": "weather",
+            "id": "8978122d-18df-4cf2-809f-0d3f48e89f03",
+            "name": "weather",
+            "state": "active",
+            "vocabulary_id": "None"
+          },
+          {
+            "display_name": "wrf",
+            "id": "5699ad73-5699-4c73-ad23-adc3efd04aed",
+            "name": "wrf",
+            "state": "active",
+            "vocabulary_id": "None"
+          }
+        ],
+        "groups": [],
+        "relationships_as_subject": [],
+        "relationships_as_object": []
+      }
+    ],
+    "sort": "views_recent desc",
+    "search_facets": {}
+  }
+}
