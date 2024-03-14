@@ -1,4 +1,6 @@
 sentence-transformers
 hnswlib
 pandas
-faker
+openai
+python-dotenv
+azure-identity

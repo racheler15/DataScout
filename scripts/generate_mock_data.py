@@ -26,9 +26,9 @@ import ssl
 # Base URL for the data.gov CKAN API
 CKAN_BASE_URL = 'https://catalog.data.gov/api/3/action'
 # Number of desired datasets
-LIMIT_NUM = 10
+LIMIT_NUM = 2
 # Number of desired rows in example records for each dataset
-LIMIT_ROW = 5
+LIMIT_ROW = 2
 
 
 def get_example_records(csv_url, limit_row=LIMIT_ROW):
@@ -97,5 +97,5 @@ def get_csv_datasets_and_metadata(limit_num=LIMIT_NUM):
 datasets_metadata = get_csv_datasets_and_metadata()
 
 # Store the data into a JSON file as mock dataset corpus
-with open('../mock_data/data_gov_mock_data.json', 'w') as f:
+with open('mock_data/data_gov_mock_data.json', 'w') as f:
     json.dump(datasets_metadata, f, indent=2)
