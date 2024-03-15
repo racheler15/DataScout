@@ -22,9 +22,9 @@ client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
 MODEL = "gpt-3.5-turbo"
 
 PROMPTS = {
-    "schema_prompt": "Given a dataset titled '{table_name}' which includes data on {table_description}, with example records like {example_records}, what would a likely table schema be?",
-    "query_prompt": "Considering a dataset titled '{table_name}' described as '{table_description}' with records such as {example_records}, what are some natural language queries users might have used to search for this data for task-based purposes?",
-    "granularity_prompt": "Based on the dataset titled '{table_name}' which provides {table_description}, and considering example entries like {example_records}, can you determine the level of data granularity?"
+    "schema_prompt": "Given the dataset titled '{table_name}' which includes data on {table_description}, with example records like {example_records}, directly list the likely table schema. Please provide this schema as a concise list of column names followed by their data types, without any introductory text, commentary, or conclusion. Format the schema details in a straightforward manner, with each column and data type on a new line.",
+    "query_prompt": "Please provide some data analytics tasks (e.g. data analysis, machine learning, business intelligence, etc.) that can be performed for the table titled '{table_name}' which includes data on {table_description}, with example records like {example_records}? Specify the analytics tasks specific to the semantics of the table, and provide all tasks (without categorization) in a flat list.",
+    "granularity_prompt": "Given a dataset titled '{table_name}' with data on {table_description} and example records like {example_records}, identify columns that express some granularity. For each identified column, determine if it relates to geographic or temporal attributes. Provide the results in a compact, single-line JSON format. Do not include markdown or additional annotations. The expected JSON structure is {{column_name: {{temporal: 'temporal_granularity', geographic: 'geographic_granularity'}}}}. Include only columns that have granularity attributes, and minimize whitespace in the output."
 }
 
 def format_prompt(prompt_template, **kwargs):
@@ -37,7 +37,6 @@ def infer_metadata_with_gptmodel(messages, model=MODEL):
     )
     return response.choices[0].message.content
 
-# TODO: FURTHER CRAFT THE PROMPTS USED FOR INFERENCE
 def infer_table_schema(table_name, table_description, example_records):
     prompt = format_prompt(
         PROMPTS['schema_prompt'], 
