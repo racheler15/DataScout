@@ -8,34 +8,19 @@
 - The enriched corpus is then prepared for further processing, including embedding, to facilitate more efficient and effective dataset retrieval and utilization.
 """
 
-from dotenv import load_dotenv
-import os
-from openai import OpenAI
 import json
+from .openai_client import OpenAIClient
+from backend.app.utils import format_prompt
 
-load_dotenv()
+# Initialize OpenAI client
+openai_client = OpenAIClient()
 
-# Load the openai api key from .env file
-client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
-
-# Specify the GPT model we use for inference
-MODEL = "gpt-3.5-turbo"
-
+# Craft metadata inference prompts
 PROMPTS = {
     "schema_prompt": "Given the dataset titled '{table_name}' which includes data on {table_description}, with example records like {example_records}, directly list the likely table schema. Please provide this schema as a concise list of column names followed by their data types, without any introductory text, commentary, or conclusion. Format the schema details in a straightforward manner, with each column and data type on a new line.",
     "query_prompt": "Please provide some data analytics tasks (e.g. data analysis, machine learning, business intelligence, etc.) that can be performed for the table titled '{table_name}' which includes data on {table_description}, with example records like {example_records}? Specify the analytics tasks specific to the semantics of the table, and provide all tasks (without categorization) in a flat list.",
     "granularity_prompt": "Given a dataset titled '{table_name}' with data on {table_description} and example records like {example_records}, identify columns that express some granularity. For each identified column, determine if it relates to geographic or temporal attributes. Provide the results in a compact, single-line JSON format. Do not include markdown or additional annotations. The expected JSON structure is {{column_name: {{temporal: 'temporal_granularity', geographic: 'geographic_granularity'}}}}. Include only columns that have granularity attributes, and minimize whitespace in the output."
 }
-
-def format_prompt(prompt_template, **kwargs):
-    return prompt_template.format(**kwargs)
-
-def infer_metadata_with_gptmodel(messages, model=MODEL):
-    response = client.chat.completions.create(
-        model=model,
-        messages=messages
-    )
-    return response.choices[0].message.content
 
 def infer_table_schema(table_name, table_description, example_records):
     prompt = format_prompt(
@@ -48,7 +33,7 @@ def infer_table_schema(table_name, table_description, example_records):
         {"role": "system", "content": "You are an assistant skilled in database schemas."},
         {"role": "user", "content": prompt}
     ]
-    return infer_metadata_with_gptmodel(messages)
+    return openai_client.infer_metadata(messages)
 
 def infer_previous_queries(table_name, table_description, example_records):
     prompt = format_prompt(
@@ -61,7 +46,7 @@ def infer_previous_queries(table_name, table_description, example_records):
         {"role": "system", "content": "You are an assistant providing possible user queries for datasets."},
         {"role": "user", "content": prompt}
     ]
-    return infer_metadata_with_gptmodel(messages)
+    return openai_client.infer_metadata(messages)
 
 def infer_granularity(table_name, table_description, example_records):
     prompt = format_prompt(
@@ -74,7 +59,7 @@ def infer_granularity(table_name, table_description, example_records):
         {"role": "system", "content": "You are an assistant skilled in determining data granularity."},
         {"role": "user", "content": prompt}
     ]
-    return infer_metadata_with_gptmodel(messages)
+    return openai_client.infer_metadata(messages)
 
 # Load the mock data
 with open('mock_data/data_gov_mock_data.json', 'r') as file:
