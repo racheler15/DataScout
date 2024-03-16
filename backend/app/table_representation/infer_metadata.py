@@ -10,7 +10,7 @@
 
 import json
 from .openai_client import OpenAIClient
-from backend.app.utils import format_prompt
+from backend.app.utils import format_prompt, extract_time_geo_granularity
 
 # Initialize OpenAI client
 openai_client = OpenAIClient()
@@ -88,6 +88,11 @@ for dataset in mock_data_corpus:
         table_description=dataset['Table description'], 
         example_records=dataset['Example records']
     )
+
+    print("Granularity before JSON parsing:", dataset['Granularity'])
+    # Extract the time/geo granularity
+    dataset['Temporal granularity'] = extract_time_geo_granularity(dataset['Granularity'])[0]
+    dataset['Geographic granularity'] = extract_time_geo_granularity(dataset['Granularity'])[1]
 
 # Save the updated data back to a new JSON file
 with open('mock_data/updated_data_gov_mock_data.json', 'w') as file:

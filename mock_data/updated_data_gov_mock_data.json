@@ -1,7 +1,7 @@
 [
   {
     "Table name": "Electric Vehicle Population Data",
-    "Table schema": "VIN (1-10) - VARCHAR\nCounty - VARCHAR\nCity - VARCHAR\nState - VARCHAR\nPostal Code - VARCHAR\nModel Year - INTEGER\nMake - VARCHAR\nModel - VARCHAR\nElectric Vehicle Type - VARCHAR\nClean Alternative Fuel Vehicle (CAFV) Eligibility - VARCHAR\nElectric Range - INTEGER\nBase MSRP - INTEGER\nLegislative District - INTEGER\nDOL Vehicle ID - VARCHAR\nVehicle Location - VARCHAR\nElectric Utility - VARCHAR\n2020 Census Tract - VARCHAR",
+    "Table schema": "VIN (1-10): String\nCounty: String\nCity: String\nState: String\nPostal Code: String\nModel Year: String\nMake: String\nModel: String\nElectric Vehicle Type: String\nClean Alternative Fuel Vehicle (CAFV) Eligibility: String\nElectric Range: String\nBase MSRP: String\nLegislative District: String\nDOL Vehicle ID: String\nVehicle Location: String\nElectric Utility: String\n2020 Census Tract: String",
     "Table description": "This dataset shows the Battery Electric Vehicles (BEVs) and Plug-in Hybrid Electric Vehicles (PHEVs) that are currently registered through Washington State Department of Licensing (DOL).",
     "Table tags": [
       "bev",
@@ -41,8 +41,8 @@
       "volt"
     ],
     "Popularity": 9872,
-    "Previous queries": "1. Analyze the distribution of Electric Vehicle Types (BEV or PHEV) in different counties.\n2. Identify the top cities with the highest number of registered electric vehicles.\n3. Explore the relationship between the year of manufacturing (Model Year) and Electric Range of the vehicles.\n4. Assess the distribution of Clean Alternative Fuel Vehicle (CAFV) Eligibility status across different models.\n5. Calculate the average Electric Range for each Electric Vehicle Type.\n6. Investigate the pricing trends based on Base MSRP for different Electric Vehicle Types.\n7. Identify any correlation between the legislative district and the number of registered electric vehicles.\n8. Examine the geographic distribution of registered electric vehicles based on vehicle location.\n9. Evaluate the popularity of different electric utilities among the registered vehicles.\n10. Analyze the census tract areas with the highest concentration of electric vehicles.",
-    "Granularity": "{\n\"Model Year\": {\"temporal\": \"year\", \"geographic\": null},\n\"City\": {\"temporal\": null, \"geographic\": \"city\"},\n\"County\": {\"temporal\": null, \"geographic\": \"county\"},\n\"Postal Code\": {\"temporal\": null, \"geographic\": \"postal_code\"},\n\"2020 Census Tract\": {\"temporal\": null, \"geographic\": \"census_tract\"}\n}",
+    "Previous queries": "1. Analyze the distribution of Electric Vehicle Types (BEV, PHEV) in different counties.\n2. Explore the correlation between Electric Range and Electric Vehicle Model Year.\n3. Investigate the relationship between Electric Vehicle Model and the Electric Utility company associated with the vehicle.\n4. Examine the impact of Legislative District on the Clean Alternative Fuel Vehicle (CAFV) eligibility of vehicles.\n5. Identify any patterns or trends in the base MSRP (Manufacturer's Suggested Retail Price) of Electric Vehicles.\n6. Geospatial analysis to visualize the distribution of Electric Vehicles across different cities in Washington state.\n7. Perform clustering analysis to identify groups of Electric Vehicles with similar characteristics.\n8. Conduct sentiment analysis on the Clean Alternative Fuel Vehicle (CAFV) eligibility status to gauge public perception.\n9. Forecast future growth in Electric Vehicle registrations based on historical data.\n10. Conduct association rule mining to discover relationships between different attributes of Electric Vehicles.",
+    "Granularity": "{\n\"Model Year\": {\"temporal\": \"year\", \"geographic\": null},\n\"Electric Range\": {\"temporal\": null, \"geographic\": null},\n\"2020 Census Tract\": {\"temporal\": null, \"geographic\": \"census tract\"}\n}",
     "Example records": [
       {
         "VIN (1-10)": "5YJYGDEE1L",
@@ -82,11 +82,17 @@
         "Electric Utility": "PUGET SOUND ENERGY INC",
         "2020 Census Tract": "53061051938"
       }
+    ],
+    "Temporal granularity": [
+      "year"
+    ],
+    "Geographic granularity": [
+      "census tract"
     ]
   },
   {
     "Table name": "Crime Data from 2020 to Present",
-    "Table schema": "- DR_NO: VARCHAR\n- Date Rptd: DATETIME\n- DATE OCC: DATETIME\n- TIME OCC: VARCHAR\n- AREA: VARCHAR\n- AREA NAME: VARCHAR\n- Rpt Dist No: VARCHAR\n- Part 1-2: VARCHAR\n- Crm Cd: VARCHAR\n- Crm Cd Desc: VARCHAR\n- Mocodes: VARCHAR\n- Vict Age: VARCHAR\n- Vict Sex: VARCHAR\n- Vict Descent: VARCHAR\n- Premis Cd: VARCHAR\n- Premis Desc: VARCHAR\n- Weapon Used Cd: VARCHAR\n- Weapon Desc: VARCHAR\n- Status: VARCHAR\n- Status Desc: VARCHAR\n- Crm Cd 1: VARCHAR\n- Crm Cd 2: VARCHAR\n- Crm Cd 3: VARCHAR\n- Crm Cd 4: VARCHAR\n- LOCATION: VARCHAR\n- Cross Street: VARCHAR\n- LAT: VARCHAR\n- LON: VARCHAR",
+    "Table schema": "- DR_NO: VARCHAR\n- Date Rptd: VARCHAR\n- DATE OCC: VARCHAR\n- TIME OCC: VARCHAR\n- AREA: VARCHAR\n- AREA NAME: VARCHAR\n- Rpt Dist No: VARCHAR\n- Part 1-2: VARCHAR\n- Crm Cd: VARCHAR\n- Crm Cd Desc: VARCHAR\n- Mocodes: VARCHAR\n- Vict Age: VARCHAR\n- Vict Sex: VARCHAR\n- Vict Descent: VARCHAR\n- Premis Cd: VARCHAR\n- Premis Desc: VARCHAR\n- Weapon Used Cd: VARCHAR\n- Weapon Desc: VARCHAR\n- Status: VARCHAR\n- Status Desc: VARCHAR\n- Crm Cd 1: VARCHAR\n- Crm Cd 2: VARCHAR\n- Crm Cd 3: VARCHAR\n- Crm Cd 4: VARCHAR\n- LOCATION: VARCHAR\n- Cross Street: VARCHAR\n- LAT: VARCHAR\n- LON: VARCHAR",
     "Table description": "***Starting on March 7th, 2024, the Los Angeles Police Department (LAPD) will adopt a new Records Management System for reporting crimes and arrests. This new system is being implemented to comply with the FBI's mandate to collect NIBRS-only data (NIBRS \u2014 FBI).\nDuring this transition, users will temporarily see only incidents reported in the retiring system. However, the LAPD is actively working on generating new NIBRS datasets to ensure a smoother and more efficient reporting system. ***\n\n******Update 1/18/2024 - LAPD is facing issues with posting the Crime data, but we are taking immediate action to resolve the problem. We understand the importance of providing reliable and up-to-date information and are committed to delivering it.\n\nAs we work through the issues, we have temporarily reduced our updates from weekly to bi-weekly to ensure that we provide accurate information. Our team is actively working to identify and resolve these issues promptly.\n\nWe apologize for any inconvenience this may cause and appreciate your understanding. Rest assured, we are doing everything we can to fix the problem and get back to providing weekly updates as soon as possible. ****** \n\n\nThis dataset reflects incidents of crime in the City of Los Angeles dating back to 2020. This data is transcribed from original crime reports that are typed on paper and therefore there may be some inaccuracies within the data. Some location fields with missing data are noted as (0\u00b0, 0\u00b0). Address fields are only provided to the nearest hundred block in order to maintain privacy. This data is as accurate as the data in the database. Please note questions or concerns in the comments.",
     "Table tags": [
       "crime",
@@ -97,8 +103,8 @@
       "safe-city"
     ],
     "Popularity": 6323,
-    "Previous queries": "1. Analyze crime trends over time based on the reported incidents\n2. Identify the most common types of crime occurrences in different areas of Los Angeles\n3. Explore the distribution of crimes by location to identify high-crime areas\n4. Investigate the relationship between crime types and various demographics such as age, gender, and descent of victims\n5. Implement predictive modeling to anticipate potential areas with high crime rates\n6. Conduct clustering analysis to group areas with similar crime profiles\n7. Perform geospatial analysis to visualize the spatial distribution of reported crimes\n8. Detect any anomalies or outliers in the crime data set\n9. Evaluate the effectiveness of law enforcement responses by analyzing the status and outcome of reported incidents\n10. Identify any patterns or correlations between crime types and specific premises where incidents occur.",
-    "Granularity": "{\n  \"DATE OCC\": {\"temporal\": \"day\", \"geographic\": \"NA\"},\n  \"TIME OCC\": {\"temporal\": \"hour\", \"geographic\": \"NA\"},\n  \"LAT\": {\"temporal\": \"NA\", \"geographic\": \"latitude\"},\n  \"LON\": {\"temporal\": \"NA\", \"geographic\": \"longitude\"}\n}",
+    "Previous queries": "1. Perform data cleaning to address any inaccuracies or missing data present in the dataset.\n2. Conduct exploratory data analysis to understand patterns and trends in crime incidents over time and across different areas.\n3. Develop predictive models to forecast future crime rates based on historical data.\n4. Identify high-crime areas using spatial analysis techniques.\n5. Analyze the impact of different crime types on victims based on age, sex, and demographic descent.\n6. Create visualizations to effectively communicate key insights from the crime data.\n7. Cluster analysis to group similar types of crimes together for further analysis.\n8. Determine correlations between crime incidents and various factors such as time of day, location, and crime category.\n9. Implement anomaly detection techniques to identify unusual patterns in the crime data.\n10. Build a recommendation system for law enforcement agencies to optimize resource allocation based on crime trends and patterns.",
+    "Granularity": "{\n\"Date Rptd\": {\"temporal\": \"daily\", \"geographic\": \"\"},\n\"DATE OCC\": {\"temporal\": \"daily\", \"geographic\": \"\"},\n\"TIME OCC\": {\"temporal\": \"hourly\", \"geographic\": \"\"},\n\"LOCATION\": {\"temporal\": \"\", \"geographic\": \"address\"},\n\"LAT\": {\"temporal\": \"\", \"geographic\": \"latitude\"},\n\"LON\": {\"temporal\": \"\", \"geographic\": \"longitude\"}\n}",
     "Example records": [
       {
         "DR_NO": "190326475",
@@ -160,6 +166,15 @@
         "LAT": "34.0444",
         "LON": "-118.2628"
       }
+    ],
+    "Temporal granularity": [
+      "hourly",
+      "daily"
+    ],
+    "Geographic granularity": [
+      "address",
+      "latitude",
+      "longitude"
     ]
   }
 ]
