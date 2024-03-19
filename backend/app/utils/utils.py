@@ -9,13 +9,23 @@ def format_prompt(prompt_template, **kwargs):
 def extract_time_geo_granularity(granularity_str):
     """ Extract time and geo granularity lists from a JSON string """
     granularity = json.loads(granularity_str)
-    
+
+    # Initialize empty sets for time and geographic granularities
+    time_granu = set()
+    geo_granu = set()
+
+    # Iterate through each item in the granularity dictionary
+    for value in granularity.values():
+        # Check if 'temporal' key exists and has a non-null value
+        if 'temporal' in value and value['temporal']:
+            time_granu.add(value['temporal'])
+        
+        # Check if 'geographic' key exists and has a non-null value
+        if 'geographic' in value and value['geographic']:
+            geo_granu.add(value['geographic'])
+
     # Convert sets to lists for JSON serialization
-    time_granu = list({value["temporal"] for key, value in granularity.items() if value["temporal"]})
-    geo_granu = list({value["geographic"] for key, value in granularity.items() if value["geographic"]})
-
-    return time_granu, geo_granu
-
+    return list(time_granu), list(geo_granu)
 
 
 def run_sql_file(filename):

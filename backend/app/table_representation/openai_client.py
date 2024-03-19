@@ -1,14 +1,22 @@
 from dotenv import load_dotenv
 import os
-from openai import OpenAI
+# from openai import OpenAI
+from openai import AzureOpenAI
 
 load_dotenv()
 
 class OpenAIClient:
     def __init__(self):
-        self.client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
-        self.text_generation_model_default = "gpt-3.5-turbo"
-        self.embedding_model_default = "text-embedding-3-small"
+        # self.client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
+        # self.text_generation_model_default = "gpt-3.5-turbo"
+        # self.embedding_model_default = "text-embedding-3-small"
+        self.client = AzureOpenAI(
+            azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT"), 
+            api_key=os.getenv("AZURE_OPENAI_API_KEY"),  
+            api_version="2023-07-01-preview"
+        ) 
+        self.text_generation_model_default = "gpt-4-infer-model"
+        self.embedding_model_default = "gpt-4-embed-ada-model"
 
     def infer_metadata(self, messages, model=None):
         if model is None:
@@ -36,4 +44,3 @@ class OpenAIClient:
         except Exception as e:
             print(f"Error generating embeddings: {e}")
             return
-
