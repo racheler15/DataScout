@@ -13,7 +13,7 @@ class OpenAIClient:
         self.client = AzureOpenAI(
             azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT"), 
             api_key=os.getenv("AZURE_OPENAI_API_KEY"),  
-            api_version="2023-07-01-preview"
+            api_version="2024-02-15-preview"
         ) 
         self.text_generation_model_default = "gpt-35-infer-model"
         self.embedding_model_default = "gpt-4-embed-ada-model"
@@ -43,4 +43,74 @@ class OpenAIClient:
             return response.data[0].embedding
         except Exception as e:
             print(f"Error generating embeddings: {e}")
+            return
+    
+    # Azure OpenAI Assistants tutorial: https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/assistant
+    def create_assistant(self, name, instructions, model=None):
+        if model is None:
+            model = self.text_generation_model_default
+        try:
+            assistant = self.client.beta.assistants.create(
+                name=name,
+                instructions=instructions,
+                tools=[{"type": "code_interpreter"}],  # in case user input sql query
+                model=model
+            )
+            return assistant
+        except Exception as e:
+            print(f"Error creating assistant: {e}")
+            return
+    
+    # Thread is essentially the record of the conversation session between the assistant and the user
+    def create_thread(self):
+        try:
+            thread = self.client.beta.threads.create()
+            return thread
+        except Exception as e:
+            print(f"Error creating thread: {e}")
+            return
+    
+    def create_message(self, thread_id, role, content):
+        try:
+            message = self.client.beta.threads.messages.create(
+                thread_id=thread_id,
+                role=role,
+                content=content
+            )
+            return message
+        except Exception as e:
+            print(f"Error creating message: {e}")
+            return
+    
+    def list_thread_messages(self, thread_id):
+        try:
+            thread_messages = self.client.beta.threads.messages.list(
+                thread_id=thread_id
+            )
+            return thread_messages
+        except Exception as e:
+            print(f"Error listing thread message: {e}")
+            return
+    
+    def run_thread(self, thread_id, assistant_id, instructions=None):
+        try:
+            run = self.client.beta.threads.runs.create(
+                thread_id=thread_id,
+                assistant_id=assistant_id,
+                instructions=instructions  # optional new instructions, will override the default instructions provided in `create_assistant`
+            )
+            return run
+        except Exception as e:
+            print(f"Error running thread: {e}")
+            return
+
+    def run_status(self, thread_id, run_id):
+        try:
+            run = self.client.beta.threads.runs.retrieve(
+                thread_id=thread_id,
+                run_id=run_id
+            )
+            return run.status
+        except Exception as e:
+            print(f"Error monitoring run status: {e}")
             return
