@@ -51,3 +51,16 @@ def run_sql_file(filename):
             cursor.connection.rollback()
             print(f"An error occurred: {e}")
             raise
+
+def format_cos_sim_results(results):
+    """ Format results returned from pgvector operations """
+    formatted_results = []
+
+    for row in results:
+        formatted_result = {
+            "table_name": row["table_name"],
+            "cosine_similarity": row["cosine_similarity"]
+        }
+        formatted_results.append(formatted_result)
+        
+    return formatted_results
