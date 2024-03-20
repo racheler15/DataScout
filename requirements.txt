@@ -3,7 +3,7 @@ hnswlib
 pandas
 openai
 python-dotenv
-azure-identity
 sqlalchemy
 psycopg2-binary
 psycopg2
+Flask
