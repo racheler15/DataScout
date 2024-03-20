@@ -1,4 +1,5 @@
 import json
+from tqdm import tqdm
 from .openai_client import OpenAIClient
 
 # Initialize OpenAI client
@@ -38,7 +39,7 @@ COMBINED_METADATA_FIELDS = [
 ]
 
 # TODO: Try differenet model embeddings to compare performance
-for dataset in mock_data_corpus:
+for dataset in tqdm(mock_data_corpus, desc="Embedding datasets"):
     dataset['Combined embedding'] = generate_combined_embedding(dataset=dataset, metadata_fields=COMBINED_METADATA_FIELDS)
     
     query_text = json.dumps(dataset['Previous queries'])

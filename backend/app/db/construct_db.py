@@ -10,14 +10,15 @@ def insert_mock_data(file_path):
 
     # Insert each record into the database
     insert_query = '''
-    INSERT INTO corpus_raw_metadata_with_embedding (table_name, popularity, time_granu, geo_granu, comb_embed, query_embed)
-    VALUES (%s, %s, %s, %s, %s, %s)
+    INSERT INTO corpus_raw_metadata_with_embedding (table_name, col_num, popularity, time_granu, geo_granu, comb_embed, query_embed)
+    VALUES (%s, %s, %s, %s, %s, %s, %s)
     ON CONFLICT (table_name) DO NOTHING;
     '''
 
     with DatabaseConnection() as cursor:
         for dataset in mock_data_corpus:
             table_name = dataset['Table name']
+            col_num = dataset['Column numbers']
             popularity = dataset['Popularity']
 
             # Join the granularity lists into comma-separated strings
@@ -28,7 +29,7 @@ def insert_mock_data(file_path):
             query_embed = dataset['Query embedding']
             
             # Execute the insert query
-            cursor.execute(insert_query, (table_name, popularity, time_granu, geo_granu, comb_embed, query_embed))
+            cursor.execute(insert_query, (table_name, col_num, popularity, time_granu, geo_granu, comb_embed, query_embed))
 
 
 def main():

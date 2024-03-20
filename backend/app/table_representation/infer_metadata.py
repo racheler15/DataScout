@@ -9,6 +9,7 @@
 """
 
 import json
+from tqdm import tqdm
 from .openai_client import OpenAIClient
 from backend.app.utils import format_prompt, extract_time_geo_granularity
 
@@ -18,7 +19,7 @@ openai_client = OpenAIClient()
 # Craft metadata inference prompts
 PROMPTS = {
     "schema_prompt": "Given the dataset titled '{table_name}' which includes data on {table_description}, with example records like {example_records}, directly list the likely table schema. Please provide this schema as a concise list of column names followed by their data types, without any introductory text, commentary, or conclusion. Format the schema details in a straightforward manner, with each column and data type on a new line.",
-    "query_prompt": "Please provide some data analytics tasks (e.g. data analysis, machine learning, business intelligence, etc.) that can be performed for the table titled '{table_name}' which includes data on {table_description}, with example records like {example_records}? Specify the analytics tasks specific to the semantics of the table, and provide all tasks (without categorization) in a flat list.",
+    "query_prompt": "Please provide some data analytics tasks (e.g. data analysis, machine learning, business intelligence, etc.) that can be performed for the table titled '{table_name}' which includes data on {table_description}, with example records like {example_records}? Specify the analytics tasks specific to the semantics of the table, and provide all tasks (without categorization) in a flat list, excluding any introductory phrases and focusing exclusively on the tasks themselves.",
     "granularity_prompt": "Given a dataset titled '{table_name}' with data on {table_description} and example records like {example_records}, identify columns that express some granularity. For each identified column, determine if it relates to geographic or temporal attributes. Provide the results in a compact, single-line JSON format. Do not include markdown or additional annotations. The expected JSON structure is {{column_name: {{temporal: 'temporal_granularity', geographic: 'geographic_granularity'}}}}. Include only columns that have granularity attributes, and minimize whitespace in the output."
 }
 
@@ -65,7 +66,7 @@ def infer_granularity(table_name, table_description, example_records):
 with open('mock_data/data_gov_mock_data.json', 'r') as file:
     mock_data_corpus = json.load(file)
 
-for dataset in mock_data_corpus:
+for dataset in tqdm(mock_data_corpus, desc="Processing datasets"):
     table_name = dataset['Table name']
     table_description = dataset['Table description']
     example_records = dataset['Example records']
@@ -89,7 +90,6 @@ for dataset in mock_data_corpus:
         example_records=dataset['Example records']
     )
 
-    print("Granularity before JSON parsing:", dataset['Granularity'])
     # Extract the time/geo granularity
     dataset['Temporal granularity'] = extract_time_geo_granularity(dataset['Granularity'])[0]
     dataset['Geographic granularity'] = extract_time_geo_granularity(dataset['Granularity'])[1]
