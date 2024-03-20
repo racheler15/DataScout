@@ -2,3 +2,25 @@ hits/
 .ipynb_checkpoints/
 .env
 __pycache__/
+
+# Frontend dependencies
+/frontend/my-app/node_modules/
+/frontend/my-app/.pnp
+/frontend/my-app/.pnp.js
+
+# Frontend testing
+/frontend/my-app/coverage/
+
+# Frontend production
+/frontend/my-app/build/
+
+# Frontend misc
+/frontend/my-app/.DS_Store
+/frontend/my-app/.env.local
+/frontend/my-app/.env.development.local
+/frontend/my-app/.env.test.local
+/frontend/my-app/.env.production.local
+
+/frontend/my-app/npm-debug.log*
+/frontend/my-app/yarn-debug.log*
+/frontend/my-app/yarn-error.log*
