@@ -6,6 +6,7 @@ from backend.app.db.connect_db import DatabaseConnection
 openai_client = OpenAIClient()
 
 # Craft schema inference prompt
+# TODO: generate multiple hypothetical schemas
 PROMPT = """
 Given the objective of {query}, help me generate a hypothetical table schema to support this.
 Only generate one table schema, excluding any introductory phrases and focusing exclusively on the tasks themselves.
