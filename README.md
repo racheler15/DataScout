@@ -10,7 +10,7 @@ Before setting up the project, ensure you have the following installed:
 
 - Node.js and npm
 - Python 3.7 or higher
-- PostgreSQL
+- PostgreSQL with [pgvector](https://github.com/pgvector/pgvector) extension
 - An Azure OpenAI API key
 
 ### Installation
