@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 import os
 # from openai import OpenAI
 from openai import AzureOpenAI
+import instructor
 
 load_dotenv()
 
@@ -18,18 +19,33 @@ class OpenAIClient:
         self.text_generation_model_default = "gpt-35-infer-model"
         self.embedding_model_default = "gpt-4-embed-ada-model"
 
-    def infer_metadata(self, messages, model=None):
+    def infer_metadata(self, messages, response_model, model=None):
         if model is None:
             model = self.text_generation_model_default
         try:
-            response = self.client.chat.completions.create(
+            client = instructor.from_openai(self.client)
+            response = client.chat.completions.create(
                 model=model,
+                response_model=response_model,
                 messages=messages
             )
-            return response.choices[0].message.content
+            return response
         except Exception as e:
             print(f"Error inferring metadata: {e}")
             return
+
+    # def infer_metadata(self, messages, model=None):
+    #     if model is None:
+    #         model = self.text_generation_model_default
+    #     try:
+    #         response = self.client.chat.completions.create(
+    #             model=model,
+    #             messages=messages
+    #         )
+    #         return response.choices[0].message.content
+    #     except Exception as e:
+    #         print(f"Error inferring metadata: {e}")
+    #         return
 
     def generate_embeddings(self, text, model=None):
         if model is None:

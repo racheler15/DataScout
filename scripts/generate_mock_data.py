@@ -27,7 +27,7 @@ import ssl
 # Base URL for the data.gov CKAN API
 CKAN_BASE_URL = 'https://catalog.data.gov/api/3/action'
 # Number of desired datasets
-LIMIT_NUM = 20
+LIMIT_NUM = 200
 # Number of desired rows in example records for each dataset
 LIMIT_ROW = 2
 

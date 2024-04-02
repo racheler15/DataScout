@@ -1,4 +1,5 @@
 import json
+import re
 from backend.app.db.connect_db import DatabaseConnection
 
 def format_prompt(prompt_template, **kwargs):
@@ -62,5 +63,30 @@ def format_cos_sim_results(results):
             "cosine_similarity": row["cosine_similarity"]
         }
         formatted_results.append(formatted_result)
-        
+
     return formatted_results
+
+def clean_json_string(json_str):
+    """ Clean a JSON string by fixing common formatting issues """
+    # Remove special characters like newlines and tabs
+    json_str = json_str.replace('\n', '\\n').replace('\t', '\\t')
+    
+    # Replace single quotes with double quotes
+    json_str = json_str.replace("'", '"')
+    
+    # Add double quotes around any keys that are not properly quoted
+    json_str = re.sub(r'(?<!")(\b[^":\n\r]+?\b)(?=\s*:)', r'"\1"', json_str)
+    
+    # Remove trailing commas before closing brackets or braces
+    json_str = re.sub(r',\s*([}\]])', r'\1', json_str)
+    
+    return json_str
+
+def validate_and_load_json(json_str):
+    """ Validate and parse a JSON string into a Python dictionary using the cleaned JSON string """
+    cleaned_json_str = clean_json_string(json_str)
+    try:
+        return json.loads(cleaned_json_str), None
+    except json.JSONDecodeError as e:
+        return None, str(e)
+

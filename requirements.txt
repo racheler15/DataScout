@@ -7,3 +7,6 @@ sqlalchemy
 psycopg2-binary
 psycopg2
 Flask
+instructor
+pydantic
+anthropic
