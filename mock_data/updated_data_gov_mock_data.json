@@ -84,9 +84,7 @@
         "2020 Census Tract": "53061051938"
       }
     ],
-    "Temporal granularity": [
-      "Model Year"
-    ],
+    "Temporal granularity": ["Model Year"],
     "Geographic granularity": [
       "County",
       "City",
@@ -175,29 +173,14 @@
         "LON": "-118.2628"
       }
     ],
-    "Temporal granularity": [
-      "DATE OCC",
-      "TIME OCC",
-      "Date Rptd"
-    ],
-    "Geographic granularity": [
-      "AREA",
-      "AREA NAME",
-      "LOCATION",
-      "LAT",
-      "LON"
-    ]
+    "Temporal granularity": ["DATE OCC", "TIME OCC", "Date Rptd"],
+    "Geographic granularity": ["AREA", "AREA NAME", "LOCATION", "LAT", "LON"]
   },
   {
     "Table name": "Lottery Powerball Winning Numbers: Beginning 2010",
     "Table schema": "{\"column_names\":[\"Draw Date\",\"Winning Numbers\",\"Multiplier\"],\"data_types\":[\"date\",\"string\",\"string\"]}",
     "Table description": "Go to http://on.ny.gov/1GpWiHD on the New York Lottery website for past Powerball results and payouts.",
-    "Table tags": [
-      "new-york-lottery",
-      "powerball",
-      "results",
-      "winning"
-    ],
+    "Table tags": ["new-york-lottery", "powerball", "results", "winning"],
     "Column numbers": 3,
     "Popularity": 6558,
     "Previous queries": "{\"queries\":[\"What are some data analytics tasks that can be performed for the table 'Lottery Powerball Winning Numbers: Beginning 2010'?\"]}",
@@ -214,9 +197,7 @@
         "Multiplier": "2"
       }
     ],
-    "Temporal granularity": [
-      "Draw Date"
-    ],
+    "Temporal granularity": ["Draw Date"],
     "Geographic granularity": []
   },
   {
@@ -253,13 +234,8 @@
         "Fund": "10544"
       }
     ],
-    "Temporal granularity": [
-      "Closing Date\ufffd"
-    ],
-    "Geographic granularity": [
-      "City\ufffd",
-      "State\ufffd"
-    ]
+    "Temporal granularity": ["Closing Date\ufffd"],
+    "Geographic granularity": ["City\ufffd", "State\ufffd"]
   },
   {
     "Table name": "Motor Vehicle Collisions - Crashes",
@@ -344,10 +320,7 @@
         "VEHICLE TYPE CODE 5": ""
       }
     ],
-    "Temporal granularity": [
-      "CRASH DATE",
-      "CRASH TIME"
-    ],
+    "Temporal granularity": ["CRASH DATE", "CRASH TIME"],
     "Geographic granularity": [
       "BOROUGH",
       "ZIP CODE",
@@ -395,23 +368,14 @@
         "Reference USEEIO Code": "1111A0"
       }
     ],
-    "Temporal granularity": [
-      "2019"
-    ],
-    "Geographic granularity": [
-      "NAICS-6"
-    ]
+    "Temporal granularity": ["2019"],
+    "Geographic granularity": ["NAICS-6"]
   },
   {
     "Table name": "Lottery Mega Millions Winning Numbers: Beginning 2002",
     "Table schema": "{\"column_names\":[\"Draw Date\",\"Winning Numbers\",\"Mega Ball\",\"Multiplier\"],\"data_types\":[\"string\",\"string\",\"string\",\"string\"]}",
     "Table description": "Go to http://on.ny.gov/1J8tPSN on the New York Lottery website for past Mega Millions results and payouts.",
-    "Table tags": [
-      "mega-millions",
-      "new-york-lottery",
-      "results",
-      "winning"
-    ],
+    "Table tags": ["mega-millions", "new-york-lottery", "results", "winning"],
     "Column numbers": 4,
     "Popularity": 3812,
     "Previous queries": "{\"queries\":[\"tasks for Lottery Mega Millions Winning Numbers: Beginning 2002\"]}",
@@ -430,9 +394,7 @@
         "Multiplier": "03"
       }
     ],
-    "Temporal granularity": [
-      "Draw Date"
-    ],
+    "Temporal granularity": ["Draw Date"],
     "Geographic granularity": []
   },
   {
@@ -493,13 +455,8 @@
         "FLAG": ""
       }
     ],
-    "Temporal granularity": [
-      "YEAR"
-    ],
-    "Geographic granularity": [
-      "STUB_NAME",
-      "STUB_LABEL"
-    ]
+    "Temporal granularity": ["YEAR"],
+    "Geographic granularity": ["STUB_NAME", "STUB_LABEL"]
   },
   {
     "Table name": "Air Quality",
@@ -546,15 +503,8 @@
         "Message": ""
       }
     ],
-    "Temporal granularity": [
-      "Time Period",
-      "Start_Date"
-    ],
-    "Geographic granularity": [
-      "Geo Type Name",
-      "Geo Join ID",
-      "Geo Place Name"
-    ]
+    "Temporal granularity": ["Time Period", "Start_Date"],
+    "Geographic granularity": ["Geo Type Name", "Geo Join ID", "Geo Place Name"]
   },
   {
     "Table name": "National Obesity By State",
@@ -588,12 +538,8 @@
         "Shape__Length": "14518698.4569941"
       }
     ],
-    "Temporal granularity": [
-      "Obesity"
-    ],
-    "Geographic granularity": [
-      "NAME"
-    ]
+    "Temporal granularity": ["Obesity"],
+    "Geographic granularity": ["NAME"]
   },
   {
     "Table name": "Alzheimer's Disease and Healthy Aging Data",
@@ -700,25 +646,14 @@
         "Report": ""
       }
     ],
-    "Temporal granularity": [
-      "YearStart",
-      "YearEnd"
-    ],
-    "Geographic granularity": [
-      "LocationAbbr",
-      "LocationDesc"
-    ]
+    "Temporal granularity": ["YearStart", "YearEnd"],
+    "Geographic granularity": ["LocationAbbr", "LocationDesc"]
   },
   {
     "Table name": "Real Estate Sales 2001-2021 GL",
     "Table schema": "{\"column_names\":[\"Serial Number\",\"List Year\",\"Date Recorded\",\"Town\",\"Address\",\"Assessed Value\",\"Sale Amount\",\"Sales Ratio\",\"Property Type\",\"Residential Type\",\"Non Use Code\",\"Assessor Remarks\",\"OPM remarks\",\"Location\"],\"data_types\":[\"string\",\"string\",\"date\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\"]}",
     "Table description": "The Office of Policy and Management maintains a listing of all real estate sales with a sales price of $2,000 or greater that occur between October 1 and September 30 of each year. For each sale record, the file includes: town, property address, date of sale, property type (residential, apartment, commercial, industrial or vacant land), sales price, and property assessment.\n\nData are collected in accordance with Connecticut General Statutes, section 10-261a and 10-261b: https://www.cga.ct.gov/current/pub/chap_172.htm#sec_10-261a and https://www.cga.ct.gov/current/pub/chap_172.htm#sec_10-261b. \nAnnual real estate sales are reported by grand list year (October 1 through September 30 each year). For instance, sales from 2018 GL are from 10/01/2018 through 9/30/2019.",
-    "Table tags": [
-      "housing",
-      "opm",
-      "real-estate",
-      "sales"
-    ],
+    "Table tags": ["housing", "opm", "real-estate", "sales"],
     "Column numbers": 14,
     "Popularity": 9034,
     "Previous queries": "{\"queries\":[\"Possible analytics tasks for Real Estate Sales 2001-2021 GL\"]}",
@@ -757,14 +692,8 @@
         "Location": ""
       }
     ],
-    "Temporal granularity": [
-      "List Year",
-      "Date Recorded"
-    ],
-    "Geographic granularity": [
-      "Town",
-      "Address"
-    ]
+    "Temporal granularity": ["List Year", "Date Recorded"],
+    "Geographic granularity": ["Town", "Address"]
   },
   {
     "Table name": "Drug overdose death rates, by drug type, sex, age, race, and Hispanic origin: United States",
@@ -830,9 +759,7 @@
         "FLAG": ""
       }
     ],
-    "Temporal granularity": [
-      "YEAR"
-    ],
+    "Temporal granularity": ["YEAR"],
     "Geographic granularity": []
   },
   {
@@ -927,15 +854,8 @@
         "StratificationID1": "EDUHSGRAD"
       }
     ],
-    "Temporal granularity": [
-      "YearStart",
-      "YearEnd"
-    ],
-    "Geographic granularity": [
-      "LocationAbbr",
-      "LocationDesc",
-      "GeoLocation"
-    ]
+    "Temporal granularity": ["YearStart", "YearEnd"],
+    "Geographic granularity": ["LocationAbbr", "LocationDesc", "GeoLocation"]
   },
   {
     "Table name": "U.S. Hourly Precipitation Data",
@@ -1013,9 +933,7 @@
         "Quality Flag": " "
       }
     ],
-    "Temporal granularity": [
-      "DATE"
-    ],
+    "Temporal granularity": ["DATE"],
     "Geographic granularity": [
       "STATION",
       "STATION_NAME",
@@ -1134,9 +1052,7 @@
         "Location": "(39.1592635, -77.21902483)"
       }
     ],
-    "Temporal granularity": [
-      "Crash Date/Time"
-    ],
+    "Temporal granularity": ["Crash Date/Time"],
     "Geographic granularity": [
       "Road Name",
       "Cross-Street Name",
@@ -1204,23 +1120,14 @@
         "Year": "1994"
       }
     ],
-    "Temporal granularity": [
-      "Read_Date",
-      "Time (24:00)"
-    ],
-    "Geographic granularity": [
-      "Site_Id",
-      "Unit_Id"
-    ]
+    "Temporal granularity": ["Read_Date", "Time (24:00)"],
+    "Geographic granularity": ["Site_Id", "Unit_Id"]
   },
   {
     "Table name": "Crimes - 2001 to Present",
     "Table schema": "{\"column_names\":[\"ID\",\"Case Number\",\"Date\",\"Block\",\"IUCR\",\"Primary Type\",\"Description\",\"Location Description\",\"Arrest\",\"Domestic\",\"Beat\",\"District\",\"Ward\",\"Community Area\",\"FBI Code\",\"X Coordinate\",\"Y Coordinate\",\"Year\",\"Updated On\",\"Latitude\",\"Longitude\",\"Location\"],\"data_types\":[\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\"]}",
     "Table description": "This dataset reflects reported incidents of crime (with the exception of murders where data exists for each victim) that occurred in the City of Chicago from 2001 to present, minus the most recent seven days. Data is extracted from the Chicago Police Department's CLEAR (Citizen Law Enforcement Analysis and Reporting) system. In order to protect the privacy of crime victims, addresses are shown at the block level only and specific locations are not identified. Should you have questions about this dataset, you may contact the Data Fulfillment and Analysis Division of the Chicago Police Department at DFA@ChicagoPolice.org.  Disclaimer: These crimes may be based upon preliminary information supplied to the Police Department by the reporting parties that have not been verified. The preliminary crime classifications may be changed at a later date based upon additional investigation and there is always the possibility of mechanical or human error. Therefore, the Chicago Police Department does not guarantee (either expressed or implied) the accuracy, completeness, timeliness, or correct sequencing of the information and the information should not be used for comparison purposes over time. The Chicago Police Department will not be responsible for any error or omission, or for the use of, or the results obtained from the use of this information. All data visualizations on maps should be considered approximate and attempts to derive specific addresses are strictly prohibited. The Chicago Police Department is not responsible for the content of any off-site pages that are referenced by or that reference this web page other than an official City of Chicago or Chicago Police Department web page. The user specifically acknowledges that the Chicago Police Department is not responsible for any defamatory, offensive, misleading, or illegal conduct of other users, links, or third parties and that the risk of injury from the foregoing rests entirely with the user.  The unauthorized use of the words \"Chicago Police Department,\" \"Chicago Police,\" or any colorable imitation of these words or the unauthorized use of the Chicago Police Department logo is unlawful. This web page does not, in any way, authorize such use. Data are updated daily. To access a list of Chicago Police Department - Illinois Uniform Crime Reporting (IUCR) codes, go to http://data.cityofchicago.org/Public-Safety/Chicago-Police-Department-Illinois-Uniform-Crime-R/c7ck-438e",
-    "Table tags": [
-      "crime",
-      "police"
-    ],
+    "Table tags": ["crime", "police"],
     "Column numbers": 22,
     "Popularity": 6839,
     "Previous queries": "{\"queries\":[\"Which crimes are most commonly reported?\",\"What is the trend of crime incidents over the years?\",\"What is the distribution of crime incidents across different locations?\",\"Are there any seasonal patterns in crime incidents?\",\"Is there a correlation between crime incidents and other factors, such as demographics or economic indicators?\",\"Can we predict the likelihood of an arrest based on the characteristics of a crime incident?\",\"What are the hotspots or high crime areas in the city?\",\"Is there a relationship between crime incidents and the time of day?\",\"Can we identify any patterns or trends in specific types of crimes?\",\"Are certain types of crimes more prevalent in certain areas or neighborhoods?\",\"How do the crime rates vary across different districts or wards of the city?\",\"What are the most common types of crimes reported in each community area?\",\"Can we identify any patterns or trends in crime incidents based on the day of the week?\",\"What is the average response time of the police to reported crime incidents?\",\"Are there any differences in crime incidents based on the weather conditions?\",\"Can we detect any anomalies or outliers in the crime data?\",\"What is the overall clearance rate for reported crimes?\",\"Are there any specific trends or patterns in domestic or non-domestic crimes?\",\"What is the relationship between crime incidents and the demographic characteristics of the community areas?\"]}",
@@ -1275,11 +1182,7 @@
         "Location": ""
       }
     ],
-    "Temporal granularity": [
-      "Date",
-      "Year",
-      "Updated On"
-    ],
+    "Temporal granularity": ["Date", "Year", "Updated On"],
     "Geographic granularity": [
       "Block",
       "Ward",
@@ -1293,10 +1196,7 @@
     "Table name": "Mental Health Care in the Last 4 Weeks",
     "Table schema": "{\"column_names\":[\"Indicator\",\"Group\",\"State\",\"Subgroup\",\"Phase\",\"Time Period\",\"Time Period Label\",\"Time Period Start Date\",\"Time Period End Date\",\"Value\",\"LowCI\",\"HighCI\",\"Confidence Interval\",\"Quartile Range\",\"Suppression Flag\"],\"data_types\":[\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"number\",\"number\",\"number\",\"string\",\"string\",\"string\"]}",
     "Table description": "The U.S. Census Bureau, in collaboration with five federal agencies, launched the Household Pulse Survey to produce data on the social and economic impacts of Covid-19 on American households.  The Household Pulse Survey was designed to gauge the impact of the pandemic on employment status, consumer spending, food security, housing, education disruptions, and dimensions of physical and mental wellness.\n\nThe survey was designed to meet the goal of accurate and timely weekly estimates. It was conducted by an internet questionnaire, with invitations to participate sent by email and text message. The sample frame is the Census Bureau Master Address File Data. Housing units linked to one or more email addresses or cell phone numbers were randomly selected to participate, and one respondent from each housing unit was selected to respond for him or herself. Estimates are weighted to adjust for nonresponse and to match Census Bureau estimates of the population by age, gender, race and ethnicity, and educational attainment. All estimates shown meet the NCHS Data Presentation Standards for Proportions.",
-    "Table tags": [
-      "covid-19",
-      "mental-health"
-    ],
+    "Table tags": ["covid-19", "mental-health"],
     "Column numbers": 15,
     "Popularity": 3754,
     "Previous queries": "{\"queries\":[\"data analytics tasks\",\"data analysis\",\"machine learning\",\"business intelligence\"]}",
@@ -1343,21 +1243,13 @@
       "Time Period Start Date",
       "Time Period End Date"
     ],
-    "Geographic granularity": [
-      "Group",
-      "State",
-      "Subgroup"
-    ]
+    "Geographic granularity": ["Group", "State", "Subgroup"]
   },
   {
     "Table name": "Warehouse and Retail Sales",
     "Table schema": "{\"column_names\":[\"YEAR\",\"MONTH\",\"SUPPLIER\",\"ITEM CODE\",\"ITEM DESCRIPTION\",\"ITEM TYPE\",\"RETAIL SALES\",\"RETAIL TRANSFERS\",\"WAREHOUSE SALES\"],\"data_types\":[\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"float\",\"float\",\"float\"]}",
     "Table description": "This dataset contains a list of sales and movement data by item and department appended monthly.\r\nUpdate Frequency : Monthly",
-    "Table tags": [
-      "alcohol",
-      "liquor",
-      "sale"
-    ],
+    "Table tags": ["alcohol", "liquor", "sale"],
     "Column numbers": 9,
     "Popularity": 5214,
     "Previous queries": "{\"queries\":[\"Possible analytics tasks for the dataset 'Warehouse and Retail Sales'\"]}",
@@ -1386,10 +1278,7 @@
         "WAREHOUSE SALES": "4.00"
       }
     ],
-    "Temporal granularity": [
-      "YEAR",
-      "MONTH"
-    ],
+    "Temporal granularity": ["YEAR", "MONTH"],
     "Geographic granularity": []
   },
   {
@@ -1434,15 +1323,8 @@
         "res_rate": "0.11240007212838853"
       }
     ],
-    "Temporal granularity": [
-      "zip",
-      "state"
-    ],
-    "Geographic granularity": [
-      "utility_name",
-      "ownership",
-      "service_type"
-    ]
+    "Temporal granularity": ["zip", "state"],
+    "Geographic granularity": ["utility_name", "ownership", "service_type"]
   },
   {
     "Table name": "Popular Baby Names",
@@ -1484,22 +1366,14 @@
         "Rank": "67"
       }
     ],
-    "Temporal granularity": [
-      "Year of Birth"
-    ],
-    "Geographic granularity": [
-      "Ethnicity"
-    ]
+    "Temporal granularity": ["Year of Birth"],
+    "Geographic granularity": ["Ethnicity"]
   },
   {
     "Table name": "Indicators of Anxiety or Depression Based on Reported Frequency of Symptoms During Last 7 Days",
     "Table schema": "{\"column_names\":[\"Indicator\",\"Group\",\"State\",\"Subgroup\",\"Phase\",\"Time Period\",\"Time Period Label\",\"Time Period Start Date\",\"Time Period End Date\",\"Value\",\"Low CI\",\"High CI\",\"Confidence Interval\",\"Quartile Range\"],\"data_types\":[\"string\",\"string\",\"string\",\"string\",\"float\",\"float\",\"string\",\"string\",\"string\",\"float\",\"float\",\"float\",\"string\",\"string\"]}",
     "Table description": "The U.S. Census Bureau, in collaboration with five federal agencies, launched the Household Pulse Survey to produce data on the social and economic impacts of Covid-19 on American households.  The Household Pulse Survey was designed to gauge the impact of the pandemic on employment status, consumer spending, food security, housing, education disruptions, and dimensions of physical and mental wellness.\n\nThe survey was designed to meet the goal of accurate and timely weekly estimates. It was conducted by an internet questionnaire, with invitations to participate sent by email and text message. The sample frame is the Census Bureau Master Address File Data. Housing units linked to one or more email addresses or cell phone numbers were randomly selected to participate, and one respondent from each housing unit was selected to respond for him or herself. Estimates are weighted to adjust for nonresponse and to match Census Bureau estimates of the population by age, gender, race and ethnicity, and educational attainment. All estimates shown meet the NCHS Data Presentation Standards for Proportions,",
-    "Table tags": [
-      "anxiety",
-      "covid-19",
-      "depression"
-    ],
+    "Table tags": ["anxiety", "covid-19", "depression"],
     "Column numbers": 14,
     "Popularity": 2710,
     "Previous queries": "{\"queries\":[\"What are the analytics tasks that can be performed for the table 'Indicators of Anxiety or Depression Based on Reported Frequency of Symptoms During Last 7 Days'?\"]}",
@@ -1544,10 +1418,7 @@
       "Time Period Start Date",
       "Time Period End Date"
     ],
-    "Geographic granularity": [
-      "State",
-      "Subgroup"
-    ]
+    "Geographic granularity": ["State", "Subgroup"]
   },
   {
     "Table name": "Diabetes",
@@ -1590,13 +1461,8 @@
         "BMAN2": "32"
       }
     ],
-    "Temporal granularity": [
-      "2015",
-      "calendar years"
-    ],
-    "Geographic granularity": [
-      "Allegheny County"
-    ]
+    "Temporal granularity": ["2015", "calendar years"],
+    "Geographic granularity": ["Allegheny County"]
   },
   {
     "Table name": "Cancer Rates",
@@ -1645,16 +1511,8 @@
         "Shape__Length": "178637.109618217"
       }
     ],
-    "Temporal granularity": [
-      "Year",
-      "Month",
-      "Quarter"
-    ],
-    "Geographic granularity": [
-      "Zip Code",
-      "County",
-      "State"
-    ]
+    "Temporal granularity": ["Year", "Month", "Quarter"],
+    "Geographic granularity": ["Zip Code", "County", "State"]
   },
   {
     "Table name": "Conditions Contributing to COVID-19 Deaths, by State and Age, Provisional 2020-2023",
@@ -1737,26 +1595,14 @@
         "Flag": ""
       }
     ],
-    "Temporal granularity": [
-      "Start Date",
-      "End Date",
-      "Year",
-      "Month"
-    ],
-    "Geographic granularity": [
-      "State",
-      "Jurisdiction"
-    ]
+    "Temporal granularity": ["Start Date", "End Date", "Year", "Month"],
+    "Geographic granularity": ["State", "Jurisdiction"]
   },
   {
     "Table name": "Heart Disease Mortality Data Among US Adults (35+) by State/Territory and County",
     "Table schema": "{\"column_names\":[\"Year\",\"LocationAbbr\",\"LocationDesc\",\"GeographicLevel\",\"DataSource\",\"Class\",\"Topic\",\"Data_Value\",\"Data_Value_Unit\",\"Data_Value_Type\",\"Data_Value_Footnote_Symbol\",\"Data_Value_Footnote\",\"StratificationCategory1\",\"Stratification1\",\"StratificationCategory2\",\"Stratification2\",\"TopicID\",\"LocationID\",\"Location 1\"],\"data_types\":[\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"number\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\"]}",
     "Table description": "2013 to 2015, 3-year average. Rates are age-standardized. County rates are spatially smoothed. The data can be viewed by gender and race/ethnicity. Data source: National Vital Statistics System. Additional data, maps, and methodology can be viewed on the Interactive Atlas of Heart Disease and Stroke http://www.cdc.gov/dhdsp/maps/atlas",
-    "Table tags": [
-      "cardiovascular-disease",
-      "county",
-      "heart-disease"
-    ],
+    "Table tags": ["cardiovascular-disease", "county", "heart-disease"],
     "Column numbers": 19,
     "Popularity": 1019,
     "Previous queries": "{\"queries\":[\"What are some data analytics tasks that can be performed for the 'Heart Disease Mortality Data Among US Adults (35+) by State/Territory and County' table?\"]}",
@@ -1805,9 +1651,7 @@
         "Location 1": "(52.995403, -170.251538)"
       }
     ],
-    "Temporal granularity": [
-      "Year"
-    ],
+    "Temporal granularity": ["Year"],
     "Geographic granularity": [
       "GeographicLevel",
       "LocationAbbr",
@@ -1878,9 +1722,7 @@
         "MTD-PRCP-NORMAL": "4"
       }
     ],
-    "Temporal granularity": [
-      "DATE"
-    ],
+    "Temporal granularity": ["DATE"],
     "Geographic granularity": [
       "STATION",
       "STATION_NAME",
@@ -2006,10 +1848,7 @@
         "LOCATION": ""
       }
     ],
-    "Temporal granularity": [
-      "CRASH_DATE",
-      "DATE_POLICE_NOTIFIED"
-    ],
+    "Temporal granularity": ["CRASH_DATE", "DATE_POLICE_NOTIFIED"],
     "Geographic granularity": [
       "BEAT_OF_OCCURRENCE",
       "STREET_NO",
@@ -2051,12 +1890,8 @@
         "Age-adjusted Death Rate": "53.8"
       }
     ],
-    "Temporal granularity": [
-      "Year"
-    ],
-    "Geographic granularity": [
-      "State"
-    ]
+    "Temporal granularity": ["Year"],
+    "Geographic granularity": ["State"]
   },
   {
     "Table name": "Youth Tobacco Survey (YTS) Data",
@@ -2158,14 +1993,8 @@
         "DisplayOrder": "8"
       }
     ],
-    "Temporal granularity": [
-      "YEAR"
-    ],
-    "Geographic granularity": [
-      "LocationAbbr",
-      "LocationDesc",
-      "GeoLocation"
-    ]
+    "Temporal granularity": ["YEAR"],
+    "Geographic granularity": ["LocationAbbr", "LocationDesc", "GeoLocation"]
   },
   {
     "Table name": "COVID-19 Outcomes by Vaccination Status",
@@ -2230,12 +2059,8 @@
         "Age Group Max": "4"
       }
     ],
-    "Temporal granularity": [
-      "Week End"
-    ],
-    "Geographic granularity": [
-      "Age Group"
-    ]
+    "Temporal granularity": ["Week End"],
+    "Geographic granularity": ["Age Group"]
   },
   {
     "Table name": "Border Crossing Entry Data",
@@ -2284,9 +2109,7 @@
         "Point": "POINT (-100.927612 29.326784)"
       }
     ],
-    "Temporal granularity": [
-      "Date"
-    ],
+    "Temporal granularity": ["Date"],
     "Geographic granularity": [
       "Port Name",
       "State",
@@ -2355,9 +2178,7 @@
         "New Georeferenced Column": "POINT (-74.077263 40.644996)"
       }
     ],
-    "Temporal granularity": [
-      "ARREST_DATE"
-    ],
+    "Temporal granularity": ["ARREST_DATE"],
     "Geographic granularity": [
       "ARREST_BORO",
       "ARREST_PRECINCT",
@@ -2369,9 +2190,7 @@
     "Table name": "Allegheny County Employee Salaries",
     "Table schema": "{\"column_names\":[\"FIRST_NAME\",\"LAST_NAME\",\"DEPARTMENT\",\"JOB_TITLE\",\"ELECTED_OFFICIAL\",\"DATE_STARTED\",\"SEX\",\"ETHNICITY\",\"ORIG_START\",\"DATE_TERM\",\"PAY_STATUS\",\"ANNUAL_SALARY\",\"REGULAR_PAY\",\"OVERTIME_PAY\",\"INCENTIVE_PAY\",\"GROSS_PAY\"],\"data_types\":[\"string\",\"string\",\"string\",\"string\",\"boolean\",\"date\",\"string\",\"string\",\"date\",\"date\",\"string\",\"number\",\"number\",\"number\",\"number\",\"number\"]}",
     "Table description": "This dataset includes annual salary, regular pay, incentive pay, and gross pay for employees under the County Executive and independently elected County officials for the years 2016 to the present, and is updated twice per year.\r\n\r\nFor December files, Annual Salary is the employee's annual salary or annualized wage as of the last pay period for the year, and the pay data fields (Regular Pay, Incentive Pay and Gross Pay) are payments made to the employee through the last pay period of the year. The June file contains the Annual Salary, and the pay data as of the last pay period in June. *Note that the June file is replaced by the December file each year.*\r\n\r\nUnion contracted salaries and wages which were not settled during the calendar year reflect the wage as of the end of the year. Regular Pay for these positions includes salaries and wages for the year it was paid, not the year it was earned. \r\n\r\nIn addition to salary or wages for days worked and retroactively settled contract payments, Regular Pay also includes pay for days such as holidays, sick days, and vacation days. Overtime Pay includes pay for extra work typically at a wage rate different from regular wages as set forth in a collective bargaining agreement. Incentive Pay includes such things as a wellness incentive and longevity pay.\r\n\r\nEmployee names are included in the dataset with the following exceptions permitted by the Pennsylvania Right to Know Law:\r\n\r\n* The names of individuals who were active sworn law enforcement officers during the year; and\r\n* Information that would disclose individually identifiable health information.\r\n\r\nAdditionally, records related to Court of Common Pleas employees would need to be requested from the [Courts](https://www.alleghenycourts.us/).\r\n\r\n*In March 2022, the salary data files prior to 2021 were updated so that all columns matched for consistent presentation.*",
-    "Table tags": [
-      "local-government"
-    ],
+    "Table tags": ["local-government"],
     "Column numbers": 16,
     "Popularity": 7580,
     "Previous queries": "{\"queries\":[\"What are the top 10 highest-paid employees?\",\"What is the average annual salary?\",\"How much is the total regular pay?\",\"Which department has the highest average annual salary?\",\"What is the distribution of ethnicity among employees?\",\"What is the distribution of sexes among employees?\",\"How many employees are currently active?\",\"What is the average incentive pay?\",\"How does the annual salary change over the years?\",\"What is the total gross pay for each year?\",\"Who are the employees with the longest tenure?\",\"What are the job titles with the highest number of employees?\"]}",
@@ -2414,13 +2233,8 @@
         "GROSS_PAY": "19421.66"
       }
     ],
-    "Temporal granularity": [
-      "DATE_STARTED",
-      "DATE_TERM"
-    ],
-    "Geographic granularity": [
-      "DEPARTMENT"
-    ]
+    "Temporal granularity": ["DATE_STARTED", "DATE_TERM"],
+    "Geographic granularity": ["DEPARTMENT"]
   },
   {
     "Table name": "Meteorite Landings",
@@ -2465,16 +2279,8 @@
         "GeoLocation": "(56.18333, 10.23333)"
       }
     ],
-    "Temporal granularity": [
-      "year",
-      "year_date"
-    ],
-    "Geographic granularity": [
-      "place",
-      "longitude",
-      "latitude",
-      "geojson"
-    ]
+    "Temporal granularity": ["year", "year_date"],
+    "Geographic granularity": ["place", "longitude", "latitude", "geojson"]
   },
   {
     "Table name": "Health conditions among children under age 18, by selected characteristics: United States",
@@ -2552,13 +2358,8 @@
         "FLAG": "..."
       }
     ],
-    "Temporal granularity": [
-      "YEAR"
-    ],
-    "Geographic granularity": [
-      "STUB_NAME",
-      "AGE"
-    ]
+    "Temporal granularity": ["YEAR"],
+    "Geographic granularity": ["STUB_NAME", "AGE"]
   },
   {
     "Table name": "Pittsburgh American Community Survey 2015 - Miscellaneous Data",
@@ -2603,18 +2404,8 @@
         "Margin of Error; Total": "96"
       }
     ],
-    "Temporal granularity": [
-      "Year",
-      "Month",
-      "Day",
-      "Quarter"
-    ],
-    "Geographic granularity": [
-      "Neighborhood",
-      "County",
-      "State",
-      "Country"
-    ]
+    "Temporal granularity": ["Year", "Month", "Day", "Quarter"],
+    "Geographic granularity": ["Neighborhood", "County", "State", "Country"]
   },
   {
     "Table name": "School Attendance by Student Group and District, 2021-2022",
@@ -2660,14 +2451,8 @@
         "Date update": "07/22/2022"
       }
     ],
-    "Temporal granularity": [
-      "Reporting period",
-      "Date update"
-    ],
-    "Geographic granularity": [
-      "District code",
-      "District name"
-    ]
+    "Temporal granularity": ["Reporting period", "Date update"],
+    "Geographic granularity": ["District code", "District name"]
   },
   {
     "Table name": "Listing of Active Businesses",
@@ -2716,10 +2501,7 @@
         "LOCATION": "(33.9968, -118.4784)"
       }
     ],
-    "Temporal granularity": [
-      "LOCATION START DATE",
-      "LOCATION END DATE"
-    ],
+    "Temporal granularity": ["LOCATION START DATE", "LOCATION END DATE"],
     "Geographic granularity": [
       "STREET ADDRESS",
       "CITY",
@@ -2779,13 +2561,8 @@
         "Percent Electric Vehicles": "1.57"
       }
     ],
-    "Temporal granularity": [
-      "Date"
-    ],
-    "Geographic granularity": [
-      "County",
-      "State"
-    ]
+    "Temporal granularity": ["Date"],
+    "Geographic granularity": ["County", "State"]
   },
   {
     "Table name": "Normal weight, overweight, and obesity among adults aged 20 and over, by selected characteristics: United States",
@@ -2849,13 +2626,8 @@
         "FLAG": ""
       }
     ],
-    "Temporal granularity": [
-      "YEAR",
-      "AGE"
-    ],
-    "Geographic granularity": [
-      "STUB_NAME"
-    ]
+    "Temporal granularity": ["YEAR", "AGE"],
+    "Geographic granularity": ["STUB_NAME"]
   },
   {
     "Table name": "Specific Chronic Conditions",
@@ -2905,27 +2677,14 @@
         "ER_Visits_Per_1000_Benes": ""
       }
     ],
-    "Temporal granularity": [
-      "Bene_Age_Lvl"
-    ],
-    "Geographic granularity": [
-      "Bene_Geo_Lvl",
-      "Bene_Geo_Desc",
-      "Bene_Geo_Cd"
-    ]
+    "Temporal granularity": ["Bene_Age_Lvl"],
+    "Geographic granularity": ["Bene_Geo_Lvl", "Bene_Geo_Desc", "Bene_Geo_Cd"]
   },
   {
     "Table name": "Adoptable Pets",
     "Table schema": "{\"column_names\":[\"Animal ID\",\"Intake Type\",\"In Date\",\"Pet name\",\"Animal Type\",\"Pet Age\",\"Pet Size\",\"Color\",\"Breed\",\"Sex\",\"URL Link\",\"Crossing\"],\"data_types\":[\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\"]}",
     "Table description": "This dataset contains a list of shelter animals that are ready to be adopted from the Montgomery County Animal Services and Adoption Center at 7315 Muncaster Mill Rd., Derwood MD  20855. The 'How To Adopt' details are posted on https://www.montgomerycountymd.gov/animalservices/adoption/howtoadopt.html.\r\nUpdate Frequency : Every two hours",
-    "Table tags": [
-      "adoptable",
-      "animals",
-      "cat",
-      "dog",
-      "pets",
-      "police"
-    ],
+    "Table tags": ["adoptable", "animals", "cat", "dog", "pets", "police"],
     "Column numbers": 12,
     "Popularity": 1864,
     "Previous queries": "{\"queries\":[\"What are some data analytics tasks that can be performed for the table titled 'Adoptable Pets'?\"]}",
@@ -2960,12 +2719,8 @@
         "Crossing": ""
       }
     ],
-    "Temporal granularity": [
-      "In Date"
-    ],
-    "Geographic granularity": [
-      "Crossing"
-    ]
+    "Temporal granularity": ["In Date"],
+    "Geographic granularity": ["Crossing"]
   },
   {
     "Table name": "Air Quality Measures on the National Environmental Health Tracking Network",
@@ -3039,9 +2794,7 @@
         "MonitorOnly": "1"
       }
     ],
-    "Temporal granularity": [
-      "ReportYear"
-    ],
+    "Temporal granularity": ["ReportYear"],
     "Geographic granularity": [
       "StateFips",
       "StateName",
@@ -3053,12 +2806,7 @@
     "Table name": "DIR Electrician Certification Unit (ECU)",
     "Table schema": "{\"column_names\":[\"ELECTRICIAN_NAME\",\"ZIP_CODE\",\"CERTIFICATE_NUMBER\",\"EXPIRATION_DATE\"],\"data_types\":[\"string\",\"string\",\"string\",\"string\"]}",
     "Table description": "This dataset contains California certified electricians and electrician trainees lists maintained by the Department of Industrial Relation's Electrician Certification Unit.  \r\n***For questions regarding your license please contact:&nbsp;ECUINFO@dir.ca.gov**",
-    "Table tags": [
-      "dir",
-      "ecu",
-      "electrician",
-      "electrician-certification"
-    ],
+    "Table tags": ["dir", "ecu", "electrician", "electrician-certification"],
     "Column numbers": 4,
     "Popularity": 6389,
     "Previous queries": "{\"queries\":[\"What are some data analytics tasks for the DIR Electrician Certification Unit (ECU) dataset?\"]}",
@@ -3077,12 +2825,8 @@
         "EXPIRATION_DATE": "05/17/2024"
       }
     ],
-    "Temporal granularity": [
-      "EXPIRATION_DATE"
-    ],
-    "Geographic granularity": [
-      "ZIP_CODE"
-    ]
+    "Temporal granularity": ["EXPIRATION_DATE"],
+    "Geographic granularity": ["ZIP_CODE"]
   },
   {
     "Table name": "Rates and Trends in Heart Disease and Stroke Mortality Among US Adults (35+) by County, Age Group, Race/Ethnicity, and Sex \u2013 2000-2019",
@@ -3149,24 +2893,14 @@
         "LocationID": "01001"
       }
     ],
-    "Temporal granularity": [
-      "Year"
-    ],
-    "Geographic granularity": [
-      "LocationAbbr",
-      "LocationDesc"
-    ]
+    "Temporal granularity": ["Year"],
+    "Geographic granularity": ["LocationAbbr", "LocationDesc"]
   },
   {
     "Table name": "Employee Salaries - 2023",
     "Table schema": "{\"column_names\":[\"Department\",\"Department_Name\",\"Division\",\"Gender\",\"Base_Salary\",\"Overtime_Pay\",\"Longevity_Pay\",\"Grade\"],\"data_types\":[\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\"]}",
     "Table description": "Annual salary information including gross pay and overtime pay for all active, permanent employees of Montgomery County, MD paid in calendar year 2023. This information will be published annually each year.",
-    "Table tags": [
-      "2023",
-      "employee",
-      "government",
-      "salary"
-    ],
+    "Table tags": ["2023", "employee", "government", "salary"],
     "Column numbers": 8,
     "Popularity": 4429,
     "Previous queries": "{\"queries\":[\"What are the analytics tasks that can be performed for the table titled 'Employee Salaries - 2023'?\"]}",
@@ -3193,13 +2927,8 @@
         "Grade": "M3"
       }
     ],
-    "Temporal granularity": [
-      "calendar year",
-      "annual"
-    ],
-    "Geographic granularity": [
-      "Montgomery County, MD"
-    ]
+    "Temporal granularity": ["calendar year", "annual"],
+    "Geographic granularity": ["Montgomery County, MD"]
   },
   {
     "Table name": "Monthly Counts of Deaths by Select Causes, 2014-2019",
@@ -3284,13 +3013,8 @@
         "Drug Overdose": "4354"
       }
     ],
-    "Temporal granularity": [
-      "Year",
-      "Month"
-    ],
-    "Geographic granularity": [
-      "Jurisdiction of Occurrence"
-    ]
+    "Temporal granularity": ["Year", "Month"],
+    "Geographic granularity": ["Jurisdiction of Occurrence"]
   },
   {
     "Table name": "NYPD Shooting Incident Data (Historic)",
@@ -3355,10 +3079,7 @@
         "Lon_Lat": "POINT (-73.92494232599995 40.81035186300006)"
       }
     ],
-    "Temporal granularity": [
-      "OCCUR_DATE",
-      "OCCUR_TIME"
-    ],
+    "Temporal granularity": ["OCCUR_DATE", "OCCUR_TIME"],
     "Geographic granularity": [
       "BORO",
       "PRECINCT",
@@ -3372,11 +3093,7 @@
     "Table name": "Electric Vehicle Charging Stations",
     "Table schema": "{\"column_names\":[\"Station Name\",\"Street Address\",\"City\",\"Access Days Time\",\"EV Level1 EVSE Num\",\"EV Level2 EVSE Num\",\"EV DC Fast Count\",\"EV Other Info\",\"New Georeferenced Column\"],\"data_types\":[\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\"]}",
     "Table description": "Existing public Electric Vehicle (EV) charging stations within Connecticut from\nUS DOE map found at https://afdc.energy.gov/stations/#/find/nearest\ncomplemented with research done by DEEP as of 05/27/2020",
-    "Table tags": [
-      "charging-stations",
-      "ct",
-      "ev"
-    ],
+    "Table tags": ["charging-stations", "ct", "ev"],
     "Column numbers": 9,
     "Popularity": 8103,
     "Previous queries": "{\"queries\":[\"Electric Vehicle Charging Stations\"]}",
@@ -3405,9 +3122,7 @@
         "New Georeferenced Column": "POINT (-72.773473 41.527367)"
       }
     ],
-    "Temporal granularity": [
-      "Access Days Time"
-    ],
+    "Temporal granularity": ["Access Days Time"],
     "Geographic granularity": [
       "Street Address",
       "City",
@@ -3478,10 +3193,7 @@
         "MEASURE": "Count"
       }
     ],
-    "Temporal granularity": [
-      "START_TIME",
-      "END_TIME"
-    ],
+    "Temporal granularity": ["START_TIME", "END_TIME"],
     "Geographic granularity": []
   },
   {
@@ -3532,11 +3244,7 @@
     "Table name": "Microplastics in Drinking Water",
     "Table schema": "{\"column_names\":[\"DOI\",\"Sample_device_and_deployment_methods\",\"Digestion\",\"Filtration\",\"Filter_Size\",\"Microplastic_Identification_Method\",\"Spectral_Analysis\",\"Controls\"],\"data_types\":[\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\"]}",
     "Table description": "**Alpha Version Data** (has undergone several rounds of internal review from the Moore Institute and is ready for external review)\r\n\r\nThis dataset is part of the [Microplastics Data Portal](https://github.com/Moore-Institute-4-Plastic-Pollution-Res/Microplastic_Data_Portal). It was created by reviewing peer-reviewed studies on microplastics in drinking water for bottled water and tap water. This data is tidied in a way that we think it is most actionable but raw data is also available on [Github](https://github.com/Moore-Institute-4-Plastic-Pollution-Res/Microplastic_Data_Portal/tree/main/data/Raw_DrinkingWater_Data). Data was validated with the rules file provided in combination with the [Data Validation Portal](https://wincowger.shinyapps.io/validate/).",
-    "Table tags": [
-      "alpha",
-      "microplastics",
-      "peer-reviewed"
-    ],
+    "Table tags": ["alpha", "microplastics", "peer-reviewed"],
     "Column numbers": 8,
     "Popularity": 1504,
     "Previous queries": "{\"queries\":[\"Data analytics tasks for the table 'Microplastics in Drinking Water'\"]}",
@@ -3563,9 +3271,7 @@
         "Controls": "Already analyzes sample filtered a second time and analyzed again; additional moistened filter placed in laminar flow box during filtration"
       }
     ],
-    "Temporal granularity": [
-      "sample_date"
-    ],
+    "Temporal granularity": ["sample_date"],
     "Geographic granularity": []
   },
   {
@@ -3597,17 +3303,11 @@
     "Granularity": "{\"time_granu\":[\"year\"],\"geo_granu\":[\"country\"]}",
     "Example records": [
       {
-        "null": [
-          "<!DOCTYPE html>"
-        ]
+        "null": ["<!DOCTYPE html>"]
       }
     ],
-    "Temporal granularity": [
-      "year"
-    ],
-    "Geographic granularity": [
-      "country"
-    ]
+    "Temporal granularity": ["year"],
+    "Geographic granularity": ["country"]
   },
   {
     "Table name": "Water Quality Data",
@@ -3675,14 +3375,8 @@
         "fdr_footnote": ""
       }
     ],
-    "Temporal granularity": [
-      "sample_date"
-    ],
-    "Geographic granularity": [
-      "latitude",
-      "longitude",
-      "county_name"
-    ]
+    "Temporal granularity": ["sample_date"],
+    "Geographic granularity": ["latitude", "longitude", "county_name"]
   },
   {
     "Table name": "Crime Data from 2010 to 2019",
@@ -3762,11 +3456,7 @@
         "LON": "-118.3962"
       }
     ],
-    "Temporal granularity": [
-      "Date Rptd",
-      "DATE OCC",
-      "TIME OCC"
-    ],
+    "Temporal granularity": ["Date Rptd", "DATE OCC", "TIME OCC"],
     "Geographic granularity": [
       "AREA ",
       "AREA NAME",
@@ -3780,10 +3470,7 @@
     "Table name": "Percent Change in Consumer Spending",
     "Table schema": "{\"column_names\":[\"State FIPS code\",\"Date\",\"All merchant category codes spending\",\"Accommodation and food service (ACF) spending\",\"Arts, entertainment, and recreation (AER)  spending\",\"General merchandise stores (GEN) and apparel and accessories (AAP) spending\",\"Grocery and food store (GRF)  spending\",\"Health care and social assistance (HCS) spending\",\"Transportation and warehousing (TWS)  spending\",\"Retail spending, including grocery  (AAP, CEC, GEN, GRF, HIC, ETC, SGH)\",\"Retail spending, excluding grocery ((AAP, CEC, GEN, HIC, ETC, SGH)\"],\"data_types\":[\"string\",\"string\",\"number\",\"number\",\"number\",\"number\",\"number\",\"number\",\"number\",\"number\",\"number\"]}",
     "Table description": "Aggregated and anonymized purchase data from consumer credit and debit card\nspending. Spending is reported based on the ZIP code where the cardholder lives, not the ZIP code where transactions occurred. Data from Affinity Solutions, compiled by Opportunity Insights. \n\nUpdate Frequency: Weekly\nDate Range: January 13th until the most recent date available.\n\nData Frequency: Data is daily until the final two weeks of the series, and the daily data is\npresented as a 7 day lookback moving average. For the final two weeks of the series, the data is weekly and presented as weekly data points.\n\nIndex Period: January 4th - January 31st \n\nIndexing Type: Seasonally adjusted change since January 2020. Data is indexed in 2019 and 2020 as the change relative to the January index period. We then seasonally adjust by dividing year-over-year, which represents the difference between the change since January observed in 2020 compared to the change since January observed since 2019. We account for differences in the dates of federal holidays between 2019 and 2020 by shifting the 2019 reference data to align the holidays before performing the year-over-year division.",
-    "Table tags": [
-      "consumer-spending",
-      "economic-recovery"
-    ],
+    "Table tags": ["consumer-spending", "economic-recovery"],
     "Column numbers": 11,
     "Popularity": 1727,
     "Previous queries": "{\"queries\":[\"Data analysis on Percent Change in Consumer Spending\",\"Machine learning on Percent Change in Consumer Spending\",\"Business intelligence on Percent Change in Consumer Spending\"]}",
@@ -3816,12 +3503,8 @@
         "Retail spending, excluding grocery ((AAP, CEC, GEN, HIC, ETC, SGH) ": "0.253"
       }
     ],
-    "Temporal granularity": [
-      "Date"
-    ],
-    "Geographic granularity": [
-      "State FIPS code"
-    ]
+    "Temporal granularity": ["Date"],
+    "Geographic granularity": ["State FIPS code"]
   },
   {
     "Table name": "School Neighborhood Poverty Estimates - Current",
@@ -3867,13 +3550,8 @@
         "LON": "-86.2049"
       }
     ],
-    "Temporal granularity": [
-      "SCHOOLYEAR"
-    ],
-    "Geographic granularity": [
-      "LAT",
-      "LON"
-    ]
+    "Temporal granularity": ["SCHOOLYEAR"],
+    "Geographic granularity": ["LAT", "LON"]
   },
   {
     "Table name": "Obesity among children and adolescents aged 2\u201319 years, by selected characteristics: United States",
@@ -3939,10 +3617,7 @@
         "FLAG": ""
       }
     ],
-    "Temporal granularity": [
-      "YEAR",
-      "AGE"
-    ],
+    "Temporal granularity": ["YEAR", "AGE"],
     "Geographic granularity": []
   },
   {
@@ -3976,14 +3651,8 @@
         "<!DOCTYPE html>": "<head>"
       }
     ],
-    "Temporal granularity": [
-      "date_registered",
-      "date_updated"
-    ],
-    "Geographic granularity": [
-      "state",
-      "city"
-    ]
+    "Temporal granularity": ["date_registered", "date_updated"],
+    "Geographic granularity": ["state", "city"]
   },
   {
     "Table name": "Traffic Violations",
@@ -4095,15 +3764,8 @@
         "Geolocation": "(39.0839346666667, -77.077504)"
       }
     ],
-    "Temporal granularity": [
-      "Date Of Stop",
-      "Time Of Stop"
-    ],
-    "Geographic granularity": [
-      "Location",
-      "Latitude",
-      "Longitude"
-    ]
+    "Temporal granularity": ["Date Of Stop", "Time Of Stop"],
+    "Geographic granularity": ["Location", "Latitude", "Longitude"]
   },
   {
     "Table name": "Real Estate Across the United States (REXUS) Inventory (Building)",
@@ -4163,27 +3825,14 @@
         "ABA Accessibility Flag ": "Will Conform"
       }
     ],
-    "Temporal granularity": [
-      "Construction Date"
-    ],
-    "Geographic granularity": [
-      "Bldg State",
-      "Bldg City",
-      "Bldg County"
-    ]
+    "Temporal granularity": ["Construction Date"],
+    "Geographic granularity": ["Bldg State", "Bldg City", "Bldg County"]
   },
   {
     "Table name": "Youth Behavior Risk Survey (High School)",
     "Table schema": "{\"column_names\":[\"Survey\",\"Prevalence\",\"Year\",\"Smoked at least once past 30 days\",\"Binge drinking in past 30 days\",\"Drank five or more alcoholic drinks in a row in past 30 days\",\"Got help from a counselor in past 12 months\",\"Drinks 1 or more sodas per day in past 7 days\",\"Adolescent obesity\",\"Physically active 60 minutes per day\"],\"data_types\":[\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\"]}",
     "Table description": "The NYC Youth Risk Behavior Survey (YRBS) is conducted through an ongoing collaboration between the New York City Department of Health and Mental Hygiene (DOHMH), the Department of Education (DOE), and the National Centers for Disease Control and Prevention (CDC). The New York City's YRBS is part of the CDC's National Youth Risk Behavior Surveillance System (YRBSS). The survey's primary purpose is to monitor priority health risk behaviors that contribute to the leading causes of mortality, morbidity, and social problems among youth in New York City. For more information see EpiQuery, https://a816-health.nyc.gov/hdi/epiquery/visualizations?PageType=ps&PopulationSource=YRBS",
-    "Table tags": [
-      "behavior",
-      "dohmh",
-      "health",
-      "risk",
-      "survey",
-      "youth"
-    ],
+    "Table tags": ["behavior", "dohmh", "health", "risk", "survey", "youth"],
     "Column numbers": 10,
     "Popularity": 7074,
     "Previous queries": "{\"queries\":[\"data analytics tasks for 'Youth Behavior Risk Survey (High School)' table\"]}",
@@ -4214,9 +3863,7 @@
         "Physically active 60 minutes per day": "13.0"
       }
     ],
-    "Temporal granularity": [
-      "Year"
-    ],
+    "Temporal granularity": ["Year"],
     "Geographic granularity": []
   },
   {
@@ -4283,10 +3930,7 @@
         "ORIG_FID": "2"
       }
     ],
-    "Temporal granularity": [
-      "Notes",
-      "SquareFeet"
-    ],
+    "Temporal granularity": ["Notes", "SquareFeet"],
     "Geographic granularity": [
       "Address",
       "City",
@@ -4367,9 +4011,7 @@
       "MMWR Week",
       "Week-Ending Date"
     ],
-    "Geographic granularity": [
-      "HHS Region"
-    ]
+    "Geographic granularity": ["HHS Region"]
   },
   {
     "Table name": "Tax Lien Sale Lists",
@@ -4419,10 +4061,7 @@
         "Water Debt Only": "NO"
       }
     ],
-    "Temporal granularity": [
-      "Month",
-      "Cycle"
-    ],
+    "Temporal granularity": ["Month", "Cycle"],
     "Geographic granularity": [
       "Borough",
       "Block",
@@ -4483,15 +4122,8 @@
         "ObjectId": "2"
       }
     ],
-    "Temporal granularity": [
-      "\ufeffYear",
-      "Date",
-      "Reporting_Date"
-    ],
-    "Geographic granularity": [
-      "Control_Set",
-      "Control_Family_Code"
-    ]
+    "Temporal granularity": ["\ufeffYear", "Date", "Reporting_Date"],
+    "Geographic granularity": ["Control_Set", "Control_Family_Code"]
   },
   {
     "Table name": "Effects of COVID-19 on Hospital Utilization Trends",
@@ -4534,16 +4166,8 @@
         "Count": "1"
       }
     ],
-    "Temporal granularity": [
-      "Year",
-      "Month",
-      "Date"
-    ],
-    "Geographic granularity": [
-      "Category",
-      "Setting",
-      "Diagnosis"
-    ]
+    "Temporal granularity": ["Year", "Month", "Date"],
+    "Geographic granularity": ["Category", "Setting", "Diagnosis"]
   },
   {
     "Table name": "Alternative Fueling Station Locations",
@@ -4717,11 +4341,7 @@
         "Restricted Access": ""
       }
     ],
-    "Temporal granularity": [
-      "Open Date",
-      "Date Last Confirmed",
-      "Updated At"
-    ],
+    "Temporal granularity": ["Open Date", "Date Last Confirmed", "Updated At"],
     "Geographic granularity": [
       "Street Address",
       "City",
@@ -4762,13 +4382,8 @@
         "Age-adjusted Death Rate": "2473.1"
       }
     ],
-    "Temporal granularity": [
-      "Year"
-    ],
-    "Geographic granularity": [
-      "Race",
-      "Sex"
-    ]
+    "Temporal granularity": ["Year"],
+    "Geographic granularity": ["Race", "Sex"]
   },
   {
     "Table name": "People Receiving Homeless Response Services by Age, Race, and Gender",
@@ -4803,13 +4418,8 @@
         "EXPERIENCING_HOMELESSNESS_CNT": "59247"
       }
     ],
-    "Temporal granularity": [
-      "CALENDAR_YEAR"
-    ],
-    "Geographic granularity": [
-      "LOCATION_ID",
-      "LOCATION"
-    ]
+    "Temporal granularity": ["CALENDAR_YEAR"],
+    "Geographic granularity": ["LOCATION_ID", "LOCATION"]
   },
   {
     "Table name": "Behavioral Risk Factor Data: Tobacco Use (2011 to present)",
@@ -4921,22 +4531,14 @@
         "DisplayOrder": "27"
       }
     ],
-    "Temporal granularity": [
-      "YEAR"
-    ],
-    "Geographic granularity": [
-      "LocationAbbr",
-      "LocationDesc",
-      "GeoLocation"
-    ]
+    "Temporal granularity": ["YEAR"],
+    "Geographic granularity": ["LocationAbbr", "LocationDesc", "GeoLocation"]
   },
   {
     "Table name": "Quarterly Census of Employment and Wages (QCEW)",
     "Table schema": "{\"column_names\":[\"Area Type\",\"Area Name\",\"Year\",\"Time Period\",\"Ownership\",\"NAICS Level\",\"NAICS Code\",\"Industry Name\",\"Establishments\",\"Average Monthly Employment\",\"1st Month Emp\",\"2nd Month Emp\",\"3rd Month Emp\",\"Total Wages (All Workers)\",\"Average Weekly Wages\"],\"data_types\":[\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"number\",\"number\",\"number\",\"number\",\"number\",\"number\",\"number\"]}",
     "Table description": "The Quarterly Census of Employment and Wages (QCEW) Program is a Federal-State cooperative program between the U.S. Department of Labor\u2019s Bureau of Labor Statistics (BLS) and the California EDD\u2019s Labor Market Information Division (LMID). The QCEW program produces a comprehensive tabulation of employment and wage information for workers covered by California Unemployment Insurance (UI) laws and Federal workers covered by the Unemployment Compensation for Federal Employees (UCFE) program.\r\n\r\nThe QCEW program serves as a near census of monthly employment and quarterly wage information by 6-digit industry codes from the North American Industry Classification System (NAICS) at the national, state, and county levels. At the national level, the QCEW program publishes employment and wage data for nearly every NAICS industry. At the state and local area level, the QCEW program publishes employment and wage data down to the 6-digit NAICS industry level, if disclosure restrictions are met. In accordance with the BLS policy, data provided to the Bureau in confidence are used only for specified statistical purposes and are not published. The BLS withholds publication of Unemployment Insurance law-covered employment and wage data for any industry level when necessary to protect the identity of cooperating employers.\r\n\r\nData from the QCEW program serve as an important input to many BLS programs. The Current Employment Statistics and the Occupational Employment Statistics programs use the QCEW data as the benchmark source for employment. The UI administrative records collected under the QCEW program serve as a sampling frame for the BLS establishment surveys.\r\n\r\nIn addition, the data serve as an input to other federal and state programs. The Bureau of Economic Analysis (BEA) of the Department of Commerce uses the QCEW data as the base for developing the wage and salary component of personal income.\r\n\r\nThe U.S. Department of Labor\u2019s Employment and Training Administration (ETA) and California's EDD use the QCEW data to administer the Unemployment Insurance program. The QCEW data accurately reflect the extent of coverage of California\u2019s UI laws and are used to measure UI revenues; national, state and local area employment; and total and UI taxable wage trends.\r\n\r\nThe U.S. Department of Labor\u2019s Bureau of Labor Statistics publishes new QCEW data in its County Employment and Wages news release on a quarterly basis. The BLS also publishes a subset of its quarterly data through the Create Customized Tables system, and full quarterly industry detail data at all geographic levels.",
-    "Table tags": [
-      "qcew"
-    ],
+    "Table tags": ["qcew"],
     "Column numbers": 15,
     "Popularity": 1497,
     "Previous queries": "{\"queries\":[\"What are the data analytics tasks for the Quarterly Census of Employment and Wages (QCEW) table?\"]}",
@@ -4977,24 +4579,14 @@
         "Average Weekly Wages": "1319"
       }
     ],
-    "Temporal granularity": [
-      "Year",
-      "Time Period"
-    ],
-    "Geographic granularity": [
-      "Area Type",
-      "Area Name"
-    ]
+    "Temporal granularity": ["Year", "Time Period"],
+    "Geographic granularity": ["Area Type", "Area Name"]
   },
   {
     "Table name": "2010 Census Populations by Zip Code",
     "Table schema": "{\"column_names\":[\"Zip Code\",\"Total Population\",\"Median Age\",\"Total Males\",\"Total Females\",\"Total Households\",\"Average Household Size\"],\"data_types\":[\"string\",\"integer\",\"float\",\"integer\",\"integer\",\"integer\",\"float\"]}",
     "Table description": "This data comes from the 2010 Census Profile of General Population and Housing Characteristics. Zip codes are limited to those that fall at least partially within LA city boundaries. The dataset will be updated after the next census in 2020. \nTo view all possible columns and access the data directly, visit http://factfinder.census.gov/faces/affhelp/jsf/pages/metadata.xhtml?lang=en&type=table&id=table.en.DEC_10_SF1_SF1DP1#main_content.",
-    "Table tags": [
-      "census",
-      "population",
-      "zip-code"
-    ],
+    "Table tags": ["census", "population", "zip-code"],
     "Column numbers": 7,
     "Popularity": 8750,
     "Previous queries": "{\"queries\":[\"What are some data analytics tasks that can be performed for the '2010 Census Populations by Zip Code' table?\"]}",
@@ -5019,12 +4611,8 @@
         "Average Household Size": "4.4"
       }
     ],
-    "Temporal granularity": [
-      "Median Age"
-    ],
-    "Geographic granularity": [
-      "Zip Code"
-    ]
+    "Temporal granularity": ["Median Age"],
+    "Geographic granularity": ["Zip Code"]
   },
   {
     "Table name": "U.S. Monthly Climate Normals (1981-2010)",
@@ -5095,9 +4683,7 @@
         "MLY-PRCP-NORMAL": "44"
       }
     ],
-    "Temporal granularity": [
-      "DATE"
-    ],
+    "Temporal granularity": ["DATE"],
     "Geographic granularity": [
       "STATION",
       "STATION_NAME",
@@ -5136,20 +4722,14 @@
         "Total": "8477"
       }
     ],
-    "Temporal granularity": [
-      "Month/Year"
-    ],
+    "Temporal granularity": ["Month/Year"],
     "Geographic granularity": []
   },
   {
     "Table name": "Average Daily Traffic Counts",
     "Table schema": "{\"column_names\":[\"ID\",\"Traffic Volume Count Location  Address\",\"Street\",\"Date of Count\",\"Total Passing Vehicle Volume\",\"Vehicle Volume By Each Direction of Traffic\",\"Latitude\",\"Longitude\",\"Location\"],\"data_types\":[\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\"]}",
     "Table description": "Average Daily Traffic (ADT) counts are analogous to a census count of vehicles on city streets. These counts provide a close approximation to the actual number of vehicles passing through a given location on an average weekday. Since it is not possible to count every vehicle on every city street, sample counts are taken along larger streets to get an estimate of traffic on half-mile or one-mile street segments. ADT counts are used by city planners, transportation engineers, real-estate developers, marketers and many others for myriad planning and operational purposes.\r\nData Owner: Transportation.\r\nTime Period: 2006.\r\nFrequency: A citywide count is taken approximately every 10 years. A limited number of traffic counts will be taken and added to the list periodically.\r\nRelated Applications: Traffic Information Interactive Map (http://webapps.cityofchicago.org/traffic/).",
-    "Table tags": [
-      "streets",
-      "sustainability",
-      "traffic"
-    ],
+    "Table tags": ["streets", "sustainability", "traffic"],
     "Column numbers": 9,
     "Popularity": 9703,
     "Previous queries": "{\"queries\":[\"data analytics tasks for table Average Daily Traffic Counts\"]}",
@@ -5178,14 +4758,8 @@
         "Location": "(41.756542, -87.617335)"
       }
     ],
-    "Temporal granularity": [
-      "Date of Count"
-    ],
-    "Geographic granularity": [
-      "Latitude",
-      "Longitude",
-      "Location"
-    ]
+    "Temporal granularity": ["Date of Count"],
+    "Geographic granularity": ["Latitude", "Longitude", "Location"]
   },
   {
     "Table name": "Center for Medicare & Medicaid Services (CMS) , Medicare Claims data",
@@ -5267,13 +4841,8 @@
         "GeoLocation": ""
       }
     ],
-    "Temporal granularity": [
-      "YearStart"
-    ],
-    "Geographic granularity": [
-      "LocationAbbr",
-      "LocationDesc"
-    ]
+    "Temporal granularity": ["YearStart"],
+    "Geographic granularity": ["LocationAbbr", "LocationDesc"]
   },
   {
     "Table name": "Biodiversity by County - Distribution of Animals, Plants and Natural Communities",
@@ -5320,12 +4889,8 @@
         "Distribution Status": "Recently Confirmed"
       }
     ],
-    "Temporal granularity": [
-      "Year Last Documented"
-    ],
-    "Geographic granularity": [
-      "County"
-    ]
+    "Temporal granularity": ["Year Last Documented"],
+    "Geographic granularity": ["County"]
   },
   {
     "Table name": "Licensed Drivers, by state, gender, and age group",
@@ -5360,12 +4925,8 @@
         "Drivers": "0"
       }
     ],
-    "Temporal granularity": [
-      "Year"
-    ],
-    "Geographic granularity": [
-      "State"
-    ]
+    "Temporal granularity": ["Year"],
+    "Geographic granularity": ["State"]
   },
   {
     "Table name": "Jobs NYC Postings",
@@ -5461,22 +5022,13 @@
       "Posting Updated",
       "Process Date"
     ],
-    "Geographic granularity": [
-      "Work Location",
-      "Work Location 1"
-    ]
+    "Geographic granularity": ["Work Location", "Work Location 1"]
   },
   {
     "Table name": "2020 Presidential General Election Results",
     "Table schema": "{\"column_names\":[\"Sub Category\",\"WEB URL\"],\"data_types\":[\"string\",\"string\"]}",
     "Table description": "The Cumulative Report includes complete official election results for the 2020 Presidential General Election as of November 29, 2020. Results are released in three separate reports:\n\nThe Vote By Mail 1 report contains complete results for ballots received by the Board of Elections on or before October 21, 2020, that could be accepted and opened before Election Day.\nThe Vote By Mail 2 Canvass report contains complete results for all remaining Vote By Mail ballots that were received in a drop box or in person at the Board of Elections by 8:00pm on November 3, or were postmarked by November 3 and received timely by the Board of Elections by 10:00am on Friday, November 13. The Vote By Mail 2 Canvass begins on Thursday, November 5.\nThe Provisional Canvass contains complete results for all provisional ballots issued to voters at Early Voting or on Election Day. \nFor more information on this process, please visit the 2020 Presidential General Election Ballot Canvass webpage at https://www.montgomerycountymd.gov/Elections/2020GeneralElection/general-ballot-canvass.html. For turnout information, please visit the Maryland State Board of Elections Press Room webpage at https://elections.maryland.gov/press_room/index.html.",
-    "Table tags": [
-      "2020",
-      "election",
-      "general",
-      "presidential",
-      "results"
-    ],
+    "Table tags": ["2020", "election", "general", "presidential", "results"],
     "Column numbers": 2,
     "Popularity": 5770,
     "Previous queries": "{\"queries\":[\"list tasks for 2020 Presidential General Election Results table\"]}",
@@ -5533,9 +5085,7 @@
         "Medical Average Product Price": "34.89"
       }
     ],
-    "Temporal granularity": [
-      "Week Ending"
-    ],
+    "Temporal granularity": ["Week Ending"],
     "Geographic granularity": []
   },
   {
@@ -5592,9 +5142,7 @@
       "Agency Start Date",
       "Leave Status as of June 30"
     ],
-    "Geographic granularity": [
-      "Work Location Borough"
-    ]
+    "Geographic granularity": ["Work Location Borough"]
   },
   {
     "Table name": "COVID-19 Cases, Tests, and Deaths by ZIP Code",
@@ -5660,25 +5208,14 @@
         "ZIP Code Location": "POINT (-87.653382 41.812017)"
       }
     ],
-    "Temporal granularity": [
-      "Week Number",
-      "Week Start",
-      "Week End"
-    ],
-    "Geographic granularity": [
-      "ZIP Code",
-      "ZIP Code Location"
-    ]
+    "Temporal granularity": ["Week Number", "Week Start", "Week End"],
+    "Geographic granularity": ["ZIP Code", "ZIP Code Location"]
   },
   {
     "Table name": "MTA Subway Stations and Complexes",
     "Table schema": "{\"column_names\":[\"Complex ID\",\"Is Complex\",\"Number Of Stations In Complex\",\"Stop Name\",\"Display Name\",\"Constituent Station Names\",\"Station IDs\",\"GTFS Stop IDs\",\"Borough\",\"Daytime Routes\",\"Structure Type\",\"Latitude\",\"Longitude\",\"ADA\",\"ADA Notes\"],\"data_types\":[\"string\",\"boolean\",\"integer\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"string\",\"float\",\"float\",\"integer\",\"string\"]}",
     "Table description": "A dataset listing all subway and Staten Island Railway stations, with data aggregated by station complex. This dataset includes information on station names, their locations, Station IDs, Complex IDs, GTFS Stop IDs, the services that stop there, the type of structure the station is on or in, and their ADA-accessibility status.",
-    "Table tags": [
-      "staten-island-railway",
-      "stations",
-      "subways"
-    ],
+    "Table tags": ["staten-island-railway", "stations", "subways"],
     "Column numbers": 15,
     "Popularity": 1248,
     "Previous queries": "{\"queries\":[\"data analytics tasks for 'MTA Subway Stations and Complexes' table\"]}",
@@ -5719,13 +5256,8 @@
         "ADA Notes": ""
       }
     ],
-    "Temporal granularity": [
-      "Daytime Routes"
-    ],
-    "Geographic granularity": [
-      "Borough",
-      "Structure Type"
-    ]
+    "Temporal granularity": ["Daytime Routes"],
+    "Geographic granularity": ["Borough", "Structure Type"]
   },
   {
     "Table name": "Global Historical Climatology Network - Daily (GHCN-Daily), Version 3",
@@ -5786,9 +5318,7 @@
         "PRCP": "0"
       }
     ],
-    "Temporal granularity": [
-      "DATE"
-    ],
+    "Temporal granularity": ["DATE"],
     "Geographic granularity": [
       "STATION",
       "STATION_NAME",
@@ -5844,10 +5374,7 @@
         "site_elevation": "149.0"
       }
     ],
-    "Temporal granularity": [
-      "system_id",
-      "site_id"
-    ],
+    "Temporal granularity": ["system_id", "site_id"],
     "Geographic granularity": [
       "site_location",
       "site_latitude",
@@ -5924,10 +5451,7 @@
         "DeathCityGeo": null
       }
     ],
-    "Temporal granularity": [
-      "Date",
-      "Date Type"
-    ],
+    "Temporal granularity": ["Date", "Date Type"],
     "Geographic granularity": [
       "Residence City",
       "Residence County",
@@ -5950,9 +5474,7 @@
     "Table name": "Power Outages - Zipcode",
     "Table schema": "{\"column_names\":[\"uid\",\"area\",\"outages\",\"dt_stamp\"],\"data_types\":[\"string\",\"string\",\"number\",\"string\"]}",
     "Table description": "Contains aggregated power outage data by ZIP Code. Limited historical record inventory. Designed for and consumed by the MEMA Power Outage web application.",
-    "Table tags": [
-      "power-outages"
-    ],
+    "Table tags": ["power-outages"],
     "Column numbers": 4,
     "Popularity": 4916,
     "Previous queries": "{\"queries\":[\"data analysis tasks for Power Outages - Zipcode table\",\"machine learning tasks for Power Outages - Zipcode table\",\"business intelligence tasks for Power Outages - Zipcode table\"]}",
@@ -5971,12 +5493,8 @@
         "dt_stamp": "03/11/2024 11:15:36 PM"
       }
     ],
-    "Temporal granularity": [
-      "dt_stamp"
-    ],
-    "Geographic granularity": [
-      "area"
-    ]
+    "Temporal granularity": ["dt_stamp"],
+    "Geographic granularity": ["area"]
   },
   {
     "Table name": "Medicare Monthly Enrollment",
@@ -6055,10 +5573,7 @@
         "PRSCRPTN_DRUG_NO_LIS_BENES": "387510.0"
       }
     ],
-    "Temporal granularity": [
-      "YEAR",
-      "MONTH"
-    ],
+    "Temporal granularity": ["YEAR", "MONTH"],
     "Geographic granularity": [
       "BENE_GEO_LVL",
       "BENE_STATE_ABRVTN",
@@ -6099,13 +5614,8 @@
         "Number of Employees": "2"
       }
     ],
-    "Temporal granularity": [
-      "Update Frequency"
-    ],
-    "Geographic granularity": [
-      "Position Title",
-      "Grade"
-    ]
+    "Temporal granularity": ["Update Frequency"],
+    "Geographic granularity": ["Position Title", "Grade"]
   },
   {
     "Table name": "Employment, Unemployment, and Labor Force Data",
@@ -6150,10 +5660,7 @@
         "Unemployment Rate": "3.6"
       }
     ],
-    "Temporal granularity": [
-      "Year",
-      "Month"
-    ],
+    "Temporal granularity": ["Year", "Month"],
     "Geographic granularity": []
   },
   {
@@ -6189,12 +5696,8 @@
         "Motorcycle": "0"
       }
     ],
-    "Temporal granularity": [
-      "year"
-    ],
-    "Geographic granularity": [
-      "state"
-    ]
+    "Temporal granularity": ["year"],
+    "Geographic granularity": ["state"]
   },
   {
     "Table name": "DOHMH Dog Bite Data",
@@ -6229,12 +5732,7 @@
         "ZipCode": ""
       }
     ],
-    "Temporal granularity": [
-      "DateOfBite"
-    ],
-    "Geographic granularity": [
-      "Borough",
-      "ZipCode"
-    ]
+    "Temporal granularity": ["DateOfBite"],
+    "Geographic granularity": ["Borough", "ZipCode"]
   }
 ]
