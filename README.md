@@ -86,6 +86,35 @@ npm start
 
 - The application should now be running at http://localhost:3000 and is ready for use
 
+### Troubleshooting
+
+This section addresses common issues you may encounter while setting up the application. Follow these steps to troubleshoot and resolve the issues.
+
+- **`ModuleNotFoundError`: No module named 'backend.app'**
+
+This error indicates that the application cannot locate the required module, possibly due to environment variables not being set correctly. Perform the following steps:
+
+```bash
+chmod +x setenv.sh  # Ensure the setenv.sh script is executable
+source ./setenv.sh  # Execute the setenv.sh script to set the necessary environment variables
+```
+
+- **Database connection issue:**
+
+If you're experiencing difficulties connecting to the PostgreSQL database, follow these steps for a possible solution:
+
+- Connect to PostgreSQL server as a superuser, often the default `postgres` user:
+
+```bash
+psql -U postgres
+```
+
+- Create the database:
+
+```bash
+CREATE DATABASE dbname;
+```
+
 ## Usage
 
 After launching the frontend application, you will be presented with an interface that allows you to interact with the chatbot, explore datasets, and view detailed metadata for each dataset (under development)
