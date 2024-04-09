@@ -29,6 +29,11 @@ def hyse_search(initial_query):
 
     # Step 3: Cosine similarity search between e(hypo_schema_embed) and e(existing_scheme_embed)
     initial_results = cos_sim_search(hypo_schema_embedding)
+    
+    # Step 4: Cosine similarity search between e(query) and e(existing_prev_queries_embed)
+    query_embedding = openai_client.generate_embeddings(text=initial_query)
+    initial_results = cos_sim_search(query_embedding, column_name="query_embed")
+    
     initial_results_formatted = format_cos_sim_results(initial_results)
     
     return initial_results_formatted
