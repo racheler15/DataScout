@@ -1,70 +1,90 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import MessageList from './MessageList';
 import InputArea from './InputArea';
 import { Box } from '@mui/material';
 import CircularProgress from '@mui/material/CircularProgress';
-
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
 
 function ChatContainer() {
     const [messages, setMessages] = useState([]);
     const [isInitialMessage, setIsInitialMessage] = useState(true);
     const [threadId, setThreadId] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
 
+    useEffect(() => {
+        const savedThreadId = sessionStorage.getItem('threadId');
+        if (savedThreadId) {
+            setThreadId(savedThreadId);
+        } else {
+            startNewThread();
+        }
+    }, []);
 
-    // Start a new thread (call this when initiating a new conversation)
-    // TODO: add a start new thread UI
     const startNewThread = async () => {
+        setIsLoading(true);
         try {
-            const response = await axios.post('http://localhost:5000/api/start_chat');
-
+            const response = await axios.post('http://127.0.0.1:5000/api/start_chat');
             const { thread_id } = response.data;
+            sessionStorage.setItem('threadId', thread_id);
             setThreadId(thread_id);
         } catch (error) {
             console.error('Error starting a new thread:', error);
+            setError('Could not start a new chat thread. Please try again.');
         }
+        setIsLoading(false);
     };
 
     const formatSearchResults = (results) => {
-        return results.map((result, index) => `${index + 1}. ${result.table_name} (Similarity: ${result.cosine_similarity.toFixed(2)})`).join('\n');
+        return results.map((result, index) =>
+            `${index + 1}. ${result.table_name} (Similarity: ${result.cosine_similarity.toFixed(2)})`
+        ).join('\n');
     };
 
     const sendMessage = async (messageText) => {
-        const apiUrl = isInitialMessage ? 'http://127.0.0.1:5000/api/hyse_search' : 'http://127.0.0.1:5000/api/your_chat_endpoint';
+        if (!threadId) {
+            setError('There is no active chat thread. Please start a new chat.');
+            return;
+        }
 
-        setIsLoading(true); // Start loading
+        const apiUrl = isInitialMessage
+            ? 'http://127.0.0.1:5000/api/hyse_search'
+            : 'http://127.0.0.1:5000/api/refine_search_space';
+
+        setIsLoading(true);
 
         try {
             const response = await axios.post(apiUrl, {
+                thread_id: threadId, // Pass the threadId to the backend
                 query: messageText,
             });
 
-            let replyText;
-            if (isInitialMessage) {
-                // Format the search results for display
-                replyText = formatSearchResults(response.data);
-            } else {
-                // Handle subsequent messages differently
-                replyText = response.data.reply;
-            }
-
             const newMessage = { id: messages.length + 1, text: messageText, sender: 'user' };
+            const replyText = isInitialMessage
+                ? formatSearchResults(response.data)
+                : response.data.reply;
+
             const reply = {
                 id: messages.length + 2,
-                data: response.data,
-                sender: 'bot'
+                text: replyText,
+                sender: 'bot',
             };
 
-            setMessages([...messages, newMessage, reply]);
-            setIsInitialMessage(false); // Set to false after the first message
+            setMessages(prevMessages => [...prevMessages, newMessage, reply]);
+            setIsInitialMessage(false);
         } catch (error) {
             console.error('Error sending message:', error);
+            setError('Could not send the message. Please try again.');
         }
 
-        setIsLoading(false); // End loading
+        setIsLoading(false);
     };
 
+    const handleCloseSnackbar = () => {
+        setError('');
+    };
 
     return (
         <Box sx={{
@@ -72,20 +92,19 @@ function ChatContainer() {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            width: '100%', // Take up 100% of the container width
-            maxWidth: '80%', // Max width set for large screens
-            height: '100vh', // Full height of the viewport
-            margin: 'auto', // Center the box
-            paddingBottom: '56px' // Padding at the bottom for the input area
+            width: '100%',
+            maxWidth: '80%',
+            height: '100vh',
+            margin: 'auto',
+            paddingBottom: '56px'
         }}>
             <Box sx={{
-                width: '100%', // Ensure that MessageList takes full width
+                width: '100%',
                 overflow: 'auto',
                 flexGrow: 1,
-                marginBottom: '8px' // Match bottom margin to InputArea top margin
+                marginBottom: '8px'
             }}>
                 <MessageList messages={messages} />
-                {/* Show the CircularProgress component when isLoading is true */}
                 {isLoading && (
                     <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
                         <CircularProgress />
@@ -93,6 +112,11 @@ function ChatContainer() {
                 )}
             </Box>
             <InputArea onSendMessage={sendMessage} />
+            <Snackbar open={!!error} autoHideDuration={6000} onClose={handleCloseSnackbar}>
+                <Alert onClose={handleCloseSnackbar} severity="error" sx={{ width: '100%' }}>
+                    {error}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 }
