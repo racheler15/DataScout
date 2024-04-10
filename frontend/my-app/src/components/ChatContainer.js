@@ -15,16 +15,19 @@ function ChatContainer() {
     const [error, setError] = useState('');
 
     useEffect(() => {
-        const savedThreadId = sessionStorage.getItem('threadId');
-        if (savedThreadId) {
-            setThreadId(savedThreadId);
-        } else {
-            startNewThread();
-        }
+        startNewThread();
+
+        // const savedThreadId = sessionStorage.getItem('threadId');
+        // if (savedThreadId) {
+        //     setThreadId(savedThreadId);
+        // } else {
+        //     startNewThread();
+        // }
     }, []);
 
     const startNewThread = async () => {
         setIsLoading(true);
+
         try {
             const response = await axios.post('http://127.0.0.1:5000/api/start_chat');
             const { thread_id } = response.data;
@@ -34,6 +37,7 @@ function ChatContainer() {
             console.error('Error starting a new thread:', error);
             setError('Could not start a new chat thread. Please try again.');
         }
+
         setIsLoading(false);
     };
 
@@ -49,31 +53,49 @@ function ChatContainer() {
             return;
         }
 
-        const apiUrl = isInitialMessage
+        const chatHistoryUrl = 'http://127.0.0.1:5000/api/update_chat_history'
+
+        const searchUrl = isInitialMessage
             ? 'http://127.0.0.1:5000/api/hyse_search'
             : 'http://127.0.0.1:5000/api/refine_search_space';
 
         setIsLoading(true);
 
         try {
-            const response = await axios.post(apiUrl, {
-                thread_id: threadId, // Pass the threadId to the backend
+            // Update the chat history
+            const chatHistoryResponse = await axios.post(chatHistoryUrl, {
+                thread_id: threadId,
                 query: messageText,
             });
 
-            const newMessage = { id: messages.length + 1, text: messageText, sender: 'user' };
-            const replyText = isInitialMessage
-                ? formatSearchResults(response.data)
-                : response.data.reply;
+            console.log(chatHistoryResponse)
 
-            const reply = {
-                id: messages.length + 2,
-                text: replyText,
-                sender: 'bot',
-            };
+            // Check if chat history update was successful before proceeding
+            if (chatHistoryResponse.data.success) {
+                // Perform the hyse search or refinement based on the initial message status
+                const searchResponse = await axios.post(searchUrl, {
+                    thread_id: threadId,
+                    query: messageText,
+                });
 
-            setMessages(prevMessages => [...prevMessages, newMessage, reply]);
-            setIsInitialMessage(false);
+                const newMessage = { id: messages.length + 1, text: messageText, sender: 'user' };
+                const replyText = isInitialMessage
+                    ? formatSearchResults(searchResponse.data)
+                    : searchResponse.data.reply;
+
+                const reply = {
+                    id: messages.length + 2,
+                    text: replyText,
+                    sender: 'bot',
+                };
+
+                setMessages(prevMessages => [...prevMessages, newMessage, reply]);
+                setIsInitialMessage(false);
+            } else {
+                // Handle failure to update chat history
+                console.error('Failed to update chat history:', chatHistoryResponse.data.error);
+                setError('Could not update chat history. Please try again.');
+            }
         } catch (error) {
             console.error('Error sending message:', error);
             setError('Could not send the message. Please try again.');
