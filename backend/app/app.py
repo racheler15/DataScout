@@ -4,7 +4,7 @@ from uuid import uuid4
 import logging
 from backend.app.table_representation.openai_client import OpenAIClient
 from backend.app.hyse.hypo_schema_search import hyse_search
-from backend.app.actions.infer_action import infer_action
+from backend.app.actions.infer_action import infer_action, infer_mentioned_metadata_fields
 
 # Flask app configuration
 app = Flask(__name__)
@@ -100,12 +100,29 @@ def refine_search_space():
         return jsonify({"success": False, "error": "Invalid or missing thread_id"}), 400
     
     try:
+        # Get user current and previous queries
         cur_chat_history = chat_history[thread_id]
         cur_query, prev_query = cur_chat_history[-1]["text"], cur_chat_history[-2]["text"]
+
+        # Determine action (reset / refine) based on query delta
         inferred_action = infer_action(cur_query=cur_query, prev_query=prev_query)
+        logging.info(f"Inferred action for current query '{cur_query}' and previous query '{prev_query}': {inferred_action.model_dump()}")
+
+        # Neither reset nor refine: error with LLM inference
+        # TODO: implement retry mechanism
+        if not inferred_action.reset and not inferred_action.refine:
+            logging.error(f"Action inference failed: neither action was identified")
+            return jsonify({"error": "Action inference failed"}), 500
         
-        logging.info(f"Inferred action for current query '{cur_query}' and previous query '{prev_query}': {inferred_action.to_dict()}")
-        return jsonify(inferred_action.to_dict()), 200 
+        # If reset: restore last search results
+        if inferred_action.reset:
+            pass
+        
+        # Identify mentioned metadata fields in user current query
+        inferred_fields = infer_mentioned_metadata_fields(cur_query=cur_query)
+        logging.info(f"Inferred mentioned metadata fields for current query '{cur_query}': {inferred_fields.model_dump()}")
+        return jsonify(inferred_fields.model_dump()), 200
+        
     except Exception as e:
         logging.error(f"Action inference failed, Error: {e}")
         return jsonify({"error": "Action inference failed due to an internal error"}), 500
