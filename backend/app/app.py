@@ -4,6 +4,7 @@ from uuid import uuid4
 import logging
 from backend.app.table_representation.openai_client import OpenAIClient
 from backend.app.hyse.hypo_schema_search import hyse_search
+from backend.app.actions.infer_action import infer_action
 
 # Flask app configuration
 app = Flask(__name__)
@@ -90,6 +91,24 @@ def initial_search():
         logging.error(f"Search failed for query: {initial_query}, Error: {e}")
         return jsonify({"error": "Search failed due to an internal error"}), 500
 
+@app.route('/api/refine_search_space', methods=['POST'])
+def refine_search_space():
+    thread_id = request.get_json().get('thread_id')
+
+    # Validate thread_id and query presence
+    if not thread_id or thread_id not in chat_history:
+        return jsonify({"success": False, "error": "Invalid or missing thread_id"}), 400
+    
+    try:
+        cur_chat_history = chat_history[thread_id]
+        cur_query, prev_query = cur_chat_history[-1]["text"], cur_chat_history[-2]["text"]
+        inferred_action = infer_action(cur_query=cur_query, prev_query=prev_query)
+        
+        logging.info(f"Inferred action for current query '{cur_query}' and previous query '{prev_query}': {inferred_action.to_dict()}")
+        return jsonify(inferred_action.to_dict()), 200 
+    except Exception as e:
+        logging.error(f"Action inference failed, Error: {e}")
+        return jsonify({"error": "Action inference failed due to an internal error"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
