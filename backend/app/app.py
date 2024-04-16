@@ -4,7 +4,7 @@ from uuid import uuid4
 import logging
 from backend.app.table_representation.openai_client import OpenAIClient
 from backend.app.hyse.hypo_schema_search import hyse_search
-from backend.app.actions.infer_action import infer_action, infer_mentioned_metadata_fields
+from backend.app.actions.infer_action import infer_action, infer_mentioned_metadata_fields, text_to_sql
 
 # Flask app configuration
 app = Flask(__name__)
@@ -118,10 +118,22 @@ def refine_search_space():
         if inferred_action.reset:
             pass
         
-        # Identify mentioned metadata fields in user current query
-        inferred_fields = infer_mentioned_metadata_fields(cur_query=cur_query)
-        logging.info(f"Inferred mentioned metadata fields for current query '{cur_query}': {inferred_fields.model_dump()}")
-        return jsonify(inferred_fields.model_dump()), 200
+        # Identify mentioned semantic metadata fields in user current query
+        inferred_semantic_fields = infer_mentioned_metadata_fields(cur_query=cur_query, semantic_metadata=True)
+        logging.info(f"Inferred mentioned semantic metadata fields for current query '{cur_query}': {inferred_semantic_fields.model_dump()}")
+        
+        # Identify mentioned raw metadata fields in user current query
+        inferred_raw_fields = infer_mentioned_metadata_fields(cur_query=cur_query, semantic_metadata=False)
+        logging.info(f"Inferred mentioned raw metadata fields for current query '{cur_query}': {inferred_raw_fields.model_dump()}")
+
+        # If user mentions raw metadata fields in their query, excute text to sql
+        if len(inferred_raw_fields.metadata_fields) > 0:
+            sql_clauses = text_to_sql(cur_query, inferred_raw_fields)
+            logging.info(f"Inferred SQL clauses for current query '{cur_query}': {sql_clauses.model_dump()}")
+
+        # Parse inferred sql clauses & inject into query template
+
+        return jsonify(sql_clauses.model_dump()), 200
         
     except Exception as e:
         logging.error(f"Action inference failed, Error: {e}")

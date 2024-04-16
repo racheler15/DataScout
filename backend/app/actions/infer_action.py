@@ -1,6 +1,7 @@
 from backend.app.table_representation.openai_client import OpenAIClient
 from backend.app.utils import format_prompt
 from pydantic import BaseModel
+import logging
 
 # Initialize OpenAI client
 openai_client = OpenAIClient()
@@ -17,8 +18,8 @@ Current query: "{cur_query}"
 Should the search space be reset or refined?
 """
 
+# TODO: Add examples in prompt to facilitate the metadata inference
 # Craft mentioned metadata fields inference prompt
-# TODO: For the generated sql clause, need to further check its validity
 PROMPT_SEMANTIC_METADATA_INFER = """
 Given the user's current query, analyze and determine which fields are being referenced. These fields include:
 - Table Schema
@@ -44,6 +45,7 @@ Current user query: "{cur_query}"
 Identify any raw metadata fields that are explicitly mentioned or implied by the query. Provide a concise list of these fields.
 """
 
+# TODO: For the generated sql clause, need to further check its validity
 PROMPT_SQL_TRANSLATION = """
 Given a list of previously identified fields from the user's query, generate SQL WHERE clause conditions that align with the user's search intentions. This task focuses on translating these field references into SQL queries.
 
@@ -67,29 +69,59 @@ class Action(BaseModel):
 
 class MentionedMetadata(BaseModel):
     metadata_fields: list[str]
-    conditions: list[str]
+
+class TextToSQL(BaseModel):
+    raw_metadata_fields: list[str]
+    sql_where_clause: list[str]
 
 
 def infer_action(cur_query, prev_query):
-    prompt = format_prompt(PROMPT_ACTION_INFER, cur_query=cur_query, prev_query=prev_query)
+    try:
+        prompt = format_prompt(PROMPT_ACTION_INFER, cur_query=cur_query, prev_query=prev_query)
 
-    response_model = Action
+        response_model = Action
 
-    messages = [
-        {"role": "system", "content": "You are an assistant skilled in search related decision making."},
-        {"role": "user", "content": prompt}
-    ]
+        messages = [
+            {"role": "system", "content": "You are an assistant skilled in search related decision making."},
+            {"role": "user", "content": prompt}
+        ]
 
-    return openai_client.infer_metadata(messages, response_model)
+        return openai_client.infer_metadata(messages, response_model)
+    except Exception as e:
+        logging.error(f"Failed to infer reset/refine action: {e}")
+        raise RuntimeError("Failed to process the action inference.") from e
 
-def infer_mentioned_metadata_fields(cur_query):
-    prompt = format_prompt(PROMPT_METADATA_INFER, cur_query=cur_query)
+def infer_mentioned_metadata_fields(cur_query, semantic_metadata=True):
+    try:
+        if semantic_metadata:
+            prompt = format_prompt(PROMPT_SEMANTIC_METADATA_INFER, cur_query=cur_query)
+        else:
+            prompt = format_prompt(PROMPT_RAW_METADATA_INFER, cur_query=cur_query)
+        
+        response_model = MentionedMetadata
 
-    response_model = MentionedMetadata
+        messages = [
+            {"role": "system", "content": "You are an assistant skilled in search related decision making."},
+            {"role": "user", "content": prompt}
+        ]
 
-    messages = [
-        {"role": "system", "content": "You are an assistant skilled in search related decision making."},
-        {"role": "user", "content": prompt}
-    ]
+        return openai_client.infer_metadata(messages, response_model)
+    except Exception as e:
+        logging.error(f"Failed to infer metadata fields: {e}")
+        raise RuntimeError("Failed to process the metadata inference.") from e
 
-    return openai_client.infer_metadata(messages, response_model)
+def text_to_sql(cur_query, identified_fields):
+    try:
+        prompt = format_prompt(PROMPT_SQL_TRANSLATION, cur_query=cur_query, identified_fields=identified_fields)
+
+        response_model = TextToSQL
+
+        messages = [
+            {"role": "system", "content": "You are an assistant skilled in text to SQL translation."},
+            {"role": "user", "content": prompt}
+        ]
+
+        return openai_client.infer_metadata(messages, response_model)
+    except Exception as e:
+        logging.error(f"Failed to translate text to SQL: {e}")
+        raise RuntimeError("Failed to process the SQL translation.") from e
