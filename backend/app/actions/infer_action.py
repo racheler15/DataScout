@@ -8,8 +8,8 @@ openai_client = OpenAIClient()
 # Craft action inference prompt
 PROMPT_ACTION_INFER = """
 Given two queries in a search session, decide whether the new query is a "reset" or a "refine" in relation to the previous query.
-- A "reset" means the new query significantly differs from the previous query, indicating a change in the search domain or interest.
-- A "refine" means the new query builds upon or slightly alters the previous query, indicating a more focused search based on the earlier query.
+- A "reset" means the new query significantly differs from the previous query, indicating a change in the analytical task focus.
+- A "refine" means the new query builds upon or slightly alters the previous query, indicating a more focused analytical task based on the earlier query.
 
 Previous query: "{prev_query}"
 Current query: "{cur_query}"
@@ -19,26 +19,44 @@ Should the search space be reset or refined?
 
 # Craft mentioned metadata fields inference prompt
 # TODO: For the generated sql clause, need to further check its validity
-PROMPT_METADATA_INFER = """
-Analyze the user's current query to determine which metadata fields are being referenced. Consider the query's context and specifics to identify relevant metadata fields.
-Only focus on the fields that are directly mentioned or implied by the query.
+PROMPT_SEMANTIC_METADATA_INFER = """
+Given the user's current query, analyze and determine which fields are being referenced. These fields include:
+- Table Schema
+- Example Records
+- Table Description
+- Table Tags
 
-Metadata fields of interest include:
+Current user query: "{cur_query}"
+
+Identify any raw metadata fields that are explicitly mentioned or implied by the query. Provide a concise list of these fields.
+"""
+
+PROMPT_RAW_METADATA_INFER = """
+Given the user's current query, analyze and determine which fields are being referenced. These fields include:
 - Table Name
 - Column Numbers
 - Popularity
 - Temporal Granularity
 - Geographic Granularity
 
-Note: The query may also refer to other aspects, such as Table Schema, Example Records, Table Description, Table Tags, or Previous Queries, but these do not require SQL WHERE clause generation.
-
-Based on the analysis, if any of the primary metadata fields [Table Name, Column Numbers, Popularity, Temporal Granularity, Geographic Granularity] are mentioned, outline the SQL WHERE clause conditions that would refine the search according to the user's intent.
-
 Current user query: "{cur_query}"
 
-Please provide your analysis, including identified metadata fields and, if applicable, the corresponding SQL WHERE clause conditions in a clear and concise manner.
+Identify any raw metadata fields that are explicitly mentioned or implied by the query. Provide a concise list of these fields.
+"""
 
-For instance, if a user's query mentions wanting datasets with information from after the year 2020, the mentioned metadata fields should be "Temporal Granularity", and the SQL WHERE clause condition should be "year > 2020".
+PROMPT_SQL_TRANSLATION = """
+Given a list of previously identified fields from the user's query, generate SQL WHERE clause conditions that align with the user's search intentions. This task focuses on translating these field references into SQL queries.
+
+Identified fields: [{identified_fields}]
+Current user query: "{cur_query}"
+
+For each identified metadata field, create the corresponding SQL WHERE clause condition. Ensure the translation reflects any specific conditions mentioned in the query, such as precise dates, numerical ranges, or other descriptive qualifiers.
+
+For example, if "Temporal Granularity" is identified and the user specifies interest in data from after the year 2020, you should generate the SQL WHERE clause as follows:
+- Field: Temporal Granularity
+- SQL WHERE Clause: "year > 2020"
+
+List the SQL WHERE clauses for each identified metadata field in a structured and clear format.
 """
 
 
