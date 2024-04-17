@@ -85,7 +85,7 @@ def initial_search():
 
     try:
         initial_results = hyse_search(initial_query)
-        logging.info(f"Search successful for query: {initial_query}")
+        logging.info(f"✅Search successful for query: {initial_query}")
         return jsonify(initial_results), 200
     except Exception as e:
         logging.error(f"Search failed for query: {initial_query}, Error: {e}")
@@ -106,7 +106,7 @@ def refine_search_space():
 
         # Determine action (reset / refine) based on query delta
         inferred_action = infer_action(cur_query=cur_query, prev_query=prev_query)
-        logging.info(f"Inferred action for current query '{cur_query}' and previous query '{prev_query}': {inferred_action.model_dump()}")
+        logging.info(f"✅Inferred action for current query '{cur_query}' and previous query '{prev_query}': {inferred_action.model_dump()}")
 
         # Neither reset nor refine: error with LLM inference
         # TODO: implement retry mechanism
@@ -118,18 +118,23 @@ def refine_search_space():
         if inferred_action.reset:
             pass
         
-        # Identify mentioned semantic metadata fields in user current query
-        inferred_semantic_fields = infer_mentioned_metadata_fields(cur_query=cur_query, semantic_metadata=True)
-        logging.info(f"Inferred mentioned semantic metadata fields for current query '{cur_query}': {inferred_semantic_fields.model_dump()}")
-        
-        # Identify mentioned raw metadata fields in user current query
-        inferred_raw_fields = infer_mentioned_metadata_fields(cur_query=cur_query, semantic_metadata=False)
-        logging.info(f"Inferred mentioned raw metadata fields for current query '{cur_query}': {inferred_raw_fields.model_dump()}")
+        # Identify mentioned SEMANTIC metadata fields in user current query
+        inferred_semantic_fields = infer_mentioned_metadata_fields(cur_query=cur_query, semantic_metadata=True).get_true_fields()
+        logging.info(f"✅Inferred mentioned semantic metadata fields for current query '{cur_query}': {inferred_semantic_fields}")
 
-        # If user mentions raw metadata fields in their query, excute text to sql
-        if len(inferred_raw_fields.metadata_fields) > 0:
+        # If user mentions any semantic metadata fields in their query, run hyse again
+        if len(inferred_semantic_fields) > 0:
+            # run hyse again
+            pass
+
+        # Identify mentioned RAW metadata fields in user current query
+        inferred_raw_fields = infer_mentioned_metadata_fields(cur_query=cur_query, semantic_metadata=False).get_true_fields()
+        logging.info(f"✅Inferred mentioned raw metadata fields for current query '{cur_query}': {inferred_raw_fields}")
+
+        # If user mentions any raw metadata fields in their query, excute text to sql
+        if len(inferred_raw_fields) > 0:
             sql_clauses = text_to_sql(cur_query, inferred_raw_fields)
-            logging.info(f"Inferred SQL clauses for current query '{cur_query}': {sql_clauses.model_dump()}")
+            logging.info(f"✅Inferred SQL clauses for current query '{cur_query}': {sql_clauses.model_dump()}")
 
         # Parse inferred sql clauses & inject into query template
 
