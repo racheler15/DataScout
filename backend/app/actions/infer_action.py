@@ -54,6 +54,8 @@ Identified fields: {identified_fields}
 Current user query: "{cur_query}"
 
 For each identified metadata field, create the corresponding SQL WHERE clause condition. Ensure the translation reflects any specific conditions mentioned in the query, such as precise dates, numerical ranges, or other descriptive qualifiers.
+
+For example, if the fields 'Temporal Granularity' and 'Geographic Granularity' are identified in user's query 'I only want data in United States after 2020', the WHERE clause for temporal_granularity might be ">= '2020-01-01'", and the clause for geographic_granularity might be "= 'US'".
 """
 
 

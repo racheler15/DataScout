@@ -62,10 +62,19 @@ def update_chat_history():
         return jsonify({"success": False, "error": "Missing query content"}), 400
 
     try:
-        # Append the user query to the chat history
-        chat_history[thread_id].append({"sender": "user", "text": query})
+        # Identify metadata fields
+        semantic_fields_identified = infer_mentioned_metadata_fields(cur_query=query, semantic_metadata=True).get_true_fields()
+        raw_fields_identified = infer_mentioned_metadata_fields(cur_query=query, semantic_metadata=False).get_true_fields()
 
-        logging.info(f"Current chat history: {chat_history}")
+        # Update chat history with additional metadata field information
+        chat_history[thread_id].append({
+            "sender": "user",
+            "text": query,
+            "mention_semantic_fields": bool(semantic_fields_identified),
+            "mention_raw_fields": bool(raw_fields_identified)
+        })
+
+        logging.info(f"💬 Current chat history: {chat_history}")
         return jsonify({
                 "success": True,
                 "thread_id": thread_id,
@@ -104,7 +113,10 @@ def refine_search_space():
         cur_chat_history = chat_history[thread_id]
         cur_query, prev_query = cur_chat_history[-1]["text"], cur_chat_history[-2]["text"]
 
-        # Determine action (reset / refine) based on query delta
+        # Check if the current query mentions semantic / raw metadata fields
+        mention_semantic_fields, mention_raw_fields = cur_chat_history[-1]["mention_semantic_fields"], cur_chat_history[-1]["mention_raw_fields"]
+
+        # Step 1: Determine action (reset / refine) based on query delta
         inferred_action = infer_action(cur_query=cur_query, prev_query=prev_query)
         logging.info(f"✅Inferred action for current query '{cur_query}' and previous query '{prev_query}': {inferred_action.model_dump()}")
 
@@ -114,29 +126,37 @@ def refine_search_space():
             logging.error(f"Action inference failed: neither action was identified")
             return jsonify({"error": "Action inference failed"}), 500
         
-        # If reset: restore last search results
+        # Step 2.1: If RESET - restore last search results
         if inferred_action.reset:
             pass
         
-        # Identify mentioned SEMANTIC metadata fields in user current query
-        inferred_semantic_fields = infer_mentioned_metadata_fields(cur_query=cur_query, semantic_metadata=True).get_true_fields()
-        logging.info(f"✅Inferred mentioned semantic metadata fields for current query '{cur_query}': {inferred_semantic_fields}")
+        # Step 2.2: If REFINE
+        # Step 3.1: Handle mentioned SEMANTIC metadata fields in user current query
+        if mention_semantic_fields:
+            # Identify mentioned semantic metadata fields
+            inferred_semantic_fields = infer_mentioned_metadata_fields(cur_query=cur_query, semantic_metadata=True).get_true_fields()
+            logging.info(f"✅Inferred mentioned semantic metadata fields for current query '{cur_query}': {inferred_semantic_fields}")
 
-        # If user mentions any semantic metadata fields in their query, run hyse again
-        if len(inferred_semantic_fields) > 0:
-            # run hyse again
-            pass
+            # Run refined hyse again: combine all previous semantic related queries
+            # Filter messages where 'mention_semantic_fields' is True
+            semantic_queries = [message['text'] for message in chat_history[thread_id] if message.get('mention_semantic_fields')]
+            # Concatenate the filtered messages into a single string
+            semantic_queries_comb = ' '.join(semantic_queries)
+            # Run hyse again
+            refined_semantic_results = hyse_search(semantic_queries_comb)
+            logging.info(f"✅Refined semantic fields search successful for query: {semantic_queries_comb}")
 
-        # Identify mentioned RAW metadata fields in user current query
-        inferred_raw_fields = infer_mentioned_metadata_fields(cur_query=cur_query, semantic_metadata=False).get_true_fields()
-        logging.info(f"✅Inferred mentioned raw metadata fields for current query '{cur_query}': {inferred_raw_fields}")
+        # Step 3.2: Handle mentioned RAW metadata fields in user current query
+        if mention_raw_fields:
+            # Identify mentioned raw metadata fields
+            inferred_raw_fields = infer_mentioned_metadata_fields(cur_query=cur_query, semantic_metadata=False).get_true_fields()
+            logging.info(f"✅Inferred mentioned raw metadata fields for current query '{cur_query}': {inferred_raw_fields}")
 
-        # If user mentions any raw metadata fields in their query, excute text to sql
-        if len(inferred_raw_fields) > 0:
+            # Excute text to sql
             sql_clauses = text_to_sql(cur_query, inferred_raw_fields)
             logging.info(f"✅Inferred SQL clauses for current query '{cur_query}': {sql_clauses.model_dump()}")
 
-        # Parse inferred sql clauses & inject into query template
+            # Parse inferred sql clauses & inject into query template
 
         return jsonify(sql_clauses.model_dump()), 200
         
