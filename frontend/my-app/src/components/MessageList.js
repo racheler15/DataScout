@@ -14,7 +14,6 @@ function MessageList({ messages }) {
         <List sx={{
             maxHeight: '100%',
             overflow: 'auto',
-            bgcolor: 'background.paper',
         }}>
             {messages.map((message) => (
                 <MessageItem key={message.id} message={message} />

@@ -64,6 +64,9 @@ class Action(BaseModel):
     reset: bool
     refine: bool
 
+    def get_true_fields(self):
+        return [field for field, value in self.model_dump().items() if value]
+
 class MentionedSemanticFields(BaseModel):
     table_schema: bool
     example_records: bool

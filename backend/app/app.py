@@ -94,8 +94,11 @@ def initial_search():
 
     try:
         initial_results = hyse_search(initial_query)
+        response_data = {
+            "top_results": initial_results[:10]
+        }
         logging.info(f"✅Search successful for query: {initial_query}")
-        return jsonify(initial_results), 200
+        return jsonify(response_data), 200
     except Exception as e:
         logging.error(f"Search failed for query: {initial_query}, Error: {e}")
         return jsonify({"error": "Search failed due to an internal error"}), 500
@@ -109,6 +112,9 @@ def refine_search_space():
         return jsonify({"success": False, "error": "Invalid or missing thread_id"}), 400
     
     try:
+        # Initialize defaults
+        refined_semantic_results, inferred_semantic_fields, inferred_raw_fields = [], [], []
+
         # Get user current and previous queries
         cur_chat_history = chat_history[thread_id]
         cur_query, prev_query = cur_chat_history[-1]["text"], cur_chat_history[-2]["text"]
@@ -157,12 +163,20 @@ def refine_search_space():
             logging.info(f"✅Inferred SQL clauses for current query '{cur_query}': {sql_clauses.model_dump()}")
 
             # Parse inferred sql clauses & inject into query template
+        
+        # Package the response with additional information from the second message onwards
+        response_data = {
+            "top_results": refined_semantic_results[:10],
+            "inferred_action": inferred_action.get_true_fields(),
+            "mention_semantic_fields": inferred_semantic_fields,
+            "mention_raw_fields": inferred_raw_fields,
+        }
 
-        return jsonify(sql_clauses.model_dump()), 200
+        return jsonify(response_data), 200
         
     except Exception as e:
-        logging.error(f"Action inference failed, Error: {e}")
-        return jsonify({"error": "Action inference failed due to an internal error"}), 500
+        logging.error(f"Search refinement failed, Error: {e}")
+        return jsonify({"error": "Search refinement failed due to an internal error"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

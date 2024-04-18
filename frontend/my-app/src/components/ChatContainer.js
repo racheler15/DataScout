@@ -42,10 +42,16 @@ function ChatContainer() {
     };
 
     const formatSearchResults = (results) => {
-        return results.map((result, index) =>
-            `${index + 1}. ${result.table_name} (Similarity: ${result.cosine_similarity.toFixed(2)})`
-        ).join('\n');
+        if (Array.isArray(results)) {
+            return results.map((result, index) =>
+                `${index + 1}. ${result.table_name} (Similarity: ${result.cosine_similarity.toFixed(2)})`
+            ).join('\n');
+        } else {
+            console.error('Expected results to be an array, but received:', results);
+            return 'There was an error retrieving the results.';
+        }
     };
+
 
     const sendMessage = async (messageText) => {
         if (!threadId) {
@@ -79,9 +85,17 @@ function ChatContainer() {
                 });
 
                 const newMessage = { id: messages.length + 1, text: messageText, sender: 'user' };
-                const replyText = isInitialMessage
-                    ? formatSearchResults(searchResponse.data)
-                    : searchResponse.data.reply;
+
+                let additionalInfo = '';
+                if (!isInitialMessage) {
+                    additionalInfo += `Inferred Action: ${searchResponse.data.inferred_action}\n`;
+                    additionalInfo += `Mentioned Semantic Fields: ${searchResponse.data.mention_semantic_fields}\n`;
+                    additionalInfo += `Mentioned Raw Fields: ${searchResponse.data.mention_raw_fields}\n`;
+                }
+
+                let replyText = searchResponse.data.top_results
+                    ? `${additionalInfo}${formatSearchResults(searchResponse.data.top_results)}`
+                    : `${additionalInfo}No results found or an error occurred.`;
 
                 const reply = {
                     id: messages.length + 2,
