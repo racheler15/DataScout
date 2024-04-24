@@ -4,7 +4,8 @@ from uuid import uuid4
 import logging
 from backend.app.table_representation.openai_client import OpenAIClient
 from backend.app.hyse.hypo_schema_search import hyse_search
-from backend.app.actions.infer_action import infer_action, infer_mentioned_metadata_fields, text_to_sql
+from backend.app.actions.infer_action import infer_action, infer_mentioned_metadata_fields, text_to_sql, execute_sql
+from backend.app.actions.handle_action import handle_semantic_fields, handle_raw_fields
 
 # Flask app configuration
 app = Flask(__name__)
@@ -63,6 +64,7 @@ def update_chat_history():
 
     try:
         # Identify metadata fields
+        # TODO: Make sure for user's initial query, mention_semantic_fields is always True
         semantic_fields_identified = infer_mentioned_metadata_fields(cur_query=query, semantic_metadata=True).get_true_fields()
         raw_fields_identified = infer_mentioned_metadata_fields(cur_query=query, semantic_metadata=False).get_true_fields()
 
@@ -143,27 +145,17 @@ def refine_search_space():
             inferred_semantic_fields = infer_mentioned_metadata_fields(cur_query=cur_query, semantic_metadata=True).get_true_fields()
             logging.info(f"✅Inferred mentioned semantic metadata fields for current query '{cur_query}': {inferred_semantic_fields}")
 
-            # Run refined hyse again: combine all previous semantic related queries
-            # Filter messages where 'mention_semantic_fields' is True
-            semantic_queries = [message['text'] for message in chat_history[thread_id] if message.get('mention_semantic_fields')]
-            # Concatenate the filtered messages into a single string
-            semantic_queries_comb = ' '.join(semantic_queries)
-            # Run hyse again
-            refined_semantic_results = hyse_search(semantic_queries_comb)
-            logging.info(f"✅Refined semantic fields search successful for query: {semantic_queries_comb}")
+            refined_semantic_results = handle_semantic_fields(chat_history, thread_id)
 
         # Step 3.2: Handle mentioned RAW metadata fields in user current query
         if mention_raw_fields:
             # Identify mentioned raw metadata fields
             inferred_raw_fields = infer_mentioned_metadata_fields(cur_query=cur_query, semantic_metadata=False).get_true_fields()
             logging.info(f"✅Inferred mentioned raw metadata fields for current query '{cur_query}': {inferred_raw_fields}")
+            
+            refined_results = handle_raw_fields(cur_query, inferred_raw_fields)
+            logging.info(f"✅Result tables after raw metadata filtering: {refined_results}")
 
-            # Excute text to sql
-            sql_clauses = text_to_sql(cur_query, inferred_raw_fields)
-            logging.info(f"✅Inferred SQL clauses for current query '{cur_query}': {sql_clauses.model_dump()}")
-
-            # Parse inferred sql clauses & inject into query template
-        
         # Package the response with additional information from the second message onwards
         response_data = {
             "top_results": refined_semantic_results[:10],

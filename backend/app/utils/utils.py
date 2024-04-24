@@ -6,6 +6,11 @@ def format_prompt(prompt_template, **kwargs):
     """ Formats a given prompt template with provided keyword arguments """
     return prompt_template.format(**kwargs)
 
+def load_json_file(file_path):
+    """ Load JSON data from a file """ 
+    with open(file_path, 'r') as file:
+        data = json.load(file)
+    return data
 
 def extract_time_geo_granularity(granularity_str):
     """ Extract time and geo granularity lists from a JSON string """
@@ -35,7 +40,7 @@ def run_sql_file(filename):
         sql_script = file.read()
 
    # Use the DatabaseConnection context manager to get a cursor
-    with DatabaseConnection() as cursor:
+    with DatabaseConnection() as db:
         try:
             # Split the script into individual statements if necessary
             sql_statements = sql_script.split(';')
@@ -44,12 +49,12 @@ def run_sql_file(filename):
             for statement in sql_statements:
                 # Strip whitespace and skip empty statements
                 if statement.strip():
-                    cursor.execute(statement.strip())
+                    db.cursor.execute(statement.strip())
             # Commit the transaction
-            cursor.connection.commit()
+            db.cursor.connection.commit()
         except Exception as e:
             # Rollback the transaction on error
-            cursor.connection.rollback()
+            db.cursor.connection.rollback()
             print(f"An error occurred: {e}")
             raise
 
@@ -90,3 +95,19 @@ def validate_and_load_json(json_str):
     except json.JSONDecodeError as e:
         return None, str(e)
 
+def extract_granularities(json_data):
+    time_granu = []
+    geo_granu = []
+    
+    # Load JSON data
+    data = json.loads(json_data) if isinstance(json_data, str) else json_data
+    
+    # Iterate over each table in the JSON array
+    for table in data:
+        # Extract temporal and geographic granularities
+        if "Temporal granularity" in table:
+            time_granu.append(table["Temporal granularity"])
+        if "Geographic granularity" in table:
+            geo_granu.append(table["Geographic granularity"])
+    
+    return time_granu, geo_granu

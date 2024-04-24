@@ -15,21 +15,22 @@ def insert_mock_data(file_path):
     ON CONFLICT (table_name) DO NOTHING;
     '''
 
-    with DatabaseConnection() as cursor:
+    with DatabaseConnection() as db:
         for dataset in mock_data_corpus:
-            table_name = dataset['Table name']
+            table_name = dataset['Table name'].lower()
             col_num = dataset['Column numbers']
             popularity = dataset['Popularity']
 
-            # Join the granularity lists into comma-separated strings
-            time_granu = ', '.join(dataset['Temporal granularity']) if dataset['Temporal granularity'] else None
-            geo_granu = ', '.join(dataset['Geographic granularity']) if dataset['Geographic granularity'] else None
+            # Convert lists into PostgreSQL array directly without joining into strings
+            # The lists are directly suitable for PostgreSQL TEXT[] type
+            time_granu = [item.lower() for item in dataset['Temporal granularity']] if dataset['Temporal granularity'] else None
+            geo_granu = [item.lower() for item in dataset['Geographic granularity']] if dataset['Geographic granularity'] else None
 
             comb_embed = dataset['Combined embedding']
             query_embed = dataset['Query embedding']
             
             # Execute the insert query
-            cursor.execute(insert_query, (table_name, col_num, popularity, time_granu, geo_granu, comb_embed, query_embed))
+            db.cursor.execute(insert_query, (table_name, col_num, popularity, time_granu, geo_granu, comb_embed, query_embed))
 
 
 def main():

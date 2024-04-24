@@ -22,7 +22,7 @@ class DatabaseConnection:
     def __enter__(self):
         self.conn = get_db_connection()
         self.cursor = self.conn.cursor()
-        return self.cursor
+        return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type is not None:

@@ -16,7 +16,8 @@ class OpenAIClient:
             api_key=os.getenv("AZURE_OPENAI_API_KEY"),  
             api_version="2024-02-15-preview"
         ) 
-        self.text_generation_model_default = "gpt-35-infer-model"
+        # self.text_generation_model_default = "gpt-35-infer-model"
+        self.text_generation_model_default = "gpt-4-infer-model"
         self.embedding_model_default = "gpt-4-embed-ada-model"
 
     def infer_metadata(self, messages, response_model, model=None):

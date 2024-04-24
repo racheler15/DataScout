@@ -22,7 +22,7 @@ openai_client = OpenAIClient()
 PROMPTS = {
     "schema_prompt": "Given the dataset titled '{table_name}' which includes data on {table_description}, with example records like {example_records}, directly list the likely table schema.",
     "query_prompt": "Please provide some data analytics tasks (e.g. data analysis, machine learning, business intelligence, etc.) that can be performed for the table titled '{table_name}' which includes data on {table_description}, with example records like {example_records}? Specify the analytics tasks specific to the semantics of the table, and provide all tasks (without categorization) in a flat list, excluding any introductory phrases and focusing exclusively on the tasks themselves.",
-    "granularity_prompt": "Given a dataset titled '{table_name}' with data on {table_description} and example records like {example_records}, identify columns that express some granularity. For each identified column, determine if it relates to geographic or temporal attributes."
+    "granularity_prompt": "Given a dataset titled '{table_name}' with data on {table_description} and example records like {example_records}, determine the most likely geographic or temporal granularity present in the dataset, if any. Please select the temporal granularity from the following options: Year, Quarter, Month, Week, Day, Hour, Minute, or Second. For the geographic granularity, choose from: Continent, Country, State/Province, County/District, City, or Zip Code/Postal Code. Identify the granularity if present, based on the data provided."
 }
 
 # PROMPTS = {

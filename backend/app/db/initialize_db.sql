@@ -1,12 +1,14 @@
 -- Enable the `pgvector` extension
 CREATE EXTENSION IF NOT EXISTS vector;
 
-CREATE TABLE IF NOT EXISTS corpus_raw_metadata_with_embedding (
+DROP TABLE IF EXISTS corpus_raw_metadata_with_embedding;
+
+CREATE TABLE corpus_raw_metadata_with_embedding (
     table_name TEXT PRIMARY KEY,
     col_num INT,
     popularity INT,
-    time_granu TEXT,
-    geo_granu TEXT,
+    time_granu TEXT[],
+    geo_granu TEXT[],
     comb_embed VECTOR(1536),
     query_embed VECTOR(1536)
 );

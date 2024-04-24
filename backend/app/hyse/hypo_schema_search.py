@@ -55,14 +55,14 @@ def cos_sim_search(input_embedding, column_name="comb_embed"):
     if column_name not in ["comb_embed", "query_embed"]:
         raise ValueError("Invalid embedding column")
     
-    with DatabaseConnection() as cursor:
+    with DatabaseConnection() as db:
         query = f"""
             SELECT table_name, 1 - ({column_name} <=> %s::VECTOR(1536)) AS cosine_similarity
             FROM corpus_raw_metadata_with_embedding
             ORDER BY cosine_similarity DESC;
         """
 
-        cursor.execute(query, (input_embedding,))
-        results = cursor.fetchall()
+        db.cursor.execute(query, (input_embedding,))
+        results = db.cursor.fetchall()
     
     return results
