@@ -4,8 +4,10 @@ from uuid import uuid4
 import logging
 from backend.app.table_representation.openai_client import OpenAIClient
 from backend.app.hyse.hypo_schema_search import hyse_search
-from backend.app.actions.infer_action import infer_action, infer_mentioned_metadata_fields, text_to_sql, execute_sql
+from backend.app.actions.infer_action import infer_action, infer_mentioned_metadata_fields
 from backend.app.actions.handle_action import handle_semantic_fields, handle_raw_fields
+from backend.app.chat.handle_chat_history import append_user_query, append_system_response
+
 
 # Flask app configuration
 app = Flask(__name__)
@@ -53,8 +55,7 @@ def get_chat_history():
 @app.route('/api/update_chat_history', methods=['POST'])
 def update_chat_history():
     data = request.get_json()
-    thread_id = data.get('thread_id')
-    query = data.get('query')
+    thread_id, query = data.get('thread_id'), data.get('query')
 
     # Validate thread_id and query presence
     if not thread_id or thread_id not in chat_history:
@@ -69,14 +70,9 @@ def update_chat_history():
         raw_fields_identified = infer_mentioned_metadata_fields(cur_query=query, semantic_metadata=False).get_true_fields()
 
         # Update chat history with additional metadata field information
-        chat_history[thread_id].append({
-            "sender": "user",
-            "text": query,
-            "mention_semantic_fields": bool(semantic_fields_identified),
-            "mention_raw_fields": bool(raw_fields_identified)
-        })
-
+        append_user_query(chat_history, thread_id, query, bool(semantic_fields_identified), bool(raw_fields_identified))
         logging.info(f"💬 Current chat history: {chat_history}")
+
         return jsonify({
                 "success": True,
                 "thread_id": thread_id,
@@ -88,6 +84,7 @@ def update_chat_history():
 
 @app.route('/api/hyse_search', methods=['POST'])
 def initial_search():
+    thread_id = request.get_json().get('thread_id')
     initial_query = request.json.get('query')
 
     if not initial_query or len(initial_query.strip()) == 0:
@@ -96,10 +93,15 @@ def initial_search():
 
     try:
         initial_results = hyse_search(initial_query)
+        append_system_response(chat_history, thread_id, initial_results, refine_type="semantic")
+
         response_data = {
             "top_results": initial_results[:10]
         }
+
         logging.info(f"✅Search successful for query: {initial_query}")
+        logging.info(f"💬 Current chat history: {chat_history}")
+
         return jsonify(response_data), 200
     except Exception as e:
         logging.error(f"Search failed for query: {initial_query}, Error: {e}")
@@ -115,7 +117,7 @@ def refine_search_space():
     
     try:
         # Initialize defaults
-        refined_semantic_results, inferred_semantic_fields, inferred_raw_fields = [], [], []
+        refined_results, inferred_semantic_fields, inferred_raw_fields = [], [], []
 
         # Get user current and previous queries
         cur_chat_history = chat_history[thread_id]
@@ -140,12 +142,14 @@ def refine_search_space():
         
         # Step 2.2: If REFINE
         # Step 3.1: Handle mentioned SEMANTIC metadata fields in user current query
+        # TODO: Does the sequence matter here between semantic/raw fields processing?
         if mention_semantic_fields:
             # Identify mentioned semantic metadata fields
             inferred_semantic_fields = infer_mentioned_metadata_fields(cur_query=cur_query, semantic_metadata=True).get_true_fields()
             logging.info(f"✅Inferred mentioned semantic metadata fields for current query '{cur_query}': {inferred_semantic_fields}")
 
-            refined_semantic_results = handle_semantic_fields(chat_history, thread_id)
+            refined_results = handle_semantic_fields(chat_history, thread_id)
+            append_system_response(chat_history, thread_id, refined_results, refine_type="semantic")
 
         # Step 3.2: Handle mentioned RAW metadata fields in user current query
         if mention_raw_fields:
@@ -155,10 +159,13 @@ def refine_search_space():
             
             refined_results = handle_raw_fields(cur_query, inferred_raw_fields)
             logging.info(f"✅Result tables after raw metadata filtering: {refined_results}")
+            append_system_response(chat_history, thread_id, refined_results, refine_type="raw")
+
+        logging.info(f"💬 Current chat history: {chat_history}")
 
         # Package the response with additional information from the second message onwards
         response_data = {
-            "top_results": refined_semantic_results[:10],
+            "top_results": refined_results[:10],
             "inferred_action": inferred_action.get_true_fields(),
             "mention_semantic_fields": inferred_semantic_fields,
             "mention_raw_fields": inferred_raw_fields,
