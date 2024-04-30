@@ -1,6 +1,5 @@
 import React from 'react';
 import { ListItem, ListItemText, ListItemAvatar, Avatar, Box } from '@mui/material';
-import DataTable from './DataTable';
 
 function MessageItem({ message }) {
     const isUser = message.sender === 'user';

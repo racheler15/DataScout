@@ -6,6 +6,7 @@ import { Box } from '@mui/material';
 import CircularProgress from '@mui/material/CircularProgress';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
+import ResultsTable from './ResultsTable';
 
 function ChatContainer() {
     const [messages, setMessages] = useState([]);
@@ -88,18 +89,25 @@ function ChatContainer() {
 
                 let additionalInfo = '';
                 if (!isInitialMessage) {
-                    additionalInfo += `Inferred Action: ${searchResponse.data.inferred_action}\n`;
-                    additionalInfo += `Mentioned Semantic Fields: ${searchResponse.data.mention_semantic_fields}\n`;
-                    additionalInfo += `Mentioned Raw Fields: ${searchResponse.data.mention_raw_fields}\n`;
+                    additionalInfo = (
+                        <>
+                            <p>Inferred Action: {searchResponse.data.inferred_action}</p>
+                            <p>Mentioned Semantic Fields: {searchResponse.data.mention_semantic_fields.join(', ')}</p>
+                            <p>Mentioned Raw Fields: {searchResponse.data.mention_raw_fields.join(', ')}</p>
+                        </>
+                    );
                 }
-
-                let replyText = searchResponse.data.top_results
-                    ? `${additionalInfo}${formatSearchResults(searchResponse.data.top_results)}`
-                    : `${additionalInfo}No results found or an error occurred.`;
 
                 const reply = {
                     id: messages.length + 2,
-                    text: replyText,
+                    text: (
+                        <>
+                            {additionalInfo}
+                            {searchResponse.data.top_results && searchResponse.data.top_results.length > 0
+                                ? <ResultsTable results={searchResponse.data.top_results} />
+                                : <p>No results found or an error occurred.</p>}
+                        </>
+                    ),
                     sender: 'bot',
                 };
 
