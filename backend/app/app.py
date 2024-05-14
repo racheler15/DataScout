@@ -6,7 +6,7 @@ from backend.app.table_representation.openai_client import OpenAIClient
 from backend.app.hyse.hypo_schema_search import hyse_search
 from backend.app.actions.infer_action import infer_action, infer_mentioned_metadata_fields
 from backend.app.actions.handle_action import handle_semantic_fields, handle_raw_fields
-from backend.app.chat.handle_chat_history import append_user_query, append_system_response
+from backend.app.chat.handle_chat_history import append_user_query, append_system_response, get_user_queries, get_last_results, get_mentioned_fields
 
 
 # Flask app configuration
@@ -120,11 +120,13 @@ def refine_search_space():
         refined_results, inferred_semantic_fields, inferred_raw_fields = [], [], []
 
         # Get user current and previous queries
-        cur_chat_history = chat_history[thread_id]
-        cur_query, prev_query = cur_chat_history[-1]["text"], cur_chat_history[-2]["text"]
-
+        cur_query, prev_query = get_user_queries(chat_history, thread_id)
         # Check if the current query mentions semantic / raw metadata fields
-        mention_semantic_fields, mention_raw_fields = cur_chat_history[-1]["mention_semantic_fields"], cur_chat_history[-1]["mention_raw_fields"]
+        mention_semantic_fields, mention_raw_fields = get_mentioned_fields(chat_history, thread_id)
+
+        # Get the last set of results
+        last_results = get_last_results(chat_history, thread_id)
+        logging.info(f"💬Cached last results: {last_results}")
 
         # Step 1: Determine action (reset / refine) based on query delta
         inferred_action = infer_action(cur_query=cur_query, prev_query=prev_query)
@@ -161,7 +163,7 @@ def refine_search_space():
             logging.info(f"✅Result tables after raw metadata filtering: {refined_results}")
             append_system_response(chat_history, thread_id, refined_results, refine_type="raw")
 
-        logging.info(f"💬 Current chat history: {chat_history}")
+        logging.info(f"💬Current chat history: {chat_history}")
 
         # Package the response with additional information from the second message onwards
         response_data = {
