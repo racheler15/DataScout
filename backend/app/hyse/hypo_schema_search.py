@@ -34,6 +34,7 @@ def hyse_search(initial_query):
     query_embedding = openai_client.generate_embeddings(text=initial_query)
     initial_results = cos_sim_search(query_embedding, column_name="query_embed")
     
+    return initial_results
     initial_results_formatted = format_cos_sim_results(initial_results)
     
     return initial_results_formatted
