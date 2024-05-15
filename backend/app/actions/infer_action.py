@@ -49,19 +49,6 @@ Identify any fields that are explicitly mentioned or strongly implied. Provide y
 """
 
 # TODO: For the generated sql clause, need to further check its validity
-# PROMPT_SQL_TRANSLATION = """
-# Given the identified fields from the user's query that require SQL translation, generate appropriate SQL WHERE clause conditions. This task focuses on converting these field references into precise SQL queries.
-
-# Identified fields: {identified_fields}
-# Current user query: "{cur_query}"
-
-# For each identified metadata field, create the corresponding SQL WHERE clause condition. Ensure the translation reflects any specific conditions mentioned in the query, such as precise dates, numerical ranges, or other descriptive qualifiers.
-
-# The temporal granularity should be chosen from Year, Quarter, Month, Week, Day, Hour, Minute, or Second. The geographical granularity should be chosen from Continent, Country, State/Province, County/District, City, or Zip Code/Postal Code.
-
-# For example, if the fields 'Temporal Granularity' and 'Geographic Granularity' are identified in user's query 'I only want data in United States after 2020', the WHERE clause for temporal_granularity might be "= 'year'", and the clause for geographic_granularity might be "= 'country'".
-# """
-
 PROMPT_SQL_TRANSLATION = """
 Given the identified fields from the user's query requiring SQL translation, generate appropriate SQL WHERE clause conditions. This task involves converting these field references into precise SQL queries, adhering strictly to predefined granularity levels.
 
@@ -162,7 +149,7 @@ def text_to_sql(cur_query, identified_fields):
         logging.error(f"Failed to translate text to SQL: {e}")
         raise RuntimeError("Failed to process the SQL translation.") from e
 
-def execute_sql(text_to_sql_instance):
+def execute_sql(text_to_sql_instance, search_space):
     field_to_column_mapping = {
         'table_name': 'table_name',
         'column_numbers': 'col_num',
@@ -172,10 +159,11 @@ def execute_sql(text_to_sql_instance):
     }
 
     with DatabaseConnection() as db:
-        # Include popularity in the SELECT list if ordering by popularity
-        query_base = sql.SQL("SELECT DISTINCT table_name, popularity FROM corpus_raw_metadata_with_embedding")
-        where_conditions = []
-        ordering = []
+        # Base query with initial WHERE condition for the search space
+        query_base = sql.SQL("SELECT DISTINCT table_name, popularity FROM corpus_raw_metadata_with_embedding WHERE table_name = ANY(%s)")
+        where_conditions = []  # List to hold additional conditions
+        ordering = []  # List to hold ORDER BY conditions
+        parameters = [search_space]  # List to hold all parameters for the SQL query
 
         for clause in text_to_sql_instance.sql_clauses:
             db_field = field_to_column_mapping.get(clause.field.lower())
@@ -183,34 +171,37 @@ def execute_sql(text_to_sql_instance):
                 logging.warning(f"Error with the raw metadata field inference: {clause.field}")
                 continue
 
-            if clause.field == 'popularity' and 'ORDER BY' in clause.clause:
-                # Handling ORDER BY popularity
-                ordering.append(sql.SQL("{} DESC").format(sql.Identifier(db_field)))
-            elif ' ' in clause.clause:
+            if 'ORDER BY' in clause.clause:
+                parts = clause.clause.split()
+                direction = parts[-1]  # Assumes format "ORDER BY field_name DESC/ASC"
+                ordering.append(sql.SQL("{} {}").format(sql.Identifier(db_field), sql.SQL(direction)))
+            else:
                 operator, value = clause.clause.split(' ', 1)
                 value = value.strip("'").lower()  # Strip quotes and convert to lowercase
                 if db_field in ['time_granu', 'geo_granu']:
                     # Using unnest to compare elements in an array field
-                    condition = sql.SQL("EXISTS (SELECT 1 FROM unnest({}) AS elem WHERE elem {} {})").format(
-                        sql.Identifier(db_field), sql.SQL(operator), sql.Literal(value))
+                    condition = sql.SQL("EXISTS (SELECT 1 FROM unnest({}) AS elem WHERE elem {} %s)").format(
+                        sql.Identifier(db_field), sql.SQL(operator))
                     where_conditions.append(condition)
+                    parameters.append(value)  # Add value to parameters list
                 else:
-                    where_conditions.append(sql.SQL("{} {}").format(sql.Identifier(db_field), sql.SQL(clause.clause)))
-            else:
-                logging.warning(f"Incomplete SQL clause for field {clause.field}: {clause.clause}")
-                continue
+                    condition = sql.SQL("{} {} %s").format(sql.Identifier(db_field), sql.SQL(operator))
+                    where_conditions.append(condition)
+                    parameters.append(value)  # Add value to parameters list
 
+        # Combine additional WHERE conditions and ORDER BY clauses into the base query
         if where_conditions:
-            query_base += sql.SQL(" WHERE ") + sql.SQL(" AND ").join(where_conditions)
+            query_base = query_base + sql.SQL(" AND ") + sql.SQL(" AND ").join(where_conditions)
         if ordering:
-            query_base += sql.SQL(" ORDER BY ") + sql.SQL(", ").join(ordering)
+            query_base = query_base + sql.SQL(" ORDER BY ") + sql.Composed(ordering)
 
         logging.info("🏃Executing query: %s", query_base.as_string(db.conn))
 
+        # Execute the query
         try:
-            db.cursor.execute(query_base)
-            result = db.cursor.fetchall()
-            return result
+            db.cursor.execute(query_base, parameters)  # Pass the parameters list
+            results = db.cursor.fetchall()
+            return results
         except Exception as e:
-            logging.error(f"Failed to execute query: {e}")
+            logging.error(f"SQL execution failed, Error: {e}")
             return []

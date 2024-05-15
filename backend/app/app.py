@@ -92,7 +92,7 @@ def initial_search():
         return jsonify({"error": "No query provided"}), 400
 
     try:
-        initial_results = hyse_search(initial_query)
+        initial_results = hyse_search(initial_query, search_space=None)
         append_system_response(chat_history, thread_id, initial_results, refine_type="semantic")
 
         response_data = {
@@ -116,6 +116,10 @@ def refine_search_space():
         return jsonify({"success": False, "error": "Invalid or missing thread_id"}), 400
     
     try:
+        # Get the last set of results
+        cached_results = get_last_results(chat_history, thread_id)
+        logging.info(f"📩Current cached results: {cached_results}")
+
         # Initialize defaults
         refined_results, inferred_semantic_fields, inferred_raw_fields = [], [], []
 
@@ -123,10 +127,6 @@ def refine_search_space():
         cur_query, prev_query = get_user_queries(chat_history, thread_id)
         # Check if the current query mentions semantic / raw metadata fields
         mention_semantic_fields, mention_raw_fields = get_mentioned_fields(chat_history, thread_id)
-
-        # Get the last set of results
-        last_results = get_last_results(chat_history, thread_id)
-        logging.info(f"💬Cached last results: {last_results}")
 
         # Step 1: Determine action (reset / refine) based on query delta
         inferred_action = infer_action(cur_query=cur_query, prev_query=prev_query)
@@ -137,20 +137,20 @@ def refine_search_space():
         if not inferred_action.reset and not inferred_action.refine:
             logging.error(f"Action inference failed: neither action was identified")
             return jsonify({"error": "Action inference failed"}), 500
-        
+
         # Step 2.1: If RESET - restore last search results
         if inferred_action.reset:
+            # TODO: refined_results = reset_results()
             pass
         
         # Step 2.2: If REFINE
         # Step 3.1: Handle mentioned SEMANTIC metadata fields in user current query
-        # TODO: Does the sequence matter here between semantic/raw fields processing?
         if mention_semantic_fields:
             # Identify mentioned semantic metadata fields
             inferred_semantic_fields = infer_mentioned_metadata_fields(cur_query=cur_query, semantic_metadata=True).get_true_fields()
             logging.info(f"✅Inferred mentioned semantic metadata fields for current query '{cur_query}': {inferred_semantic_fields}")
 
-            refined_results = handle_semantic_fields(chat_history, thread_id)
+            refined_results = handle_semantic_fields(chat_history, thread_id, search_space=cached_results)
             append_system_response(chat_history, thread_id, refined_results, refine_type="semantic")
 
         # Step 3.2: Handle mentioned RAW metadata fields in user current query
@@ -159,8 +159,7 @@ def refine_search_space():
             inferred_raw_fields = infer_mentioned_metadata_fields(cur_query=cur_query, semantic_metadata=False).get_true_fields()
             logging.info(f"✅Inferred mentioned raw metadata fields for current query '{cur_query}': {inferred_raw_fields}")
             
-            refined_results = handle_raw_fields(cur_query, inferred_raw_fields)
-            logging.info(f"✅Result tables after raw metadata filtering: {refined_results}")
+            refined_results = handle_raw_fields(cur_query, inferred_raw_fields, search_space=cached_results)
             append_system_response(chat_history, thread_id, refined_results, refine_type="raw")
 
         logging.info(f"💬Current chat history: {chat_history}")

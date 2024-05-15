@@ -15,10 +15,12 @@ def append_user_query(chat_history, thread_id, text, mention_semantic_fields=Non
     # logging.info(f"💬User input query added to chat history for thread_id {thread_id}: {text}")
 
 def append_system_response(chat_history, thread_id, text, refine_type):
-    # Append a system response to the chat history
+    table_names = [result["table_name"] for result in text]
+    
+    # Append a system response to the chat history 
     response = {
         "sender": "system",
-        "text": text,
+        "text": table_names,
         "refine_type": refine_type
     }
 
