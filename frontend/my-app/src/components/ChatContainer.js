@@ -14,16 +14,10 @@ function ChatContainer() {
     const [threadId, setThreadId] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
 
     useEffect(() => {
         startNewThread();
-
-        // const savedThreadId = sessionStorage.getItem('threadId');
-        // if (savedThreadId) {
-        //     setThreadId(savedThreadId);
-        // } else {
-        //     startNewThread();
-        // }
     }, []);
 
     const startNewThread = async () => {
@@ -41,18 +35,6 @@ function ChatContainer() {
 
         setIsLoading(false);
     };
-
-    const formatSearchResults = (results) => {
-        if (Array.isArray(results)) {
-            return results.map((result, index) =>
-                `${index + 1}. ${result.table_name} (Similarity: ${result.cosine_similarity.toFixed(2)})`
-            ).join('\n');
-        } else {
-            console.error('Expected results to be an array, but received:', results);
-            return 'There was an error retrieving the results.';
-        }
-    };
-
 
     const sendMessage = async (messageText) => {
         if (!threadId) {
@@ -98,17 +80,19 @@ function ChatContainer() {
                     );
                 }
 
+                const completeResults = searchResponse.data.complete_results;
+
                 const reply = {
                     id: messages.length + 2,
                     text: (
                         <>
                             {additionalInfo}
                             {searchResponse.data.top_results && searchResponse.data.top_results.length > 0
-                                ? <ResultsTable results={searchResponse.data.top_results} />
+                                ? <ResultsTable results={searchResponse.data.top_results} onResetSearch={() => handleResetSearch(completeResults)} />
                                 : <p>No results found or an error occurred.</p>}
                         </>
                     ),
-                    sender: 'bot',
+                    sender: 'system',
                 };
 
                 setMessages(prevMessages => [...prevMessages, newMessage, reply]);
@@ -124,6 +108,23 @@ function ChatContainer() {
         }
 
         setIsLoading(false);
+    };
+
+    const handleResetSearch = async (completeResults) => {
+        try {
+            const response = await axios.post('http://127.0.0.1:5000/api/reset_search_space', {
+                thread_id: threadId,
+                results: completeResults,
+            });
+
+            // Set success message
+            setSuccessMessage('Search space has been successfully reset.');
+
+            console.log('Reset search space successful:', response.data);
+        } catch (error) {
+            console.error('Error resetting search space:', error);
+            setError('Could not reset search space. Please try again.');
+        }
     };
 
     const handleCloseSnackbar = () => {
@@ -159,6 +160,16 @@ function ChatContainer() {
             <Snackbar open={!!error} autoHideDuration={6000} onClose={handleCloseSnackbar}>
                 <Alert onClose={handleCloseSnackbar} severity="error" sx={{ width: '100%' }}>
                     {error}
+                </Alert>
+            </Snackbar>
+            <Snackbar
+                open={!!successMessage}
+                autoHideDuration={3000}
+                onClose={() => setSuccessMessage('')}
+                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            >
+                <Alert onClose={() => setSuccessMessage('')} severity="success" sx={{ width: '100%' }}>
+                    {successMessage}
                 </Alert>
             </Snackbar>
         </Box>
