@@ -95,8 +95,12 @@ def initial_search():
         initial_results = hyse_search(initial_query, search_space=None)
         append_system_response(chat_history, thread_id, initial_results, refine_type="semantic")
 
+        # Update the cached results
+        chat_history[thread_id + '_cached_results'] = [result["table_name"] for result in initial_results]
+
         response_data = {
-            "top_results": initial_results[:10]
+            "top_results": initial_results[:10],
+            "complete_results": initial_results,
         }
 
         logging.info(f"✅Search successful for query: {initial_query}")
@@ -116,8 +120,8 @@ def refine_search_space():
         return jsonify({"success": False, "error": "Invalid or missing thread_id"}), 400
     
     try:
-        # Get the last set of results
-        cached_results = get_last_results(chat_history, thread_id)
+        # Get the cached results
+        cached_results = chat_history.get(thread_id + "_cached_results")
         logging.info(f"📩Current cached results: {cached_results}")
 
         # Initialize defaults
@@ -140,8 +144,10 @@ def refine_search_space():
 
         # Step 2.1: If RESET - restore last search results
         if inferred_action.reset:
-            # TODO: refined_results = reset_results()
-            pass
+            # Update the cached results to previous search results
+            cached_results = get_last_results(chat_history, thread_id)
+            chat_history[thread_id + "_cached_results"] = cached_results
+            return jsonify({"success": True, "message": "Successfully reset to last results set"}), 200
         
         # Step 2.2: If REFINE
         # Step 3.1: Handle mentioned SEMANTIC metadata fields in user current query
@@ -150,6 +156,7 @@ def refine_search_space():
             inferred_semantic_fields = infer_mentioned_metadata_fields(cur_query=cur_query, semantic_metadata=True).get_true_fields()
             logging.info(f"✅Inferred mentioned semantic metadata fields for current query '{cur_query}': {inferred_semantic_fields}")
 
+            # TODO: Filter semantic refined results based on cosine similarity scores for better precision?
             refined_results = handle_semantic_fields(chat_history, thread_id, search_space=cached_results)
             append_system_response(chat_history, thread_id, refined_results, refine_type="semantic")
 
@@ -167,6 +174,7 @@ def refine_search_space():
         # Package the response with additional information from the second message onwards
         response_data = {
             "top_results": refined_results[:10],
+            "complete_results": refined_results,
             "inferred_action": inferred_action.get_true_fields(),
             "mention_semantic_fields": inferred_semantic_fields,
             "mention_raw_fields": inferred_raw_fields,
@@ -177,6 +185,28 @@ def refine_search_space():
     except Exception as e:
         logging.error(f"Search refinement failed, Error: {e}")
         return jsonify({"error": "Search refinement failed due to an internal error"}), 500
+
+@app.route('/api/reset_search_space', methods=['POST'])
+def reset_search_space():
+    thread_id = request.get_json().get('thread_id')
+    results = request.json.get('results')
+
+    # Validate thread_id and results presence
+    if not thread_id or thread_id not in chat_history:
+        return jsonify({"success": False, "error": "Invalid or missing thread_id"}), 400
+
+    if not results:
+        return jsonify({"success": False, "error": "No results provided"}), 400
+
+    try:
+        # Update the cached results
+        chat_history[thread_id + "_cached_results"] = [result["table_name"] for result in results]
+        logging.info(f"💬Current chat history: {chat_history}")
+        return jsonify({"success": True}), 200
+    except Exception as e:
+        logging.error(f"Search space reset failed for thread_id '{thread_id}', Error: {e}")
+        return jsonify({"error": "Search space reset failed due to an internal error"}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True)
