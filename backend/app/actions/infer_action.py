@@ -5,7 +5,6 @@ from typing import List, Dict
 import logging
 from backend.app.db.connect_db import DatabaseConnection
 from psycopg2 import sql
-
 # Initialize OpenAI client
 openai_client = OpenAIClient()
 
@@ -123,6 +122,7 @@ def infer_action(cur_query, prev_query):
         raise RuntimeError("Failed to process the action inference.") from e
 
 def infer_mentioned_metadata_fields(cur_query, semantic_metadata=True):
+    print(cur_query)
     try:
         if semantic_metadata:
             prompt = format_prompt(PROMPT_SEMANTIC_METADATA_INFER, cur_query=cur_query)
@@ -135,7 +135,6 @@ def infer_mentioned_metadata_fields(cur_query, semantic_metadata=True):
             {"role": "system", "content": "You are an assistant skilled in search related decision making"},
             {"role": "user", "content": prompt}
         ]
-
         return openai_client.infer_metadata(messages, response_model)
     except Exception as e:
         logging.error(f"Failed to infer metadata fields: {e}")

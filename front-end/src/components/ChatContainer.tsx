@@ -24,7 +24,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
         const response = await axios.get(
           "http://127.0.0.1:5000/api/most_popular_datasets"
         );
-        console.log(response);
+        // console.log(response);
         setResults(response.data); // Set results with the fetched data
       } catch (error) {
         console.error("Error fetching top 10 popular datasets:", error);
@@ -58,6 +58,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
       >
         {chatOpen ? <ArrowRightToLine /> : <ArrowLeftFromLine />}
       </div>
+      {/* <div className="chat-button">Chat Open</div> */}
       {chatOpen && (
         <>
           <QueryBlocks

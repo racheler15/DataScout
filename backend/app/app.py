@@ -8,6 +8,7 @@ from backend.app.actions.infer_action import infer_action, infer_mentioned_metad
 from backend.app.actions.handle_action import handle_semantic_fields, handle_raw_fields
 from backend.app.chat.handle_chat_history import append_user_query, append_system_response, get_user_queries, get_last_results, get_mentioned_fields
 
+
 # Flask app configuration
 app = Flask(__name__)
 CORS(app)
@@ -27,6 +28,7 @@ chat_history = {}
 #########
 @app.route('/api/start_chat', methods=['POST']) #post = submitting data ==> creating a new chat session
 def start_new_chat_session():
+    logging.info(f"starting new chat session")
     # Generate a unique session/thread ID
     thread_id = str(uuid4())
     # Initialize the chat history for this thread; messages stored as list
@@ -38,6 +40,7 @@ def start_new_chat_session():
 
 @app.route('/api/get_chat_history', methods=['GET'])
 def get_chat_history():
+    logging.info(f"getting chat history")
     # Extract thread_id from the request's query parameters
     thread_id = request.args.get('thread_id')
     
@@ -63,6 +66,7 @@ def get_chat_history():
 #########
 @app.route('/api/update_chat_history', methods=['POST'])
 def update_chat_history():
+    logging.info(f"updating chat history")
     data = request.get_json()
     thread_id, query = data.get('thread_id'), data.get('query')
 
@@ -98,6 +102,7 @@ def update_chat_history():
 #########
 @app.route('/api/most_popular_datasets', methods=['GET'])
 def get_most_popular_datasets():
+    logging.info(f"fetching most popular datasets")
     popular_results = most_popular_datasets()
     return jsonify(popular_results)
 
@@ -107,6 +112,7 @@ def get_most_popular_datasets():
 #########
 @app.route('/api/hyse_search', methods=['POST'])
 def initial_search():
+    logging.info(f"first hyse search")
     thread_id = request.get_json().get('thread_id')
     initial_query = request.json.get('query')
 

@@ -11,6 +11,15 @@
     transform: translateX(100%);
     padding: 0px;
 }
+.chat-button{
+    position: absolute;
+    margin-top: 16px;
+    right: 20px;
+    padding: 4px 12px;
+    background-color: white;
+    border: 2px solid #a9c7ff;
+    border-radius: 12px;
+}
 
 .arrow-container {
     position: absolute;
