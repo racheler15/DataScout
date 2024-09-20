@@ -5,6 +5,10 @@ DROP TABLE IF EXISTS corpus_raw_metadata_with_embedding;
 
 CREATE TABLE corpus_raw_metadata_with_embedding (
     table_name TEXT PRIMARY KEY,
+    table_desc TEXT,
+    table_tags TEXT[],
+    previous_queries TEXT[],
+    example_records JSONB,
     col_num INT,
     popularity INT,
     time_granu TEXT[],

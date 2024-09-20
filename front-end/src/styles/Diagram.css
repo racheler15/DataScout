@@ -1,0 +1,9 @@
+.diagram-image-container{
+    display: flex;
+}
+.sunburst-image{
+    object-fit: contain;
+    width: 100%;
+    height: auto;
+    display: block;
+}

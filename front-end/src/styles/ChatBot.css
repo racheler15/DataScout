@@ -1,0 +1,22 @@
+.chatbot-container{
+    border-top: 1px solid black;
+    flex: 1.5;
+    padding-top: 4px;
+    /* padding: 12px; */
+    overflow: hidden; /* Prevents content from spilling out */
+    overflow-y: auto; /* Enables vertical scrolling */
+    display: flex;
+    flex-direction: column;
+}
+
+.cs-message-input__tools {
+    width: 0;
+}
+
+.chatbot-container .cs-chat-container .cs-message-input {
+    margin-left: 2%;
+    margin-right: 2%;
+    margin-bottom: 0.5rem;
+    border: none;
+    padding: 0px;
+}

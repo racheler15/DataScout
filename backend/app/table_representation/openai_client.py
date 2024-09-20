@@ -6,6 +6,7 @@ import instructor
 
 load_dotenv()
 
+# Azure OpenAI Assistants allows you to create AI assistants tailored to your needs
 class OpenAIClient:
     def __init__(self):
         # self.client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
@@ -88,6 +89,7 @@ class OpenAIClient:
             print(f"Error creating thread: {e}")
             return
     
+    #Add a user question to the thread
     def create_message(self, thread_id, role, content):
         try:
             message = self.client.beta.threads.messages.create(
@@ -122,6 +124,7 @@ class OpenAIClient:
             print(f"Error running thread: {e}")
             return
 
+    # Retrieve the status of the run ("completed", "cancelled", "expired", "failed")
     def run_status(self, thread_id, run_id):
         try:
             run = self.client.beta.threads.runs.retrieve(

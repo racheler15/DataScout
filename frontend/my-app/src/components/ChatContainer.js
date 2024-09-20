@@ -79,9 +79,9 @@ function ChatContainer() {
                         </>
                     );
                 }
+                console.log("SEARCH:", searchResponse)
 
                 const completeResults = searchResponse.data.complete_results;
-
                 const reply = {
                     id: messages.length + 2,
                     text: (

@@ -24,3 +24,10 @@ __pycache__/
 /frontend/my-app/npm-debug.log*
 /frontend/my-app/yarn-debug.log*
 /frontend/my-app/yarn-error.log*
+
+**/.DS_Store
+**/.vscode
+
+**/venv
+
+**/node_modules

@@ -1,0 +1,21 @@
+.container {
+    border-left: 1px solid black;
+    width: 300px;
+    right: 0;
+    transition: transform 1.5s ease-in-out; 
+    transform: translateX(0); 
+
+}
+.container.closed {
+    transform: translateX(100%);
+    padding: 0px;
+}
+
+.arrow-container {
+    position: absolute;
+    left: -40px;
+    top: 50%;
+    cursor: pointer;
+    padding-right: 1rem;
+    transform: translateY(-50%);
+}
