@@ -97,6 +97,14 @@ class SQLClause(BaseModel):
 class TextToSQL(BaseModel):
     sql_clauses: List[SQLClause]
 
+def prune_query(text):
+    messages = [ 
+        {"role": "system", "content": "You are an assistant skilled in pruning messages to retain only the most relevant information for dataset search tasks. Remove unnecessary phrases, such as 'I want' or 'dataset' and focus on key elements like the task type and specific requirements."
+        },
+        {"role": "user", "content": text}
+        ]
+    return openai_client.infer_metadata_wo_instructor(messages)
+
 
 def infer_action(cur_query, prev_query):
     try:
@@ -160,7 +168,7 @@ def execute_sql(text_to_sql_instance, search_space):
 
     with DatabaseConnection() as db:
         # Base query with initial WHERE condition for the search space
-        query_base = sql.SQL("SELECT DISTINCT table_name, popularity FROM corpus_raw_metadata_with_embedding WHERE table_name = ANY(%s)")
+        query_base = sql.SQL("SELECT DISTINCT table_name, popularity, previous_queries, table_desc, table_tags, col_num, time_granu, geo_granu, comb_embed, query_embed FROM corpus_raw_metadata_with_embedding WHERE table_name = ANY(%s)")
         where_conditions = []  # List to hold additional conditions
         ordering = []  # List to hold ORDER BY conditions
         parameters = [search_space]  # List to hold all parameters for the SQL query

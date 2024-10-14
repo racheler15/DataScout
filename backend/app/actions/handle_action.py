@@ -25,4 +25,4 @@ def handle_raw_fields(cur_query, inferred_raw_fields, search_space):
     
     refined_results = execute_sql(sql_clauses, search_space)
 
-    return refined_results
+    return sql_clauses.model_dump(), refined_results

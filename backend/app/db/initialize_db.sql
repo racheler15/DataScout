@@ -5,6 +5,7 @@ DROP TABLE IF EXISTS corpus_raw_metadata_with_embedding;
 
 CREATE TABLE corpus_raw_metadata_with_embedding (
     table_name TEXT PRIMARY KEY,
+    table_schema TEXT[],
     table_desc TEXT,
     table_tags TEXT[],
     previous_queries TEXT[],

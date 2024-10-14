@@ -10,8 +10,8 @@ def insert_mock_data(file_path):
 
     # Insert each record into the database
     insert_query = '''
-    INSERT INTO corpus_raw_metadata_with_embedding (table_name, previous_queries, example_records, table_desc, table_tags, col_num, popularity, time_granu, geo_granu, comb_embed, query_embed)
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    INSERT INTO corpus_raw_metadata_with_embedding (table_name, table_schema, previous_queries, example_records, table_desc, table_tags, col_num, popularity, time_granu, geo_granu, comb_embed, query_embed)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     ON CONFLICT (table_name) DO NOTHING;
     '''
 
@@ -33,13 +33,16 @@ def insert_mock_data(file_path):
             previous_queries_json = dataset.get("Previous queries", "{}")
             previous_queries = json.loads(previous_queries_json).get("queries", [])  # Extract queries array
 
+            schema = dataset.get("Table schema", "{}")
+            table_schema = json.loads(schema).get("column_names", [])  # Extract queries array
+
             example_records = dataset.get('Example records', [])
             example_records = json.dumps(example_records)
             comb_embed = dataset['Combined embedding']
             query_embed = dataset['Query embedding']
             
             # Execute the insert query
-            db.cursor.execute(insert_query, (table_name, previous_queries, example_records, table_desc, table_tags, col_num, popularity, time_granu, geo_granu, comb_embed, query_embed))
+            db.cursor.execute(insert_query, (table_name, table_schema, previous_queries, example_records, table_desc, table_tags, col_num, popularity, time_granu, geo_granu, comb_embed, query_embed))
 
 
 def main():

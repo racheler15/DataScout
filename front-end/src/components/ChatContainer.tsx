@@ -1,11 +1,10 @@
-import ChatBot from "./ChatBot";
+import ChatBot, { MessageProps } from "./ChatBot";
 import QueryBlocks from "./QueryBlocks";
 import "../styles/ChatContainer.css";
 import { ArrowRightToLine, ArrowLeftFromLine } from "lucide-react";
 import { ResultProp } from "./ResultsTable";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { MessageModel } from "@chatscope/chat-ui-kit-react";
 
 interface ChatContainerProps {
   chatOpen: boolean;
@@ -25,7 +24,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
         const response = await axios.get(
           "http://127.0.0.1:5000/api/most_popular_datasets"
         );
-        console.log("Fetched datasets:", response);
+        console.log(response);
         setResults(response.data); // Set results with the fetched data
       } catch (error) {
         console.error("Error fetching top 10 popular datasets:", error);
@@ -34,42 +33,48 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
     fetchMostPopularDatasets();
   }, [setResults]); // Dependency array includes setResults
 
-  const [messages, setMessages] = useState<MessageModel[]>([
+  const [messages, setMessages] = useState<MessageProps[]>([
     {
-      id: 0,
-      message:
-        "Hello, I am ChatGPT! Please start your dataset search with a task.",
+      id: 1,
+      text: "Hello, I am ChatGPT! Please start your dataset search with a task.",
       sender: "system",
-      direction: "incoming",
-      position: "single",
+      show: true
     },
   ]);
 
   const [task, setTask] = useState<string>("");
-  const [filter, setFilter] = useState<string>("");
+  const [filters, setFilters] = useState<string[]>([]);
+  const [iconVisibility, setIconVisibility] = useState<boolean[]>(
+    new Array(filters.length).fill(true)
+  );
 
   return (
-    <div className={`container ${chatOpen ? "" : "closed"}`}>
+    <div className={`chat-container ${chatOpen ? "" : "closed"}`}>
       <div
         className="arrow-container"
         onClick={() => {
           setChatOpen(!chatOpen);
         }}
       >
-        {chatOpen ? <ArrowRightToLine />: <ArrowLeftFromLine />}
+        {chatOpen ? <ArrowRightToLine /> : <ArrowLeftFromLine />}
       </div>
       {chatOpen && (
         <>
           <QueryBlocks
             task={task}
             setTask={setTask}
-            filter={filter}
-            setFilter={setFilter}
+            filters={filters}
+            setFilters={setFilters}
+            iconVisibility={iconVisibility}
+            setIconVisibility={setIconVisibility}
+            messages={messages}
+            setMessages={setMessages}
           />
           <ChatBot
             setResults={setResults}
             setTask={setTask}
-            setFilter={setFilter}
+            setFilters={setFilters}
+            setIconVisibility={setIconVisibility}
             messages={messages}
             setMessages={setMessages}
           />

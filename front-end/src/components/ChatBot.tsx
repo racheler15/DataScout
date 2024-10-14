@@ -1,42 +1,60 @@
 import "../styles/ChatBot.css";
-import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
-import {
-  MainContainer,
-  ChatContainer as Chat,
-  MessageList,
-  Message,
-  MessageInput,
-  TypingIndicator,
-  MessageModel,
-} from "@chatscope/chat-ui-kit-react";
+import { Search } from "lucide-react";
+import { TypingIndicator } from "@chatscope/chat-ui-kit-react";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { ResultProp } from "./ResultsTable";
-import ResultsTable from "./ResultsTable";
-import { MessageDirection } from "@chatscope/chat-ui-kit-react/src/types/unions";
 
 // https://www.youtube.com/watch?v=Lag9Pj_33hM
 
-interface MessageProps {
+export interface MessageProps {
   id: number;
-  message: String | React.ReactNode;
+  text: String | JSX.Element;
   sender: "user" | "system";
-  direction: MessageDirection;
-  position: "single" | "normal";
+  show: boolean;
 }
-
 interface ChatBotProps {
   setResults: (a: ResultProp[]) => unknown;
   setTask: (task: string) => void;
-  setFilter: (filter: string) => void;
-  messages: MessageModel[];
-  setMessages: React.Dispatch<React.SetStateAction<MessageModel[]>>;
+  setFilters: React.Dispatch<React.SetStateAction<string[]>>;
+  setIconVisibility: React.Dispatch<React.SetStateAction<boolean[]>>;
+  messages: MessageProps[];
+  setMessages: React.Dispatch<React.SetStateAction<MessageProps[]>>;
 }
+interface MessageItemProps {
+  message: MessageProps;
+}
+interface SqlClause {
+  field: string;
+  clause: string;
+}
+export const SYSTEM_UPDATES = [
+  "SYSTEM UPDATED TASK BLOCK",
+  "SYSTEM CREATED FILTER BLOCK",
+  "USER CREATED FILTER BLOCK",
+];
+
+const MessageItem = ({ message }: MessageItemProps) => {
+  const senderStyle = {
+    color: message.sender === "user" ? "#3D5D9F" : "#A02A2A",
+  };
+  return (
+    <div className={`message-container ${message.show ? "" : "show"}`}>
+      {message.show && (
+        <div className="user" style={senderStyle}>
+          {message.sender === "user" ? "User:" : "System:"}{" "}
+        </div>
+      )}
+      <div className="text">{message.text}</div>
+    </div>
+  );
+};
 
 const ChatBot = ({
   setResults,
   setTask,
-  setFilter,
+  setFilters,
+  setIconVisibility,
   messages,
   setMessages,
 }: ChatBotProps) => {
@@ -48,8 +66,32 @@ const ChatBot = ({
   const [currentSearchSpace, setCurrentSearchSpace] = useState<ResultProp[]>(
     []
   );
-
+  const [inputText, setInputText] = useState("");
   const [typing, setTyping] = useState(false);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputText(e.target.value);
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault(); // Prevent form from refreshing the page
+    if (inputText.trim()) {
+      sendMessage(inputText); // Pass the message text to sendMessage function
+      setInputText(""); // Clear the input after submitting
+    }
+  };
+
+  const prunePrompt = async (message: string) => {
+    try {
+      const response = await axios.post(
+        "http://127.0.0.1:5000/api/prune_prompt",
+        { query: message }
+      );
+      setTask(response.data["pruned_query"]);
+    } catch (error) {
+      console.error("Error sending: " + message);
+    }
+  };
 
   useEffect(() => {
     startNewThread();
@@ -105,21 +147,22 @@ const ChatBot = ({
         });
         console.log(searchResponse);
 
-        const newMessage: MessageModel = {
+        const newMessage: MessageProps = {
           id: messages.length + 1,
-          message: messageText,
+          text: messageText,
           sender: "user",
-          direction: "outgoing" as MessageDirection,
-          position: "normal",
+          show: true,
         };
-        console.log(newMessage.id, messageText);
-        console.log(messages.length);
-        if (messages.length === 3) {
-          console.log("true");
-          setFilter(messageText);
-        }
+
         let additionalInfo: string = "";
         if (!isInitialMessage) {
+          searchResponse.data.filter_prompts.sql_clauses.forEach(
+            (item: SqlClause) => {
+              setFilters((prev) => [...prev, `${item.field} ${item.clause}`]);
+              setIconVisibility((prev) => [...prev, true]);
+            }
+          );
+
           additionalInfo += `Inferred Action: ${searchResponse.data.inferred_action}\n`;
           additionalInfo += `Mentioned Semantic Fields: ${searchResponse.data.mention_semantic_fields.join(
             ", "
@@ -129,22 +172,30 @@ const ChatBot = ({
           )}\n`;
         } else {
           // is initial message, update query block
-          setTask(messageText.replace(/\n/g, " "));
+          prunePrompt(messageText);
         }
 
         // Update the current search space
-        const reply: MessageModel = {
+        const reply: MessageProps = {
           id: messages.length + 2,
-          message: `${
-            searchResponse.data.complete_results &&
-            searchResponse.data.complete_results.length > 0
-              ? `Conducted search for "${messageText}".`
-              : "No results found or an error occurred."
-          } ${additionalInfo ? `\n${additionalInfo}` : ""}`,
-
+          text: (
+            <>
+              {isInitialMessage &&
+              searchResponse.data.complete_results &&
+              searchResponse.data.complete_results.length > 0 ? (
+                <div className="system-update-response">
+                  {SYSTEM_UPDATES[0]}
+                </div>
+              ) : (
+                <div className="system-update-response">
+                  {SYSTEM_UPDATES[1]}
+                </div>
+              )}
+              {/* {additionalInfo ? <div>{additionalInfo}</div> : null} */}
+            </>
+          ),
           sender: "system",
-          direction: "incoming" as MessageDirection,
-          position: "single",
+          show: false,
         };
 
         setMessages((prevMessages) => [...prevMessages, newMessage, reply]);
@@ -176,7 +227,6 @@ const ChatBot = ({
           results: completeResults,
         }
       );
-
       // Set success message
       alert("This is a notification alert!");
       setSuccessMessage("Search space has been successfully reset.");
@@ -190,22 +240,31 @@ const ChatBot = ({
 
   return (
     <div className="chatbot-container">
-      <MainContainer style={{ border: "none" }}>
-        <Chat>
-          <MessageList
-            scrollBehavior="smooth"
-            typingIndicator={
-              // if typing is true show TypingIndicator else null
-              typing ? <TypingIndicator content="ChatGPT is typing" /> : null
-            }
-          >
-            {messages.map((message, i) => {
-              return <Message key={i} model={message} />;
-            })}
-          </MessageList>
-          <MessageInput placeholder="Type message here" onSend={sendMessage} />
-        </Chat>
-      </MainContainer>
+      <div className="chat-messages-container">
+        <div className="chat-messages">
+          {messages.map((message, index) => (
+            <div>
+              <MessageItem key={index} message={message}/>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="typing">
+        {typing ? <TypingIndicator content="ChatGPT is typing . . ." /> : null}
+      </div>
+      <div className="chatbox">
+        <div className="search-icon">
+          <Search />
+        </div>
+        <form className="input-container" onSubmit={handleSubmit}>
+          <input
+            type="text"
+            value={inputText}
+            onChange={handleInputChange}
+            placeholder="Type a message..."
+          />
+        </form>
+      </div>
     </div>
   );
 };

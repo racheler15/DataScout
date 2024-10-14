@@ -6,6 +6,7 @@ import { CircleArrowLeft, CircleArrowRight } from "lucide-react";
 import React from "react";
 export type ResultProp = {
   table_tags: string[];
+  // table_schema: string[];
   table_desc: string;
   previous_queries: string[];
   // example_records: Record<string, any>[];

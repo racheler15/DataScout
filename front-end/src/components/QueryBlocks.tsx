@@ -4,12 +4,18 @@ import { Icon } from "@iconify/react";
 import eyeIcon from "@iconify-icons/fluent/eye-20-regular";
 import eyeOffIcon from "@iconify-icons/fluent/eye-off-20-regular";
 import { X } from "lucide-react";
+import FilterPrompt from "./FilterPrompt";
+import { MessageProps } from "./ChatBot";
 
 interface QueryBlocksProps {
   task: string;
-  setTask: (task: string) => void;
-  filter: string;
-  setFilter: (task: string) => void;
+  setTask: React.Dispatch<React.SetStateAction<string>>;
+  filters: string[];
+  setFilters: React.Dispatch<React.SetStateAction<string[]>>;
+  iconVisibility: boolean[]
+  setIconVisibility: React.Dispatch<React.SetStateAction<boolean[]>>;
+  messages: MessageProps[];
+  setMessages: React.Dispatch<React.SetStateAction<MessageProps[]>>;
 }
 
 interface FilterItemProps {
@@ -19,12 +25,17 @@ interface FilterItemProps {
   onRemove: () => void;
 }
 
-const QueryBlocks = ({}: QueryBlocksProps) => {
-  const [task, setTask] = useState("");
-  const [filters, setFilters] = useState(["f", '3']);
-  const [iconVisibility, setIconVisibility] = useState<boolean[]>(
-    new Array(filters.length).fill(true)
-  );
+const QueryBlocks = ({
+  task,
+  setTask,
+  filters,
+  setFilters,
+  iconVisibility,
+  setIconVisibility,
+  messages,
+  setMessages,
+}: QueryBlocksProps) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const FilterItem: React.FC<FilterItemProps> = ({
     filter,
@@ -55,6 +66,15 @@ const QueryBlocks = ({}: QueryBlocksProps) => {
   const removeFilter = (index: number) => {
     setFilters(filters.filter((_, i) => i !== index));
     setIconVisibility((prev) => prev.filter((_, i) => i !== index)); // Update visibility state
+  };
+
+  const handleClick = () => {
+    setIsModalOpen(true); // Open the modal when "+" is clicked
+  };
+
+  const handleNewFilterSubmit = (filter: string) => {
+    setFilters((prev) => [...prev, filter]); // Add the new filter
+    setIconVisibility((prev) => [...prev, true]); // Update visibility state
   };
 
   return (
@@ -102,7 +122,13 @@ const QueryBlocks = ({}: QueryBlocksProps) => {
           </div>
         </div>
         <div className="filter-block">
-          <span className="label">metadata</span>
+          <span className="label">
+            <div style={{ display: "flex" }}>metadata</div>
+            <div>({filters.length})</div>
+            <button className="metadata-btn" onClick={handleClick}>
+              +
+            </button>
+          </span>
           <div className="filter-tags">
             {filters.length === 0 ? (
               <div
@@ -125,6 +151,13 @@ const QueryBlocks = ({}: QueryBlocksProps) => {
           </div>
         </div>
       </div>
+      <FilterPrompt
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)} // Close modal
+        onSubmit={handleNewFilterSubmit} // Handle new filter submission
+        messages={messages}
+        setMessages={setMessages}
+      />
     </div>
   );
 };

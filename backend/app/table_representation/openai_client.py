@@ -10,14 +10,13 @@ load_dotenv()
 class OpenAIClient:
     def __init__(self):
         # self.client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
-        # self.text_generation_model_default = "gpt-3.5-turbo"
+        # self.text_generation_model_default = "gpt-4o-mini"
         # self.embedding_model_default = "text-embedding-3-small"
         self.client = AzureOpenAI(
             azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT"), 
             api_key=os.getenv("AZURE_OPENAI_API_KEY"),  
             api_version="2024-02-15-preview"
         ) 
-        # self.text_generation_model_default = "gpt-35-infer-model"
         self.text_generation_model_default = "gpt-4-infer-model"
         self.embedding_model_default = "gpt-4-embed-ada-model"
 
@@ -62,7 +61,7 @@ class OpenAIClient:
             return response.data[0].embedding
         except Exception as e:
             print(f"Error generating embeddings: {e}")
-            return
+            return        
     
     # Azure OpenAI Assistants tutorial: https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/assistant
     def create_assistant(self, name, instructions, model=None):
