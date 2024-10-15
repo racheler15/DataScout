@@ -6,17 +6,17 @@ import instructor
 
 load_dotenv()
 
+# Azure OpenAI Assistants allows you to create AI assistants tailored to your needs
 class OpenAIClient:
     def __init__(self):
         # self.client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
-        # self.text_generation_model_default = "gpt-3.5-turbo"
+        # self.text_generation_model_default = "gpt-4o-mini"
         # self.embedding_model_default = "text-embedding-3-small"
         self.client = AzureOpenAI(
             azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT"), 
             api_key=os.getenv("AZURE_OPENAI_API_KEY"),  
             api_version="2024-02-15-preview"
         ) 
-        # self.text_generation_model_default = "gpt-35-infer-model"
         self.text_generation_model_default = "gpt-4-infer-model"
         self.embedding_model_default = "gpt-4-embed-ada-model"
 
@@ -61,7 +61,7 @@ class OpenAIClient:
             return response.data[0].embedding
         except Exception as e:
             print(f"Error generating embeddings: {e}")
-            return
+            return        
     
     # Azure OpenAI Assistants tutorial: https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/assistant
     def create_assistant(self, name, instructions, model=None):
@@ -88,6 +88,7 @@ class OpenAIClient:
             print(f"Error creating thread: {e}")
             return
     
+    #Add a user question to the thread
     def create_message(self, thread_id, role, content):
         try:
             message = self.client.beta.threads.messages.create(
@@ -122,6 +123,7 @@ class OpenAIClient:
             print(f"Error running thread: {e}")
             return
 
+    # Retrieve the status of the run ("completed", "cancelled", "expired", "failed")
     def run_status(self, thread_id, run_id):
         try:
             run = self.client.beta.threads.runs.retrieve(

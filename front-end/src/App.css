@@ -1,0 +1,28 @@
+.app-container {
+  display: flex;
+  flex-direction: row;
+  width: 100vw;
+  height: 100vh;
+  transition: flex 1s ease-in-out;
+}
+
+.app-container > :nth-child(1) {
+  flex: 1 1 65%; 
+}
+
+.app-container > :nth-child(2) {
+  flex: 1 1 35%; 
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid black;
+}
+
+.app-container.chat-close > :nth-child(2) {
+  flex: 0 0 0; 
+
+}
+
+.app-container.chat-close > :nth-child(1) {
+  flex: 1 1 100%; 
+
+}

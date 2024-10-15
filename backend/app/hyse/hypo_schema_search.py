@@ -33,7 +33,6 @@ def hyse_search(initial_query, search_space=None):
     # Step 4: Cosine similarity search between e(query) and e(existing_prev_queries_embed)
     query_embedding = openai_client.generate_embeddings(text=initial_query)
     initial_results = cos_sim_search(query_embedding, search_space, column_name="query_embed")
-    
     return initial_results
 
 
@@ -57,7 +56,7 @@ def cos_sim_search(input_embedding, search_space, column_name="comb_embed"):
         if search_space:
             # Filter by specific table names
             query = f"""
-                SELECT table_name, 1 - ({column_name} <=> %s::VECTOR(1536)) AS cosine_similarity
+                SELECT table_name, table_desc, table_tags, previous_queries, col_num, example_records, popularity, time_granu, geo_granu, 1 - ({column_name} <=> %s::VECTOR(1536)) AS cosine_similarity
                 FROM corpus_raw_metadata_with_embedding
                 WHERE table_name = ANY(%s)
                 ORDER BY cosine_similarity DESC;
@@ -66,12 +65,25 @@ def cos_sim_search(input_embedding, search_space, column_name="comb_embed"):
         else:
             # No specific search space, search through all table names
             query = f"""
-                SELECT table_name, 1 - ({column_name} <=> %s::VECTOR(1536)) AS cosine_similarity
+                SELECT table_name, table_desc, table_tags, previous_queries, col_num, example_records, popularity, time_granu, geo_granu, 1 - ({column_name} <=> %s::VECTOR(1536)) AS cosine_similarity
                 FROM corpus_raw_metadata_with_embedding
                 ORDER BY cosine_similarity DESC;
             """
+            
             db.cursor.execute(query, (input_embedding, ))
         
         results = db.cursor.fetchall()
-    
+    return results
+
+def most_popular_datasets():
+    with DatabaseConnection() as db:        
+        # No specific search space, search through all table names
+        query = f"""
+            SELECT *
+            FROM corpus_raw_metadata_with_embedding
+            ORDER BY popularity DESC
+            LIMIT 10;
+        """
+        db.cursor.execute(query)    
+        results = db.cursor.fetchall()
     return results

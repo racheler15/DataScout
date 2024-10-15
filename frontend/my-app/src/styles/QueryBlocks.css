@@ -1,0 +1,37 @@
+.query-container {
+  flex: 1;
+  padding: 12px;
+}
+
+.task {
+  margin-left: 1rem;
+  margin-top: 1rem;
+  padding: 12px;
+  background-color: #FED5FF;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  display: flex;
+  align-items: center; /* Center children vertically */
+}
+.task-title{
+  padding-right: 2rem;
+}
+
+.task-prompt {
+  margin-left: 1rem;
+  border: 1px solid #CB96D4;
+  padding: 4px;
+  flex: 1;
+  outline: none;
+  height: auto;
+  min-height: 30px; 
+  max-height: 300px;
+  overflow-y: auto;
+  width: 100%; 
+  box-sizing: border-box;
+  resize: vertical;
+
+}
+.task-prompt:focus { /* when box is clicked */
+  outline: 2px solid #CB96D4; 
+}

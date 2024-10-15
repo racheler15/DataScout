@@ -3,11 +3,10 @@ from flask_cors import CORS
 from uuid import uuid4
 import logging
 from backend.app.table_representation.openai_client import OpenAIClient
-from backend.app.hyse.hypo_schema_search import hyse_search
-from backend.app.actions.infer_action import infer_action, infer_mentioned_metadata_fields
+from backend.app.hyse.hypo_schema_search import hyse_search, most_popular_datasets
+from backend.app.actions.infer_action import infer_action, infer_mentioned_metadata_fields, prune_query
 from backend.app.actions.handle_action import handle_semantic_fields, handle_raw_fields
 from backend.app.chat.handle_chat_history import append_user_query, append_system_response, get_user_queries, get_last_results, get_mentioned_fields
-
 
 # Flask app configuration
 app = Flask(__name__)
@@ -23,14 +22,19 @@ logging.basicConfig(level=logging.INFO)
 # TODO: Use server-side session to store chat histories
 chat_history = {}
 
-@app.route('/api/start_chat', methods=['POST'])
+#########
+# When start chat session, create a new thread (conversation session between an Assistant and a user).
+#########
+@app.route('/api/start_chat', methods=['POST']) #post = submitting data ==> creating a new chat session
 def start_new_chat_session():
     # Generate a unique session/thread ID
     thread_id = str(uuid4())
-    # Initialize the chat history for this thread
+    # Initialize the chat history for this thread; messages stored as list
     chat_history[thread_id] = []
     # Return the thread_id to the client
     return jsonify({"thread_id": thread_id})
+
+
 
 @app.route('/api/get_chat_history', methods=['GET'])
 def get_chat_history():
@@ -52,6 +56,11 @@ def get_chat_history():
             "error": "Invalid or missing thread_id"
         }), 400
 
+
+
+#########
+# This function processes incoming POST requests to update the chat history.
+#########
 @app.route('/api/update_chat_history', methods=['POST'])
 def update_chat_history():
     data = request.get_json()
@@ -71,7 +80,9 @@ def update_chat_history():
 
         # Update chat history with additional metadata field information
         append_user_query(chat_history, thread_id, query, bool(semantic_fields_identified), bool(raw_fields_identified))
-        logging.info(f"💬 Current chat history: {chat_history}")
+        # logging.info(f"💬 Current chat history: {chat_history}")
+        logging.info(f"💬 Number of threads in chat history: {len(chat_history)}")
+
 
         return jsonify({
                 "success": True,
@@ -82,6 +93,18 @@ def update_chat_history():
         logging.error(f"Update chat history failed for thread: {thread_id}, Error: {e}")
         return jsonify({"error": "Update chat history failed due to an internal error"}), 500
 
+#########
+# This function does returns 10 most popular datasets when component first mounts.
+#########
+@app.route('/api/most_popular_datasets', methods=['GET'])
+def get_most_popular_datasets():
+    popular_results = most_popular_datasets()
+    return jsonify(popular_results)
+
+
+#########
+# This function does first initial hyse_search based on first query.
+#########
 @app.route('/api/hyse_search', methods=['POST'])
 def initial_search():
     thread_id = request.get_json().get('thread_id')
@@ -111,6 +134,9 @@ def initial_search():
         logging.error(f"Search failed for query: {initial_query}, Error: {e}")
         return jsonify({"error": "Search failed due to an internal error"}), 500
 
+#########
+# This function 
+#########
 @app.route('/api/refine_search_space', methods=['POST'])
 def refine_search_space():
     thread_id = request.get_json().get('thread_id')
@@ -166,10 +192,10 @@ def refine_search_space():
             inferred_raw_fields = infer_mentioned_metadata_fields(cur_query=cur_query, semantic_metadata=False).get_true_fields()
             logging.info(f"✅Inferred mentioned raw metadata fields for current query '{cur_query}': {inferred_raw_fields}")
             
-            refined_results = handle_raw_fields(cur_query, inferred_raw_fields, search_space=cached_results)
+            sql_clauses, refined_results = handle_raw_fields(cur_query, inferred_raw_fields, search_space=cached_results)
             append_system_response(chat_history, thread_id, refined_results, refine_type="raw")
 
-        logging.info(f"💬Current chat history: {chat_history}")
+        # logging.info(f"💬Current chat history: {chat_history}")
 
         # Package the response with additional information from the second message onwards
         response_data = {
@@ -177,7 +203,8 @@ def refine_search_space():
             "complete_results": refined_results,
             "inferred_action": inferred_action.get_true_fields(),
             "mention_semantic_fields": inferred_semantic_fields,
-            "mention_raw_fields": inferred_raw_fields,
+            "mention_raw_fields": inferred_raw_fields,   
+            "filter_prompts" : sql_clauses,         
         }
 
         return jsonify(response_data), 200
@@ -207,6 +234,16 @@ def reset_search_space():
         logging.error(f"Search space reset failed for thread_id '{thread_id}', Error: {e}")
         return jsonify({"error": "Search space reset failed due to an internal error"}), 500
 
+#########
+# This function takes in a prompt and prunes it of unnecessary words, keeping only relevant content.
+#########
+@app.route('/api/prune_prompt', methods=['POST'])
+def prune_prompt():
+    query = request.get_json().get('query')
+    if query and len(query) >= 1: 
+        prompt = prune_query(query)
+        logging.info(f"✅Prune successful for query: {query}")
+        return jsonify({"pruned_query": prompt})
 
 if __name__ == '__main__':
     app.run(debug=True)

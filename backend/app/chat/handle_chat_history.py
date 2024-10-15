@@ -11,7 +11,6 @@ def append_user_query(chat_history, thread_id, text, mention_semantic_fields=Non
 
     if thread_id in chat_history:
         chat_history[thread_id].append(response)
-    
     # logging.info(f"💬User input query added to chat history for thread_id {thread_id}: {text}")
 
 def append_system_response(chat_history, thread_id, text, refine_type):
