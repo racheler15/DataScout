@@ -10,8 +10,8 @@ def insert_mock_data(file_path):
 
     # Insert each record into the database
     insert_query = '''
-    INSERT INTO corpus_raw_metadata_with_embedding (table_name, table_schema, previous_queries, example_records, table_desc, table_tags, col_num, popularity, time_granu, geo_granu, comb_embed, query_embed)
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    INSERT INTO corpus_raw_metadata_with_embedding (table_name, table_schema, previous_queries, example_records, table_desc, table_tags, col_num, popularity, time_granu, geo_granu, comb_embed, query_embed, table_category)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     ON CONFLICT (table_name) DO NOTHING;
     '''
 
@@ -40,9 +40,11 @@ def insert_mock_data(file_path):
             example_records = json.dumps(example_records)
             comb_embed = dataset['Combined embedding']
             query_embed = dataset['Query embedding']
+
+            table_category = dataset["Category"]
             
             # Execute the insert query
-            db.cursor.execute(insert_query, (table_name, table_schema, previous_queries, example_records, table_desc, table_tags, col_num, popularity, time_granu, geo_granu, comb_embed, query_embed))
+            db.cursor.execute(insert_query, (table_name, table_schema, previous_queries, example_records, table_desc, table_tags, col_num, popularity, time_granu, geo_granu, comb_embed, query_embed, table_category))
 
 
 def main():
@@ -53,7 +55,7 @@ def main():
         print("🚀 Database initialized successfully.")
 
         # Insert mock data corpus into database
-        insert_mock_data('mock_data/mock_data_with_embedding.json')
+        insert_mock_data('mock_data/mock_data_with_embedding_and_tag.json')
 
     except Exception as e:
         print(f"An error occurred: {e}")

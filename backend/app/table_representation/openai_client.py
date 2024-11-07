@@ -21,7 +21,6 @@ class OpenAIClient:
         # self.embedding_model_default = "gpt-4-embed-ada-model"
 
     def infer_metadata(self, messages, response_model, model=None):
-        print("CALLING")
         if model is None:
             model = self.text_generation_model_default
         try:

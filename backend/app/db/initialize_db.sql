@@ -15,7 +15,8 @@ CREATE TABLE corpus_raw_metadata_with_embedding (
     time_granu TEXT[],
     geo_granu TEXT[],
     comb_embed VECTOR(1536),
-    query_embed VECTOR(1536)
+    query_embed VECTOR(1536),
+    table_category TEXT
 );
 
 -- Add index for the embeddings using HNSW cosine distance

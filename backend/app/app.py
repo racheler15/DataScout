@@ -7,11 +7,26 @@ from backend.app.hyse.hypo_schema_search import hyse_search, most_popular_datase
 from backend.app.actions.infer_action import infer_action, infer_mentioned_metadata_fields, prune_query
 from backend.app.actions.handle_action import handle_semantic_fields, handle_raw_fields
 from backend.app.chat.handle_chat_history import append_user_query, append_system_response, get_user_queries, get_last_results, get_mentioned_fields
+import os
+import time
+import asyncio
+import threading
+import queue
+from typing import List, Dict, Any
+import autogen
+from autogen import AssistantAgent, UserProxyAgent, GroupChat, GroupChatManager, ConversableAgent, Agent
+
 
 
 # Flask app configuration
 app = Flask(__name__)
 CORS(app)
+
+chat_status = "ended"
+
+# Queues for single-user setup
+print_queue = queue.Queue()
+user_queue = queue.Queue()
 
 # OpenAI client instantiation
 openai_client = OpenAIClient()
@@ -22,6 +37,36 @@ logging.basicConfig(level=logging.INFO)
 # In-memory storage for chat history
 # TODO: Use server-side session to store chat histories
 chat_history = {}
+
+llm_config = {
+    "config_list": [
+        {"model": "gpt-4o-mini", "api_key": os.environ.get('OPENAI_API_KEY')}
+    ]
+}
+
+table_schema_dict = {
+"table_name": "TEXT PRIMARY KEY",
+"table_schema": "TEXT[]",
+"table_desc": "TEXT",
+"table_tags": "TEXT[]",
+"previous_queries": "TEXT[]",
+"example_records": "JSONB",
+"col_num": "INT",
+"popularity": "INT",
+"time_granu": "TEXT[]",
+"geo_granu": "TEXT[]",
+"comb_embed": "VECTOR(1536)",
+"query_embed": "VECTOR(1536)",
+"table_category": "TEXT"
+    }
+
+# Overwrite print_received_messages from Autogen libraries, currently hardcoded; need to stream
+# def new_print_received_message(self, message, sender):
+#     print(f"PATCHED {sender.name}: {message}")
+#     socket_io.emit('message', {"sender": sender.name, "content": message})
+# AssistantAgent._print_received_message = new_print_received_message
+# UserProxyAgent._print_received_message = new_print_received_message
+
 
 #########
 # When start chat session, create a new thread (conversation session between an Assistant and a user).
@@ -34,6 +79,7 @@ def start_new_chat_session():
     # Initialize the chat history for this thread; messages stored as list
     chat_history[thread_id] = []
     # Return the thread_id to the client
+    global chat_status
     return jsonify({"thread_id": thread_id})
 
 
@@ -250,6 +296,302 @@ def prune_prompt():
         prompt = prune_query(query)
         logging.info(f"✅Prune successful for query: {query}")
         return jsonify({"pruned_query": prompt})
+    
+class MyConversableAgent(ConversableAgent):
+    async def a_get_human_input(self, prompt: str) -> str:
+        logging.info("async human input")
+
+        start_time = time.time()
+        global chat_status
+        chat_status="inputting"
+        while True:
+            if not user_queue.empty():
+                logging.info("checking user_queue")
+                input_value = user_queue.get()
+                chat_status = "chat ongoing"
+                return input_value
+            if time.time()-start_time > 600: #10 min timeout mechanism for memory leaks
+                chat_status = "ended"
+                return "exit"
+            await asyncio.sleep(1)
+
+async def print_messages(recipient, messages, sender, config):
+    print(f"Messages from: {sender.name} sent to {recipient.name} | num messages: {len(messages)} | message: {messages[-1]}")
+    content = messages[-1]['content']
+    print(content)
+
+    if all(key in messages[-1] for key in ['name']):
+        print_queue.put({'user': messages[-1]['name'], 'message': content})
+    elif messages[-1]['role'] == 'user':
+        print_queue.put({'user': sender.name, 'message': content})
+    else:
+        print_queue.put({'user': recipient.name, 'message': content})
+    
+    return False, None
+
+def create_userproxy():
+    user_proxy = MyConversableAgent(
+        name = "user_proxy",
+        system_message="A human admin.",
+        human_input_mode="ALWAYS",
+        llm_config=llm_config
+        )
+    user_proxy.register_reply(
+        [autogen.Agent, None],
+        reply_func=print_messages,
+        config={"callback":None}
+    )
+    return user_proxy
+
+async def initiate_chat(agent, recipient, message, max_turns):
+    logging.info("initiating chat between recipient and user")
+    result = await agent.a_initiate_chat(recipient, message=message, summary_method="reflection_with_llm", max_turns=max_turns, clear_history = False)
+    if result is None:
+        logging.error("No result returned from initiate_chat")
+    print("RESULT", result)
+    return result
+
+def run_chat(thread_id, user_query, task, filters):
+    global chat_status
+    logging.info("run_chat running.")
+    try: 
+        with app.app_context():
+            #data structure for the req
+            user = create_userproxy()
+
+            query_refiner = AssistantAgent(name="query_refiner", 
+            system_message="""
+            You are a helpful assistant that refines search queries to make them specific. Users are currently exploring datasets and may not have a clear objective for the dataset in mind, so they require assistance in refining their intent. Ask a single, directed question to help the user clarify their search in one step, aiming to make the query specific enough to elicit their search intent. To be 'specific,' a query should include a topic and a clear task.
+
+            For example, 'I want a dataset on presidential elections' is too broad. In this case, you should ask a question that helps clarify the task or narrow the scope in just one step.
+
+            An example of a query that is specific enough would be, 'I want a dataset to train a predictive model on voter turnout in presidential elections.' This query has a clear topic (presidential elections) and a defined task (training a predictive model on voter turnout).
+
+            After asking the question and receiving the user's response, provide an example of the refined query based on their input: 'An example of the refined query based on your input is: [refined query].' Additionally, offer 3 alternative queries by stating 'Alternative queries:' followed by concise examples to help guide them towards a more specific query. Otherwise, if the search query is specific enough (having both a topic and a clear task), inform the user that they can now proceed to query metadata attributes.
+            """,
+            llm_config=llm_config
+            )
+            metadata_agent = AssistantAgent(name="metadata_agent", 
+            system_message=f"""     
+            You are a helpful assistant that will help reduce the search space given the user query: {user_query}. Given all the metadata attributes and their type: {table_schema_dict}, propose the top 3 metadata attributes from the provided list that will be useful to query over for the given user query.
+            """,
+            llm_config=llm_config
+            )
+            metadata_agent.register_reply(
+                [UserProxyAgent, None],
+                reply_func=print_messages,
+                config={"callback": None}
+            )
+            query_refiner.register_reply(
+                [UserProxyAgent, None],
+                reply_func=print_messages,
+                config={"callback": None}
+            )
+        
+            asyncio.run(initiate_chat(user, query_refiner, user_query, 5))
+            print("FINISHED RUNNNING INITIATE CHAT")
+            metadata_message= "Please use the new refined query from the summary to generate metadata attribute suggestions."
+            asyncio.run(initiate_chat(user, metadata_agent, metadata_message, 2))
+
+            chat_status="ended"
+    
+    except Exception as e:
+        logging.error(f"runchat failed, Error: {e}")
+        with app.app_context():
+            return jsonify({"error": "Search failed due to an internal error"}), 500
+        
+
+@app.route('/api/agent_chooser', methods=['POST'])
+def agent_chooser():
+    logging.info("Choosing autogen agent.")
+    thread_id = request.get_json().get('thread_id')
+    user_query = request.json.get('query')
+    task = request.json.get('task')
+    filters = request.json.get('filters')
+
+    user = UserProxyAgent(
+    name = "user_proxy",
+    system_message="A human admin.",
+    human_input_mode="ALWAYS",
+    llm_config=llm_config
+    )
+
+    agent_chooser = AssistantAgent(name="agent_chooser", 
+    system_message=f"""
+    You are a helpful assistant suggests the next agent to call based on the user_query, existing filters, and existing task. You will output only one agent (query_refiner, graph_agent) based on the following logic:
+    
+    query_refiner: This agent refines search queries to make them specific. 
+    - Call this agent if {task} is empty.
+
+    graph_agent: This agent will graph the distribution of the categorical or numerical variable specified in {user_query}. 
+    - Call this agent if {task} is not empty, and {user_query} specifies a metadata attribute from {table_schema_dict}.
+    """,
+    llm_config=llm_config
+    )
+    try:
+        global chat_status
+        logging.info("initiating autogen agent chat")
+        chat_result = user.initiate_chat(agent_chooser, message=user_query, summary_method="reflection_with_llm",max_turns=1)
+        
+        if chat_status == 'error':
+            chat_status = 'ended'
+        with print_queue.mutex:
+            print_queue.queue.clear()
+        with user_queue.mutex:
+            user_queue.queue.clear()
+        chat_status = 'chat ongoing'
+        logging.info("starting thread")
+        
+
+        # Start the thread and pass the request data
+        thread = threading.Thread(target=run_chat, args=(thread_id, user_query, task, filters))
+        thread.start()
+        logging.info(chat_result.chat_history)
+        return jsonify({"agent_chosen": chat_result.chat_history[1]["content"], "status": chat_status}), 200
+    except Exception as e:
+        logging.error(f"Agent chooser failed, Error: {e}")
+        return jsonify({"error": "Search failed due to an internal error"}), 500  
+      
+#########
+# This function takes front end message and puts it in queue for agents.
+#########
+@app.route('/api/send_message', methods=['POST'])
+def send_message():
+    logging.info("received user input from frontend")
+    user_input = request.json.get('query')
+    user_queue.put(user_input)
+    return jsonify({'status': 'Message Received'})
+
+#########
+# This function displays messages from agents to frontend.
+#########
+@app.route('/api/get_message', methods=['GET'])
+def get_messages():
+    global chat_status
+    if not print_queue.empty():
+        msg = print_queue.get()
+        logging.info(msg)
+        return jsonify({'message': msg, 'status': chat_status}), 200 
+    else:
+        return jsonify({'message': '', 'status': chat_status}), 200
+
+
+
+@app.route('/api/query_refiner', methods=['POST'])
+def query_refiner():
+    logging.info("Query refiner agent.")
+    user_query = request.json.get('query')
+
+    user = UserProxyAgent(
+    name = "user_proxy",
+    system_message="A human admin.",
+    human_input_mode="ALWAYS",
+    llm_config=llm_config
+    )
+
+    query_refiner = AssistantAgent(name="query_refiner", 
+    system_message="""
+    You are a helpful assistant that refines search queries to make them specific. Users are currently exploring datasets and may not have a clear objective for the dataset in mind, so they require assistance in refining their intent. Ask a single, directed question to help the user clarify their search in one step, aiming to make the query specific enough to elicit their search intent. To be 'specific,' a query should include a topic and a clear task.
+
+    For example, 'I want a dataset on presidential elections' is too broad. In this case, you should ask a question that helps clarify the task or narrow the scope in just one step.
+
+    An example of a query that is specific enough would be, 'I want a dataset to train a predictive model on voter turnout in presidential elections.' This query has a clear topic (presidential elections) and a defined task (training a predictive model on voter turnout).
+
+    After asking the question and receiving the user's response, provide an example of the refined query based on their input: 'An example of the refined query based on your input is: [refined query].' Additionally, offer 3 alternative queries by stating 'Alternative queries:' followed by concise examples to help guide them towards a more specific query. Otherwise, if the search query is specific enough (having both a topic and a clear task), inform the user that they can now proceed to query metadata attributes.
+    """,
+    llm_config=llm_config
+    )
+
+    chat_result = user.initiate_chat(query_refiner, message=user_query, summary_method="reflection_with_llm", max_turns=4)
+    jsonify(chat_result.summary)
+
+    
+#########
+# This function takes in a initial query and helps refine it. Then it suggests 3 metadata attributes to query over.
+#########
+@app.route('/api/autogen_reply', methods=['POST'])
+def autogen_reply():
+    logging.info("Starting or continuing autogen search pipeline")
+    thread_id = request.get_json().get('thread_id')
+    initial_query = request.json.get('query')
+    # Ensure the thread_id exists
+    if thread_id not in chat_history:
+        return jsonify({'error': 'Thread ID not found'}), 404
+    if not initial_query or len(initial_query.strip()) == 0:
+        logging.error("Empty query provided")
+        return jsonify({"error": "No query provided"}), 400
+
+
+    # initial_results = hyse_search(initial_query, search_space=None)
+
+
+    user = UserProxyAgent(
+        name = "user_proxy",
+        system_message="A human admin.",
+        human_input_mode="ALWAYS",
+        llm_config=llm_config
+    )
+
+    query_refiner = AssistantAgent(name="query_refiner", 
+        system_message="""
+        You are a helpful assistant that refines search queries to make them specific. Users are currently exploring datasets and may not have a clear objective for the dataset in mind, so they require assistance in refining their intent. Ask a single, directed question to help the user clarify their search in one step, aiming to make the query specific enough to elicit their search intent. To be 'specific,' a query should include a topic and a clear task.
+
+        For example, 'I want a dataset on presidential elections' is too broad. In this case, you should ask a question that helps clarify the task or narrow the scope in just one step.
+
+        An example of a query that is specific enough would be, 'I want a dataset to train a predictive model on voter turnout in presidential elections.' This query has a clear topic (presidential elections) and a defined task (training a predictive model on voter turnout).
+
+        After asking the question and receiving the user's response, provide an example of the refined query based on their input: 'An example of the refined query based on your input is: [refined query].' Additionally, offer 3 alternative queries by stating 'Alternative queries:' followed by concise examples to help guide them towards a more specific query. Otherwise, if the search query is specific enough (having both a topic and a clear task), inform the user that they can now proceed to query metadata attributes.
+        """,
+        llm_config=llm_config
+    )
+
+    metadata_agent = AssistantAgent(name="metadata_agent", 
+        system_message=f"""     
+        You are a helpful assistant that will help reduce the search space given the user query: {initial_query}. Given all the metadata attributes and their type: {table_schema_dict}, propose the top 3 metadata attributes that will be useful to query over for the given user query.
+        """,
+        llm_config=llm_config
+    )
+    try:
+        initial_results = hyse_search(initial_query, search_space=None)
+        append_system_response(chat_history, thread_id, initial_results, refine_type="semantic")
+        
+        chat_results = user.initiate_chats(
+        [
+            {"recipient": query_refiner,
+            "message": initial_query,
+            "summary_method": "reflection_with_llm",
+            "max_turns": 3,
+            "silent": False
+            },
+            {"recipient": metadata_agent,
+            "message": "Please use the new refined query from the summary to generate metadata attribute suggestions.",
+            "summary_method": "reflection_with_llm",
+            "max_turns": 1,
+            "silent": False
+            },
+            ]
+        )
+
+        # Update the cached results
+        chat_history[thread_id + '_cached_results'] = [result["table_name"] for result in initial_results]
+
+        response_data = {
+            "top_results": initial_results[:10],
+            "complete_results": initial_results,
+            "chat_history": chat_history,
+            "chat_results": chat_results
+        }
+
+        logging.info(f"✅Search successful for query: {initial_query}")
+        logging.info(f"💬 Current chat history: {chat_history}")
+
+        return jsonify(response_data), 200
+    except Exception as e:
+        logging.error(f"Search failed for query: {initial_query}, Error: {e}")
+        return jsonify({"error": "Search failed due to an internal error"}), 500    
+    
+     
 
 if __name__ == '__main__':
     app.run(debug=True)
+
