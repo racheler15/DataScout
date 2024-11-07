@@ -5,14 +5,14 @@ import eyeIcon from "@iconify-icons/fluent/eye-20-regular";
 import eyeOffIcon from "@iconify-icons/fluent/eye-off-20-regular";
 import { X } from "lucide-react";
 import FilterPrompt from "./FilterPrompt";
-import { MessageProps } from "./ChatBot";
+import { MessageProps, SYSTEM_UPDATES } from "./ChatBot";
 
 interface QueryBlocksProps {
   task: string;
   setTask: React.Dispatch<React.SetStateAction<string>>;
   filters: string[];
   setFilters: React.Dispatch<React.SetStateAction<string[]>>;
-  iconVisibility: boolean[]
+  iconVisibility: boolean[];
   setIconVisibility: React.Dispatch<React.SetStateAction<boolean[]>>;
   messages: MessageProps[];
   setMessages: React.Dispatch<React.SetStateAction<MessageProps[]>>;
@@ -106,12 +106,26 @@ const QueryBlocks = ({
               }}
               value={task}
               onChange={(e) => setTask(e.target.value)}
-              // onKeyDown={(e) => {
-              //   if (e.key === "Enter") {
-              //     e.preventDefault(); // Prevent new line on Enter
-              //     setTask(task);
-              //   }
-              // }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault(); // Prevent new line on Enter
+                  setTask(task);
+                  const updatedTask: MessageProps = {
+                    id: messages.length + 1,
+                    text: (
+                      <>
+                        <div className="system-update-response">
+                          {SYSTEM_UPDATES[0]}
+                        </div>
+                      </>
+                    ),
+                    sender: "system",
+                    show: false,
+                  };
+                  setMessages((prevMessages) => [...prevMessages, updatedTask]);
+                  console.log("NEW TASK: ", task);
+                }
+              }}
               placeholder="Enter your task here..."
             />{" "}
             <X

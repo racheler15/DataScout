@@ -15,7 +15,9 @@ export interface MessageProps {
 }
 interface ChatBotProps {
   setResults: (a: ResultProp[]) => unknown;
+  task: string;
   setTask: (task: string) => void;
+  filters: string[];
   setFilters: React.Dispatch<React.SetStateAction<string[]>>;
   setIconVisibility: React.Dispatch<React.SetStateAction<boolean[]>>;
   messages: MessageProps[];
@@ -29,14 +31,14 @@ interface SqlClause {
   clause: string;
 }
 export const SYSTEM_UPDATES = [
-  "SYSTEM UPDATED TASK BLOCK",
+  "USER UPDATED TASK BLOCK",
   "SYSTEM CREATED FILTER BLOCK",
   "USER CREATED FILTER BLOCK",
 ];
-
 const MessageItem = ({ message }: MessageItemProps) => {
   const senderStyle = {
     color: message.sender === "user" ? "#3D5D9F" : "#A02A2A",
+    paddingRight: message.sender === "user" ? "20px" : "0px",
   };
   return (
     <div className={`message-container ${message.show ? "" : "show"}`}>
@@ -52,7 +54,9 @@ const MessageItem = ({ message }: MessageItemProps) => {
 
 const ChatBot = ({
   setResults,
+  task,
   setTask,
+  filters,
   setFilters,
   setIconVisibility,
   messages,
@@ -68,12 +72,15 @@ const ChatBot = ({
   );
   const [inputText, setInputText] = useState("");
   const [typing, setTyping] = useState(false);
+  const [chatStatus, setChatStatus] = useState('ended');
+  const [activeAgent, setActiveAgent] = useState("");
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputText(e.target.value);
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    console.log("handling submit")
     e.preventDefault(); // Prevent form from refreshing the page
     if (inputText.trim()) {
       sendMessage(inputText); // Pass the message text to sendMessage function
@@ -92,11 +99,41 @@ const ChatBot = ({
       console.error("Error sending: " + message);
     }
   };
+  const fetchMessages = async() =>{
+    try {
+      const response = await fetch("http://127.0.0.1:5000/api/get_message");
+      const data = await response.json();
+      console.log(data)
+      if (data.message && data.message !=='') {
+        const newMessage: MessageProps = {
+          id: messages.length + 1,
+          text: data.message.message,
+          sender: data.message.user,
+          show: true,
+        };
+        setMessages(prevMessages => [...prevMessages, newMessage]);
+
+      }
+      setChatStatus(data.status)
+    } catch (error) {
+      console.error('Error fetching messages: ', error)
+    }
+    
+  }
 
   useEffect(() => {
     startNewThread();
     // Empty dependency array means this effect runs once when the component mounts
   }, []);
+
+  useEffect(() => {
+    // Empty dependency array means this effect runs once when the component mounts
+  }, [task]);
+
+  useEffect(()=> {
+    const intervalId = setInterval(fetchMessages, 3000); // changed from 1000
+    return () => clearInterval(intervalId);
+  }, [messages])
 
   // called when component mounts
   const startNewThread = async () => {
@@ -120,12 +157,20 @@ const ChatBot = ({
       setError("There is no active chat thread. Please start a new chat.");
       return;
     }
+    const newMessage: MessageProps = {
+          id: messages.length + 1,
+          text: messageText,
+          sender: "user",
+          show: true,
+        };
+    setMessages((prevMessages) => [...prevMessages, newMessage])
 
     const chatHistoryUrl = "http://127.0.0.1:5000/api/update_chat_history";
+    const searchUrl = "http://127.0.0.1:5000/api/agent_chooser";
 
-    const searchUrl = isInitialMessage
-      ? "http://127.0.0.1:5000/api/hyse_search"
-      : "http://127.0.0.1:5000/api/refine_search_space";
+    // const searchUrl = isInitialMessage
+    //   ? "http://127.0.0.1:5000/api/autogen_agent"
+    //   : "http://127.0.0.1:5000/api/refine_search_space";
 
     setIsLoading(true);
 
@@ -141,67 +186,103 @@ const ChatBot = ({
       // Check if chat history update was successful before proceeding
       if (chatHistoryResponse.data.success) {
         // Perform the hyse search or refinement based on the initial message status
-        const searchResponse = await axios.post(searchUrl, {
-          thread_id: threadId,
-          query: messageText,
-        });
-        console.log(searchResponse);
-
-        const newMessage: MessageProps = {
-          id: messages.length + 1,
-          text: messageText,
-          sender: "user",
-          show: true,
-        };
-
-        let additionalInfo: string = "";
-        if (!isInitialMessage) {
-          searchResponse.data.filter_prompts.sql_clauses.forEach(
-            (item: SqlClause) => {
-              setFilters((prev) => [...prev, `${item.field} ${item.clause}`]);
-              setIconVisibility((prev) => [...prev, true]);
-            }
-          );
-
-          additionalInfo += `Inferred Action: ${searchResponse.data.inferred_action}\n`;
-          additionalInfo += `Mentioned Semantic Fields: ${searchResponse.data.mention_semantic_fields.join(
-            ", "
-          )}\n`;
-          additionalInfo += `Mentioned Raw Fields: ${searchResponse.data.mention_raw_fields.join(
-            ", "
-          )}\n`;
+        // const searchResponse = await axios.post(searchUrl, {
+        //   thread_id: threadId,
+        //   query: messageText,
+        //   task: task,
+        //   filters: filters
+        // });
+        // console.log(searchResponse);
+        // let chosen_agent = searchResponse.data.agent_chosen
+        // let replyUrl = '';
+        // if (chosen_agent === 'query_refiner') {
+        //   replyUrl = "http://127.0.0.1:5000/api/query_refiner"
+        // } else if (chosen_agent === 'graph_agent') {
+        //   replyUrl = "http://127.0.0.1:5000/api/graph_agent"
+        
+        let apiEndpoint, requestBody;
+        if (chatStatus === 'chat ongoing' || chatStatus === 'inputting') {
+          // send message request
+          apiEndpoint = "http://127.0.0.1:5000/api/send_message";
+          console.log("APIENDPOINT", chatStatus)
+          requestBody = {query: messageText}
         } else {
-          // is initial message, update query block
-          prunePrompt(messageText);
+          // start chat request
+          console.log("starting agent_chooser")
+          apiEndpoint = "http://127.0.0.1:5000/api/agent_chooser"
+          requestBody = {
+            thread_id: threadId,
+            query: messageText,
+            task: task,
+            filters: filters
+          }
         }
+        try {
+          const searchResponse = await fetch(apiEndpoint, {
+            method: "POST",
+            headers: {'Content-Type': "application/json"},
+            body: JSON.stringify(requestBody)
+          })
+          console.log(searchResponse)
+        } catch (error) {
+          console.error("Error sending request: ", error)
+        }
+        
 
-        // Update the current search space
-        const reply: MessageProps = {
-          id: messages.length + 2,
-          text: (
-            <>
-              {isInitialMessage &&
-              searchResponse.data.complete_results &&
-              searchResponse.data.complete_results.length > 0 ? (
-                <div className="system-update-response">
-                  {SYSTEM_UPDATES[0]}
-                </div>
-              ) : (
-                <div className="system-update-response">
-                  {SYSTEM_UPDATES[1]}
-                </div>
-              )}
-              {/* {additionalInfo ? <div>{additionalInfo}</div> : null} */}
-            </>
-          ),
-          sender: "system",
-          show: false,
-        };
+        // const newMessage: MessageProps = {
+        //   id: messages.length + 1,
+        //   text: messageText,
+        //   sender: "user",
+        //   show: true,
+        // };
 
-        setMessages((prevMessages) => [...prevMessages, newMessage, reply]);
+        // let additionalInfo: string = "";
+        // if (!isInitialMessage) {
+        //   searchResponse.data.filter_prompts.sql_clauses.forEach(
+        //     (item: SqlClause) => {
+        //       setFilters((prev) => [...prev, `${item.field} ${item.clause}`]);
+        //       setIconVisibility((prev) => [...prev, true]);
+        //     }
+        //   );
+
+        //   additionalInfo += `Inferred Action: ${searchResponse.data.inferred_action}\n`;
+        //   additionalInfo += `Mentioned Semantic Fields: ${searchResponse.data.mention_semantic_fields.join(
+        //     ", "
+        //   )}\n`;
+        //   additionalInfo += `Mentioned Raw Fields: ${searchResponse.data.mention_raw_fields.join(
+        //     ", "
+        //   )}\n`;
+        // } else {
+        //   // is initial message, update query block
+        //   prunePrompt(messageText);
+        // }
+
+        // // Update the current search space
+        // const reply: MessageProps = {
+        //   id: messages.length + 2,
+        //   text: (
+        //     <>
+        //       {isInitialMessage &&
+        //       searchResponse.data.complete_results &&
+        //       searchResponse.data.complete_results.length > 0 ? (
+        //         <div className="system-update-response">
+        //           {SYSTEM_UPDATES[0]}
+        //         </div>
+        //       ) : (
+        //         <div className="system-update-response">
+        //           {SYSTEM_UPDATES[1]}
+        //         </div>
+        //       )}
+        //     </>
+        //   ),
+        //   sender: "system",
+        //   show: false,
+        // };
+
+        // setMessages((prevMessages) => [...prevMessages, newMessage, reply]);
         setIsInitialMessage(false);
         setTyping(false);
-        setResults(searchResponse.data.complete_results);
+        // setResults(searchResponse.data.complete_results);
       } else {
         // Handle failure to update chat history
         console.error(
@@ -218,25 +299,6 @@ const ChatBot = ({
     setIsLoading(false);
   };
 
-  const handleResetSearch = async (completeResults: ResultProp[]) => {
-    try {
-      const response = await axios.post(
-        "http://127.0.0.1:5000/api/reset_search_space",
-        {
-          thread_id: threadId,
-          results: completeResults,
-        }
-      );
-      // Set success message
-      alert("This is a notification alert!");
-      setSuccessMessage("Search space has been successfully reset.");
-      // Update the current search space
-      setCurrentSearchSpace(completeResults);
-    } catch (error) {
-      console.error("Error resetting search space:", error);
-      setError("Could not reset search space. Please try again.");
-    }
-  };
 
   return (
     <div className="chatbot-container">

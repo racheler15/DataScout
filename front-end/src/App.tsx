@@ -1,5 +1,4 @@
 import "./App.css";
-import Diagram from "./components/Diagram";
 import ResultsTable, { ResultProp } from "./components/ResultsTable";
 import { useState } from "react";
 import ChatContainer from "./components/ChatContainer";
