@@ -1,0 +1,117 @@
+.chatbot-container {
+  border-top: 1px solid black;
+  flex: 1.5;
+  padding-top: 4px;
+  overflow: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 8px;
+}
+
+.chat-messages-container {
+  padding-top: 8px;
+  padding-left: 16px;
+  padding-right: 8px;
+  display: flex;
+  flex-direction: column;
+  height: 90%;
+  margin-bottom: 12px;
+  gap: 4px;
+  flex-grow: 1;
+  max-height: calc(100% - 68px);
+}
+
+.chat-messages {
+    width: 100%;
+    overflow-y: auto;
+    padding-right: 20px;
+    box-sizing: border-box;
+    white-space: pre-line
+}
+
+.chatbox {
+  margin-left: 8px;
+  margin-right: 8px;
+  display: flex;
+  align-items: center;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid #c2c2c2;
+  flex-shrink: 0;
+}
+
+.input-container {
+  margin-left: 8px;
+  display: flex;
+  flex: 1;
+}
+
+.input-container input {
+  border: none;
+  outline: none;
+  display: flex;
+  flex: 0.99;
+  overflow-y: auto;
+}
+
+.typing {
+  display: flex;
+  align-items: center;
+  font-weight: bold;
+  margin-left: 16px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: #A02A2A;
+  animation: typingAnimation 2s infinite;
+  transform-origin: center;
+  margin-bottom: 8px;
+}
+
+.search-icon {
+  margin-left: 12px;
+  color: #a9c7ff;
+}
+
+.message-container {
+  display: flex;
+  padding-bottom: 12px;
+}
+
+.user {
+  font-weight: bold;
+  margin-right: 12px;
+  text-transform: uppercase;
+  font-size: 14px;
+}
+.text {
+  font-size: 14px;
+}
+.system-update-response{
+    font-size: 12px;
+    font-weight: bold;
+    width: 100%;
+    height: 20px;
+    color: #232327;
+
+}
+.show {
+    border-top: 1px solid darkgrey;
+    border-bottom: 1px solid darkgrey;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    display: flex;
+    align-items: center;
+    /* justify-content: center; */
+    margin-bottom: 12px;
+}
+
+@keyframes typingAnimation {
+  0%,
+  100% {
+    transform: scale(1); /* Original size */
+  }
+  50% {
+    transform: scale(1.03); /* Increase size */
+  }
+}
