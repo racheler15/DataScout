@@ -4,6 +4,7 @@
   width: 100vw;
   height: 100vh;
   transition: flex 1s ease-in-out;
+  font-size: 14px;
 }
 
 .app-container > :nth-child(1) {

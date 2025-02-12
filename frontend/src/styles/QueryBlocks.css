@@ -34,8 +34,13 @@
   border: 1px solid #cb96d4;
   overflow-y: auto;
   display: flex;
+  width: 80%;
   justify-content: space-between;
   align-items: center;
+}
+.task-reason {
+  padding-top: 12px;
+  padding-left: 8px;
 }
 
 .filter-block {

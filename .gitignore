@@ -1,6 +1,7 @@
 hits/
 .ipynb_checkpoints/
 .env
+.cache/
 __pycache__/
 
 # Frontend dependencies
@@ -25,9 +26,15 @@ __pycache__/
 /frontend/my-app/yarn-debug.log*
 /frontend/my-app/yarn-error.log*
 
+# eval
+**eval
+
+**scripts
+
 **/.DS_Store
 **/.vscode
 
 **/venv
+**/myenv
 
 **/node_modules

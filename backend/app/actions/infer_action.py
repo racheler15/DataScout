@@ -47,6 +47,36 @@ Current user query: "{cur_query}"
 Identify any fields that are explicitly mentioned or strongly implied. Provide your analysis as a structured output listing only those fields that are directly related to the query.
 """
 
+PROMPT_FILTER_INFER = """
+## Instructions:
+Given the user's filters, analyze and determine which fields are being referenced in the schema for a SELECT query. Your output should be a list.
+Current user filter:
+{filters}
+
+## Steps for Analysis:
+Identify the field(s) referenced in the filter. The field is the column name used for comparison (e.g., col_num, table_name).
+Identify the operator(s) used in the filter. The operator is the operator that compares the field to the parameter (e.g., >, <, =, BETWEEN).
+Identify the parameter(s). The parameter is the value used in the comparison (e.g., 5, 10, or 0).
+
+## Examples:
+# If the filter is "col_num > 5":
+Field = col_num
+Operator = >
+Parameter = 5
+
+# If the filter is "0 < col_num < 10", it should be treated as two separate conditions:
+Field = col_num
+Operator = <
+Parameter = 0
+AND:
+Field = col_num
+Operator = <
+Parameter = 10
+
+## Output
+Return only a list, with each element containing a dictionary of the fields, operators, and parameters that are directly referenced by the user's filter.
+"""
+
 # TODO: For the generated sql clause, need to further check its validity
 PROMPT_SQL_TRANSLATION = """
 Given the identified fields from the user's query requiring SQL translation, generate appropriate SQL WHERE clause conditions. This task involves converting these field references into precise SQL queries, adhering strictly to predefined granularity levels.
@@ -66,7 +96,6 @@ For example, if the fields 'Temporal Granularity' and 'Geographic Granularity' a
 class Action(BaseModel):
     reset: bool
     refine: bool
-
     def get_true_fields(self):
         return [field for field, value in self.model_dump().items() if value]
 
@@ -92,6 +121,11 @@ class MentionedRawFields(BaseModel):
 class SQLClause(BaseModel):
     field: str
     clause: str
+
+class FilterClause(BaseModel):
+    field: str
+    clause: str
+    parameter: int
 
 class TextToSQL(BaseModel):
     sql_clauses: List[SQLClause]
@@ -156,7 +190,23 @@ def text_to_sql(cur_query, identified_fields):
         logging.error(f"Failed to translate text to SQL: {e}")
         raise RuntimeError("Failed to process the SQL translation.") from e
 
+def filters_to_sql(cur_query, filters):
+    try: 
+        prompt = format_prompt(PROMPT_FILTER_INFER, cur_query=cur_query, filters=filters)
+        response_model = FilterClause
+        messages = [
+            {"role": "system", "content": "You are an assistant skilled in text to SQL translation, and designed to output a list."},
+            {"role": "user", "content": prompt}
+        ]
+
+        return openai_client.infer_metadata_wo_instructor(messages)
+
+    except Exception as e:
+        logging.error(f"Failed to translate filter to SQL: {e}")
+        raise RuntimeError("Failed to process the SQL translation.") from e
+
 def execute_sql(text_to_sql_instance, search_space):
+
     field_to_column_mapping = {
         'table_name': 'table_name',
         'column_numbers': 'col_num',
@@ -167,9 +217,12 @@ def execute_sql(text_to_sql_instance, search_space):
 
     with DatabaseConnection() as db:
         # Base query with initial WHERE condition for the search space
-        query_base = sql.SQL("SELECT DISTINCT table_name, popularity, previous_queries, table_desc, table_tags, col_num, time_granu, geo_granu, comb_embed, query_embed FROM corpus_raw_metadata_with_embedding WHERE table_name = ANY(%s)")
+        query_base = sql.SQL("SELECT DISTINCT table_name, popularity, db_description, tags, col_num, time_granu, geo_granu, comb_embed, query_embed FROM eval_data_all WHERE table_name = ANY(%s)")
         where_conditions = []  # List to hold additional conditions
+        logging.info(where_conditions)
         ordering = []  # List to hold ORDER BY conditions
+        logging.info(ordering)
+
         parameters = [search_space]  # List to hold all parameters for the SQL query
 
         for clause in text_to_sql_instance.sql_clauses:
@@ -202,6 +255,41 @@ def execute_sql(text_to_sql_instance, search_space):
         if ordering:
             query_base = query_base + sql.SQL(" ORDER BY ") + sql.Composed(ordering)
 
+        logging.info("🏃Executing query: %s", query_base.as_string(db.conn))
+
+        # Execute the query
+        try:
+            db.cursor.execute(query_base, parameters)  # Pass the parameters list
+            results = db.cursor.fetchall()
+            return results
+        except Exception as e:
+            logging.error(f"SQL execution failed, Error: {e}")
+            return []
+        
+def execute_metadata_sql(sql_clauses, search_space):
+    with DatabaseConnection() as db:
+        # Base query with initial WHERE condition for the search space
+        query_base = sql.SQL("SELECT DISTINCT * FROM eval_data_all WHERE table_name = ANY(%s)")
+        where_conditions = []  # List to hold additional conditions
+        parameters = [search_space]  # List to hold all parameters for the SQL query
+
+        for clause in sql_clauses:
+            db_field, operator, value = clause['Field'], clause['Operator'], clause['Parameter']
+            if db_field in ['time_granu', 'geo_granu']:
+                # Using unnest to compare elements in an array field
+                condition = sql.SQL("EXISTS (SELECT 1 FROM unnest({}) AS elem WHERE elem {} %s)").format(
+                    sql.Identifier(db_field), sql.SQL(operator))
+                where_conditions.append(condition)
+                parameters.append(value)  # Add value to parameters list
+            else:
+                condition = sql.SQL("{} {} %s").format(sql.Identifier(db_field), sql.SQL(operator))
+                where_conditions.append(condition)
+                parameters.append(value)  # Add value to parameters list
+
+        # Combine additional WHERE conditions and ORDER BY clauses into the base query
+        if where_conditions:
+            query_base = query_base + sql.SQL(" AND ") + sql.SQL(" AND ").join(where_conditions)
+       
         logging.info("🏃Executing query: %s", query_base.as_string(db.conn))
 
         # Execute the query

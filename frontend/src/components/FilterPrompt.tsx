@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "../styles/FilterPrompt.css";
-import {MessageProps} from "./MessageItem"
+import { MessageProps } from "./MessageItem";
+import axios from "axios";
 
 interface FilterPromptProps {
   isOpen: boolean;
@@ -8,6 +9,7 @@ interface FilterPromptProps {
   onSubmit: (filter: string) => void;
   messages: MessageProps[];
   setMessages: React.Dispatch<React.SetStateAction<MessageProps[]>>;
+  activeFilters: string[];
 }
 
 const FilterPrompt: React.FC<FilterPromptProps> = ({
@@ -16,23 +18,38 @@ const FilterPrompt: React.FC<FilterPromptProps> = ({
   onSubmit,
   messages,
   setMessages,
+  activeFilters,
 }) => {
   const [filterValue, setFilterValue] = useState("");
+  const [suggestedAttributes, setSuggestedAttributes] = useState<{
+    [key: string]: string;
+  }>({});
 
-  const remaining = ["# cols", "popularity", "location", "time"];
-  const handleSubmit = () => {
-    const reply: MessageProps = {
-      id: messages.length + 1,
-      text: "updated filter",
-      sender: "system",
-      show: false,
-      type: "general"
+  useEffect(() => {
+    const fetchRemainingAttributes = async () => {
+      try {
+        const fetchResponse = await axios.post(
+          "http://127.0.0.1:5000/api/remaining_attributes",
+          {
+            // attributes: activeFilters,
+            attributes: "[]",
+
+          }
+        );
+        setSuggestedAttributes(fetchResponse.data.attributes);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
     };
+
+    fetchRemainingAttributes();
+  }, [activeFilters]);
+
+  const handleSubmit = () => {
     if (filterValue) {
       onSubmit(filterValue);
       setFilterValue(""); // Clear input after submission
       onClose(); // Close the modal
-      setMessages((prevMessages) => [...prevMessages, reply])
     }
   };
 
@@ -46,10 +63,24 @@ const FilterPrompt: React.FC<FilterPromptProps> = ({
         </div>
         <div className="remaining-attributes">
           Avaliable metadata attributes:
+          <div
+            style={{
+              fontSize: "12px",
+              marginBottom: "4px",
+              marginTop: "4px",
+              fontWeight: "normal",
+            }}
+          >
+            <i>Hover to see data type</i>
+          </div>
           <div className="wrapped-attributes-container">
-            {remaining.map((attribute, index) => (
-              <div key={index} className="wrapped-attributes">
-                {attribute}
+            {Object.entries(suggestedAttributes).map(([key, value], index) => (
+              <div
+                key={index}
+                className="wrapped-attributes"
+                title={value} // Tooltip that shows the value on hover
+              >
+                {key}
               </div>
             ))}
           </div>
@@ -59,9 +90,9 @@ const FilterPrompt: React.FC<FilterPromptProps> = ({
           value={filterValue}
           onChange={(e) => setFilterValue(e.target.value)}
           placeholder="Enter new metadata filter..."
+          rows = {1}
           style={{
             width: "100%",
-            minHeight: "80px",
             borderRadius: "8px",
             padding: "8px",
           }}

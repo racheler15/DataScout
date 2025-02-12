@@ -1,51 +1,50 @@
 .filter-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-  }
-  
-  .filter-content {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    width: 500px; /* Set your desired width */
-  }
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
 
-  .filter-content button {
-    border-radius: 16px;
-  }
-  .filter-content button:hover {
-    border: 1px solid black;
-  }
+.filter-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  width: 500px; 
+}
 
-  .remaining-attributes {
-    font-size: 14px;
-    font-weight: bold;
-    margin-top: 12px;
-    margin-bottom: 20px;
-  }
+.filter-content button {
+  border-radius: 16px;
+}
+.filter-content button:hover {
+  border: 1px solid black;
+}
 
-  .wrapped-attributes-container {
-    margin-top: 8px;
-    font-size: 14px;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .wrapped-attributes{
-    background-color: #a9c7ff3b;
-    font-size: 12px;
-    font-weight: normal;
-    padding: 6px 12px;
-    border-radius: 16px;
-  
-  }
+.remaining-attributes {
+  font-size: 14px;
+  font-weight: bold;
+  margin-top: 12px;
+  margin-bottom: 20px;
+}
+
+.wrapped-attributes-container {
+  margin-top: 8px;
+  font-size: 14px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.wrapped-attributes {
+  background-color: #a9c7ff3b;
+  font-size: 12px;
+  font-weight: normal;
+  padding: 6px 12px;
+  border-radius: 16px;
+}

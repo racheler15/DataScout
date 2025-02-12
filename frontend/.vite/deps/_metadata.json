@@ -1,0 +1,79 @@
+{
+  "hash": "6b94a48d",
+  "configHash": "b0cfcc25",
+  "lockfileHash": "6d0de939",
+  "browserHash": "b03f6bc3",
+  "optimized": {
+    "react/jsx-dev-runtime": {
+      "src": "../../node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "1f7ea599",
+      "needsInterop": true
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "2d4da636",
+      "needsInterop": true
+    },
+    "react": {
+      "src": "../../node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "5aa50ff9",
+      "needsInterop": true
+    },
+    "lucide-react": {
+      "src": "../../node_modules/lucide-react/dist/esm/lucide-react.js",
+      "file": "lucide-react.js",
+      "fileHash": "37675573",
+      "needsInterop": false
+    },
+    "axios": {
+      "src": "../../node_modules/axios/index.js",
+      "file": "axios.js",
+      "fileHash": "591c74bb",
+      "needsInterop": false
+    },
+    "@iconify/react": {
+      "src": "../../node_modules/@iconify/react/dist/iconify.js",
+      "file": "@iconify_react.js",
+      "fileHash": "b28f26b2",
+      "needsInterop": false
+    },
+    "@iconify-icons/fluent/eye-20-regular": {
+      "src": "../../node_modules/@iconify-icons/fluent/eye-20-regular.js",
+      "file": "@iconify-icons_fluent_eye-20-regular.js",
+      "fileHash": "4a573895",
+      "needsInterop": false
+    },
+    "@iconify-icons/fluent/eye-off-20-regular": {
+      "src": "../../node_modules/@iconify-icons/fluent/eye-off-20-regular.js",
+      "file": "@iconify-icons_fluent_eye-off-20-regular.js",
+      "fileHash": "d1656a94",
+      "needsInterop": false
+    },
+    "@chatscope/chat-ui-kit-react": {
+      "src": "../../node_modules/@chatscope/chat-ui-kit-react/dist/es/index.js",
+      "file": "@chatscope_chat-ui-kit-react.js",
+      "fileHash": "f2c9c148",
+      "needsInterop": false
+    },
+    "react-vega": {
+      "src": "../../node_modules/react-vega/esm/index.js",
+      "file": "react-vega.js",
+      "fileHash": "fca749eb",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-X3MDYGI3": {
+      "file": "chunk-X3MDYGI3.js"
+    },
+    "chunk-32E4H3EV": {
+      "file": "chunk-32E4H3EV.js"
+    },
+    "chunk-G3PMV62Z": {
+      "file": "chunk-G3PMV62Z.js"
+    }
+  }
+}

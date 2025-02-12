@@ -5,8 +5,11 @@ import logging
 from backend.app.table_representation.openai_client import OpenAIClient
 from backend.app.hyse.hypo_schema_search import hyse_search, most_popular_datasets, get_datasets
 from backend.app.actions.infer_action import infer_action, infer_mentioned_metadata_fields, prune_query
-from backend.app.actions.handle_action import handle_semantic_fields, handle_raw_fields
+from backend.app.actions.handle_action import handle_semantic_fields, handle_raw_fields, handle_raw_filters
 from backend.app.chat.handle_chat_history import append_user_query, append_system_response, get_user_queries, get_last_results, get_mentioned_fields
+from backend.app.db.table_schema import table_schema_dict
+
+import ast
 import os
 import time
 import asyncio
@@ -18,18 +21,15 @@ from autogen import AssistantAgent, UserProxyAgent, GroupChat, GroupChatManager,
 from autogen import register_function
 from collections import Counter
 import matplotlib.pyplot as plt
-
-import plotly.graph_objs as go
-import plotly.io as pio
-import statistics
 import re
-import json
+import numpy as np
+
 
 
 
 # Flask app configuration
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/api/*": {"origins": ["http://localhost:5174", "http://localhost:5173"]}})
 
 chat_status = "ended"
 
@@ -55,21 +55,6 @@ llm_config = {
     ]
 }
 
-table_schema_dict = {
-"table_name": "TEXT PRIMARY KEY",
-"table_schema": "TEXT[]",
-"table_desc": "TEXT",
-"table_tags": "TEXT[]",
-"previous_queries": "TEXT[]",
-"example_records": "JSONB",
-"col_num": "INT",
-"popularity": "INT",
-"time_granu": "TEXT[]",
-"geo_granu": "TEXT[]",
-"comb_embed": "VECTOR(1536)",
-"query_embed": "VECTOR(1536)",
-"table_category": "TEXT"
-    }
 
 # https://www.youtube.com/watch?v=4mO2TmDervU&ab_channel=YeyuLab
 
@@ -113,7 +98,6 @@ def get_chat_history():
 #########
 @app.route('/api/update_chat_history', methods=['POST'])
 def update_chat_history():
-    logging.info(f"updating chat history")
     data = request.get_json()
     thread_id, query = data.get('thread_id'), data.get('query')
 
@@ -131,8 +115,7 @@ def update_chat_history():
 
         # Update chat history with additional metadata field information
         append_user_query(chat_history, thread_id, query, bool(semantic_fields_identified), bool(raw_fields_identified))
-        # logging.info(f"💬 Current chat history: {chat_history}")
-        logging.info(f"💬 Number of threads in chat history: {len(chat_history)}")
+        logging.info(f"💬 Current chat history: {len(chat_history)}")
 
         return jsonify({
                 "success": True,
@@ -158,16 +141,18 @@ def get_most_popular_datasets():
 #########
 @app.route('/api/hyse_search', methods=['POST'])
 def initial_search():
-    logging.info(f"first hyse search")
     thread_id = request.get_json().get('thread_id')
     initial_query = request.json.get('query')
+
+    logging.info(f"✅THIS IS QUERY: {initial_query}")
 
     if not initial_query or len(initial_query.strip()) == 0:
         logging.error("Empty query provided")
         return jsonify({"error": "No query provided"}), 400
 
     try:
-        initial_results = hyse_search(initial_query, search_space=None)
+        logging.info("Starting hyse")
+        initial_results, _, _ = hyse_search(initial_query, search_space=None, num_schema=1, k=100)  # Keep top 100 results in initial search
         append_system_response(chat_history, thread_id, initial_results, refine_type="semantic")
 
         # Update the cached results
@@ -175,11 +160,11 @@ def initial_search():
 
         response_data = {
             "top_results": initial_results[:10],
-            "complete_results": initial_results,
+            "complete_results": initial_results[:100],
         }
 
         logging.info(f"✅Search successful for query: {initial_query}")
-        logging.info(f"💬 Current chat history: {chat_history}")
+        # logging.info(f"💬 Current chat history: {chat_history}")
 
         return jsonify(response_data), 200
     except Exception as e:
@@ -200,7 +185,7 @@ def refine_search_space():
     try:
         # Get the cached results
         cached_results = chat_history.get(thread_id + "_cached_results")
-        logging.info(f"📩Current cached results: {cached_results}")
+        # logging.info(f"📩Current cached results: {cached_results}")
 
         # Initialize defaults
         refined_results, inferred_semantic_fields, inferred_raw_fields = [], [], []
@@ -265,6 +250,69 @@ def refine_search_space():
         logging.error(f"Search refinement failed, Error: {e}")
         return jsonify({"error": "Search refinement failed due to an internal error"}), 500
 
+@app.route('/api/refine_metadata', methods=['POST'])
+def refine_metadata():
+    cur_query = request.json.get('cur_query')
+    filters = request.json.get('filters')    
+    logging.info(f"✅✅filters: {filters}")
+
+    mention_semantic_fields = True if cur_query else False
+    mention_raw_fields = True if filters else False
+
+    try:
+        # Initialize defaults
+        refined_results, inferred_semantic_fields, inferred_raw_fields = [], [], []
+        
+        # Step 2.2: If REFINE
+        # Step 3.1: Handle mentioned SEMANTIC metadata fields in user current query
+        if mention_semantic_fields:
+            # Identify mentioned semantic metadata fields
+            inferred_semantic_fields = infer_mentioned_metadata_fields(cur_query=cur_query, semantic_metadata=True).get_true_fields()
+            logging.info(f"✅Inferred mentioned semantic metadata fields for current query '{cur_query}': {inferred_semantic_fields}")
+            search_space = hyse_search(cur_query, search_space=None, num_schema=1, k=100)
+            table_names = [d["table_name"] for d in search_space[0]]
+            logging.info(f"✅Table names of '{cur_query}': {table_names}")
+
+
+            # TODO: Filter semantic refined results based on cosine similarity scores for better precision?
+            # refined_results = handle_semantic_fields(chat_history, thread_id, search_space=cached_results)
+            # append_system_response(chat_history, thread_id, refined_results, refine_type="semantic")
+        else:
+            logging.info("ELSE NO TASK")
+            search_space = jsonify(most_popular_datasets())
+            table_names = [d["table_name"] for d in search_space[0]]
+            logging.info(f"✅Table names of '{cur_query}': {table_names}")
+
+
+        # Step 3.2: Handle mentioned RAW metadata fields in user current query
+        if filters is not None:
+            # Identify mentioned raw metadata fields
+            # inferred_raw_fields = infer_mentioned_metadata_fields(cur_query=filters, semantic_metadata=False).get_true_fields()
+            # logging.info(f"✅Inferred mentioned raw metadata fields for current query '{cur_query}': {inferred_raw_fields}")
+            # logging.info(table_names)
+            sql_clauses, refined_results = handle_raw_filters(cur_query, filters, search_space=table_names)
+            # append_system_response(chat_history, thread_id, refined_results, refine_type="raw")
+        else:
+            sql_clauses = []
+            refined_results=search_space
+        # logging.info(f"💬Current chat history: {chat_history}")
+
+        # Package the response with additional information from the second message onwards
+        response_data = {
+            "top_results": refined_results[:10],
+            "complete_results": refined_results,
+            "inferred_action": "refine",
+            "mention_semantic_fields": inferred_semantic_fields,
+            "mention_raw_fields": inferred_raw_fields,   
+            "filter_prompts" : sql_clauses,         
+        }
+
+        return jsonify(response_data), 200
+        
+    except Exception as e:
+        logging.error(f"Search refinement failed, Error: {e}")
+        return jsonify({"error": "Search refinement failed due to an internal error"}), 500
+
 @app.route('/api/reset_search_space', methods=['POST'])
 def reset_search_space():
     thread_id = request.get_json().get('thread_id')
@@ -280,11 +328,56 @@ def reset_search_space():
     try:
         # Update the cached results
         chat_history[thread_id + "_cached_results"] = [result["table_name"] for result in results]
-        logging.info(f"💬Current chat history: {chat_history}")
+        # logging.info(f"💬Current chat history: {chat_history}")
         return jsonify({"success": True}), 200
     except Exception as e:
         logging.error(f"Search space reset failed for thread_id '{thread_id}', Error: {e}")
         return jsonify({"error": "Search space reset failed due to an internal error"}), 500
+
+#########
+# This function takes in a metadata filter and returns the metadata attribute selected.
+#########
+@app.route('/api/add_metadata', methods=['POST'])
+def add_metadata():
+    query = request.get_json().get('attribute')
+    logging.info(query)
+
+    messages = [ 
+        {"role": "system", "content": f"""You are an assistant that will return a 'list' containing metadata attribute from {table_schema_dict} or an empty list. Given the user input, determine which key from the dictionary best describes the attribute as users might have spelling errors or use synonyms. 
+
+        For example, if a key is col_num, a valid query might be "number of cols > 10" or "col_num > 10" which both indicate they want to execute a query with the number of cols. Another example, if a key is popularity, a valid query might be "pop > 5000".
+            
+        If any query uses an attribute that is not found in the dictionary, return an empty list. If a match is found, return [attribute, fixed query to match the dictionary]. For example, if the query was "number of cols > 10", the output should be a list ['num_col', 'num_col > 10'].             
+        """
+        },
+        {"role": "user", "content": query}
+        ]
+    
+    result = openai_client.infer_metadata_wo_instructor(messages)
+    # Check if result is a string
+    if isinstance(result, str):  # Checking if result is a string
+        try:
+            # Safely evaluate the string to convert to a list or other Python literal
+            result = ast.literal_eval(result)
+        except (ValueError, SyntaxError) as e:
+            # Handle possible exceptions during evaluation
+            logging.error(f"Error evaluating string: {e}")
+            return jsonify({"error": "Invalid string format"}), 400
+
+    return jsonify({"metadata": result})
+    
+
+#########
+# This function takes in active filters and returns a dict of remaining attributes and their type that can be queryable.
+#########
+@app.route('/api/remaining_attributes', methods=['POST'])
+def remaining_attributes():
+    attribute = request.get_json().get('attributes')
+    logging.info(attribute)
+    result = {key: table_schema_dict[key] for key in table_schema_dict if key not in attribute}
+
+    return jsonify({"attributes": result})
+    
 
 #########
 # This function takes in a prompt and prunes it of unnecessary words, keeping only relevant content.
@@ -296,7 +389,101 @@ def prune_prompt():
         prompt = prune_query(query)
         logging.info(f"✅Prune successful for query: {query}")
         return jsonify({"pruned_query": prompt})
+
+#########
+# This function takes in a user message and determines which agent response to return.
+#########
+@app.route('/api/process_message', methods=['POST'])
+def process_message():
+    message = request.get_json().get('message')
+    filters = request.get_json().get('filters')
+    task_query = request.get_json().get('task')
+
+    inferred_action = infer_action(cur_query=message, prev_query=task_query)
+    logging.info(f"✅Inferred action for current query '{message}' and previous query '{task_query}': {inferred_action.model_dump()}")
     
+    # TODO: Make sure for user's initial query, mention_semantic_fields is always True
+    semantic_fields_identified = infer_mentioned_metadata_fields(cur_query=message, semantic_metadata=True).get_true_fields()
+    raw_fields_identified = infer_mentioned_metadata_fields(cur_query=message, semantic_metadata=False).get_true_fields()
+    logging.info(semantic_fields_identified)
+    logging.info(raw_fields_identified)
+    
+    logging.info(task_query)
+    #first search
+    messages = [ 
+    {"role": "system", 
+    "content": f""" You are a helpful assistant that determines if the user message is a search query or a question. If the user message: {message} contains a desire to find a dataset of a certain topic, return True. Otherwise return False if it is a question or clarification.
+    Only return a boolen.
+    """
+    },
+    {"role": "user", "content": message}
+    ]
+    
+    first_search = openai_client.infer_metadata_wo_instructor(messages)
+    if first_search=="True" and not task_query:
+        logging.info("first_search true and empty task")
+        return jsonify({"reset": False, "refine": False, "system": False, "result": first_search})
+    
+    if first_search == "True":
+        # If inferred action = RESET, reset search space & update task
+        #TODO: should i reset the filters too?
+        if inferred_action.reset and task_query:
+            logging.info("RESET")
+            messages = [ 
+                {"role": "system", 
+                "content": f""" You are a helpful assistant that refines search queries to make them specific. Users are currently exploring datasets and may not have a clear objective for the dataset in mind, so they require assistance in refining their intent. To be 'specific,' a query should include a topic and a clear task. Use the requirements to modify the query: {message}. Otherwise, return the message itself if it is a good search query.
+
+                Output the refined query as a string only.
+                """
+                },
+                {"role": "user", "content": message}
+                ]
+            
+            result = openai_client.infer_metadata_wo_instructor(messages)
+            return jsonify({"reset": True, "refine": False, "system": False, "result": result})
+
+
+        # If REFINE, update task and do new search
+        # TODO: suggestion metadata filters based on search
+        elif inferred_action.refine:
+            logging.info("REFINE")
+
+            messages = [ 
+                {"role": "system", 
+                "content": f""" You are a helpful assistant that refines search queries: {message} to make them specific. Users are currently exploring datasets and may not have a clear objective for the dataset in mind, so they require assistance in refining their intent. To be 'specific,' a query should include a topic and a clear task. 
+
+                For example, 'Presidential elections' is too broad. Instead, an example of a query that is specific enough would be, 'Train a predictive model on voter turnout in presidential elections.' This query has a clear topic (presidential elections) and a defined task (training a predictive model on voter turnout).
+
+                Use the requirements to modify the query: {message} given the previous task_query: {task_query}. If task_query is empty, this means this is the first search. You can the message itself if it is a good search query.
+
+                Output the refined query as a string only.
+                """
+                },
+                {"role": "user", "content": message}
+                ]
+            
+            result = openai_client.infer_metadata_wo_instructor(messages)
+            return jsonify({"reset": False, "refine": True, "system": False, "result": result})
+
+
+    # Otherwise system Q&A for clarification/question answering
+    else:
+        logging.info("Q&A")
+
+        messages = [ 
+            {"role": "system", 
+            "content": f""" You are a helpful assistant that helps with clarification and answer questions concisely the user may have about their search queries. You have access to the user's previous seach query: {task_query} and the filters they are using: {filters}.
+            """
+            },
+            {"role": "user", "content": message}
+            ]
+        
+        result = openai_client.infer_metadata_wo_instructor(messages)
+        logging.info(result)
+        return jsonify({"reset": False, "refine": False, "system": True,"result": result})
+
+
+
 
 
 #########
@@ -435,27 +622,61 @@ def run_chat(thread_id, user_query, task, filters):
 def generate_histogram_spec(attribute, datasets):
     """Generate a Vega-Lite histogram specification."""
     # Extract data for the histogram
-    logging.info("GENERATING HISTOGRAM", attribute)
+    logging.info(f"GENERATING HISTOGRAM for: {attribute}")
     data = [dataset[attribute] for dataset in datasets if attribute in dataset]
     logging.info(data)
-    result = []
-    for entry in data:
-        logging.info(entry)
-        if isinstance(entry, list):  # If the entry is already a list
-            for sub_entry in entry:
-                result.extend({attribute: value} for value in sub_entry.split(", "))  # Split and append
-        elif isinstance(entry, str):  # If the entry is a string
-            result.extend({attribute: value} for value in entry.split(", "))  # Split and append
-        elif entry is None:
-            continue
-        else:
-            raise ValueError(f"Unexpected type for entry: {type(entry)}. Expected string or list.")
 
+    values = {}
+    # Determine attribute type
+    attribute_type = table_schema_dict[attribute]
+    if "TEXT" in attribute_type:
+    # Handle the case where the attribute type contains "TEXT"
+        for entry in data:
+            if isinstance(entry, list):  # If the entry is a list, iterate through sub-entries
+                for sub_entry in entry:
+                    if sub_entry in values:
+                        values[sub_entry]["count"] += 1
+                    else:
+                        values[sub_entry] = {"attribute": sub_entry, "count": 1}
+            else:  # If the entry is not a list, handle normally
+                if entry in values:
+                    values[entry]["count"] += 1
+                else:
+                    values[entry] = {"attribute": entry, "count": 1}
+
+    elif "INT" in attribute_type or "DECIMAL" in attribute_type:
+        # Handle the case where the attribute type contains "INT" or "DECIMAL"
+        data_sorted = sorted(data)
+
+        # Calculate Q1 (25th percentile) and Q3 (75th percentile)
+        Q1 = np.percentile(data_sorted, 25)
+        Q3 = np.percentile(data_sorted, 75)
+
+        # Calculate the IQR (Interquartile Range)
+        IQR = Q3 - Q1
+
+        # Calculate the lower and upper bounds
+        lower_bound = Q1 - 1.5 * IQR
+        upper_bound = Q3 + 1.5 * IQR
+
+        # Find the outliers
+        outliers = [x for x in data_sorted if x < lower_bound or x > upper_bound]
+
+        # Filter the data to remove outliers
+        filtered_data = [x for x in data if lower_bound <= x <= upper_bound]
+        max_value = max(filtered_data)
+        bins = np.round(np.linspace(0, max_value, num=9)).astype(int) # Create 8 bins
+        hist, bin_edges = np.histogram(data, bins=bins)
+        for i in range(len(hist)):
+            entry = bin_edges[i]
+            values[entry] = {"attribute": entry, "count": hist[i]}
+
+    else:
+        raise ValueError(f"Unexpected type for entry: {type(entry)}. Expected string or number.")
+    
     # Output the result
-    print(result)
-        
-
-
+    values = list(values.values())
+    print(values)
 
     user_proxy = UserProxyAgent(
     name = "user_proxy",
@@ -466,19 +687,20 @@ def generate_histogram_spec(attribute, datasets):
 
     veta_agent = AssistantAgent(name="veta_agent", 
     system_message=f"""
-          You are a helpful assistant that will generate a Vega-Lite histogram specification with hover tooltips. You have access to the vega lite package and make any necessary downloads needed. Based on the data: {data} of the attribute {attribute}, generate a vega-lite visualization. 
+    You are a helpful assistant that will generate a Vega-Lite histogram specification with hover tooltips. You have access to the Vega-Lite package and can make any necessary downloads needed. Use the values: {values} of the attribute {attribute} to generate a Vega-Lite visualization.
 
-          If the attribute is a numerical type, you should generate a histogram with appropriate bins to summarize the numbers. If the attribute is categorical type, you should group each unique categories together and graph the counts per category. 
-          
-          For values that are null, replace it with the string "None". Make sure to store each value in data.value as a dictionary. If there are multiple values separated by commas inside of each item in data.value, you should separate the values and group them with all other same values across the data.value. 
-          
-          Should use "https://vega.github.io/schema/vega-lite/v5.json" for the "$schema". Return only the Vega-Lite specification in the dictionary format.
+    - If the attribute is a numerical type, you should generate a histogram with bins that display the range of values, such as "attribute: 0-10", "attribute: 10-20", and so on. Allow for selection of the bars.
+
+    - If the attribute is a categorical type, group each unique category together and graph the counts per category. Create a checklist on the side for all the unique categories.
+
+    For values that are null, replace them with the string "None". Make sure to store each value in data.value as a dictionary. If there are multiple values separated by commas inside each item in data.value, separate the values and group them with all other same values across the data.value.
+    Use "https://vega.github.io/schema/vega-lite/v5.json" for the $schema. Return only the Vega-Lite specification in the dictionary format.
     """,
     llm_config=llm_config
     )
 
     try:
-        logging.info("initiating metadata agent chat")
+        logging.info("initiating vega-lite agent chat")
         veta_message= "Generate an appropriate Vega-Lite histogram depending on the metadata attribute's type."
         chat_result = user_proxy.initiate_chat(veta_agent, message=veta_message, summary_method="reflection_with_llm", max_turns=1)
         print(chat_result)
@@ -501,7 +723,8 @@ def suggest_and_generate():
     logging.info(attribute)
     # Step 1: Suggest attribute using LLM
     suggested_attribute = attribute
-    datasets = get_datasets()
+    ###################
+    datasets = get_datasets() ######## will need to reset research based on current parameters #######
 
     # Step 2: Generate Vega-Lite spec for the suggested attribute
     try:
@@ -510,7 +733,54 @@ def suggest_and_generate():
     except KeyError:
         return jsonify({"error": f"Attribute '{suggested_attribute}' not found in datasets."}), 400
 
-    return jsonify({"attribute": suggested_attribute, "vegaLiteSpec": vega_lite_spec})
+    return jsonify({"attribute": suggested_attribute, "vegaLiteSpec": vega_lite_spec, "outliers": ""})
+
+@app.route('/api/vega_testing', methods=['POST'])
+def vega_testing():
+    """Endpoint to suggest an attribute and generate a histogram."""
+    suggested_attribute = request.get_json().get('attribute')
+    task = request.get_json().get('task')
+
+    logging.info(suggested_attribute)
+    attribute_type = table_schema_dict[suggested_attribute]
+    # datasets = request.get_json().get('datasets')
+    datasets, _, _= hyse_search(task, search_space=None, num_schema=1, k=100)
+
+    # Remove outliers using the IQR method
+    def remove_outliers(data):
+        if not data:  # Ensure the list isn't empty
+            return [], []
+        data = np.array(data, dtype=float)
+        Q1 = np.percentile(data, 25)  
+        Q3 = np.percentile(data, 75)  
+        IQR = Q3 - Q1  
+        lower_bound = Q1 - 1.5 * IQR
+        upper_bound = Q3 + 1.5 * IQR
+        # Keep only values within the bounds
+        outliers = [x for x in data if x < lower_bound or x > upper_bound]
+        data = [x for x in data if lower_bound <= x <= upper_bound]
+        return data, outliers
+
+
+    if "TEXT" in attribute_type:
+        data = generate_histogram_spec(suggested_attribute, datasets)
+
+    else:
+        logging.info(f"GENERATING HISTOGRAM for: {suggested_attribute}")
+        data = [dataset[suggested_attribute] for dataset in datasets if suggested_attribute in dataset]
+        # Apply outlier removal
+        data, outliers = remove_outliers(data)
+        value = np.median(data)
+        logging.info(data)
+        logging.info("OUTLIERS", outliers)
+
+
+    try:
+        return jsonify({"attribute": suggested_attribute, "attribute_type": attribute_type, "vegaLiteSpec": data, "outliers": len(outliers), "value": value})
+    
+    except Exception as e:
+        logging.error(f"Starting autogen refinement failed, Error: {e}")
+        return jsonify({"error": "Search failed due to an internal error"}), 500 
 
 @app.route('/api/suggest_metadata', methods=['POST'])
 def suggest_metadata():
@@ -529,11 +799,14 @@ def suggest_metadata():
 
     metadata_agent = AssistantAgent(name="metadata_agent", 
     system_message=f"""
-          You are a helpful assistant that will help reduce the search space given the user query: {task}. The current filters used are {filters}. Given all the metadata attributes and their type: {table_schema_dict}, propose the top 3 metadata attributes from the provided list that will be useful to query over for the given user query. Do not repeat if the filter is already being used. The metadata attributes should be helpful in refining the user's task query and be about structure of the dataset, such as number of columns or time granularity, and not for task semantics, such as tags and description. Your suggestion should be specific to the user query and how the proposed metadata attribute will help the user refine their search. 
-          
-          For example, if the task was "I want a dataset for elections" then a possible metadata attribute that could be suggested would be 'col_num' with the reason: "can use col_num to identify more complex election datasets with multiple attributes, such as detailed candidate data, geographic breakdowns, or time-based trends, for deeper analysis."
-          
-          Return your suggestions in a only one dictionary with only "key"=metadata attribute and 'value'=reason why we should use this attribute.
+        ## Instruction
+        You are a helpful assistant that will help reduce the search space given the user query: {task}. The current filters used are {filters}. Given all the metadata attributes and their type: {table_schema_dict}, propose the top "2 NUMERICAL" metadata attributes from the provided list that will be useful to query over for the given user query. Do not repeat if the filter is already being used. The metadata attributes should be helpful in refining the user's task query and be about structure of the dataset, such as number of columns or time granularity, and not for task semantics, such as tags and description. You will also provide a reason less than 15 words which should be directly related to the task.
+        
+        ## Example
+        For example, if the task was "I want a dataset for elections" then a possible metadata attribute that could be suggested would be 'col_num' with the reason: "can use col_num to identify more complex election datasets with multiple attributes, such as detailed candidate data, geographic breakdowns, or time-based trends, for deeper analysis."
+        
+        ## Output
+        Return your suggestions in dictionary with only "key"=metadata attribute and 'value'=reason why we should use this attribute.
     """,
     llm_config=llm_config
     )
@@ -586,11 +859,10 @@ def start_autogen_chat():
         return jsonify({"error": "Search failed due to an internal error"}), 500  
     
 
-@app.route('/api/start_refinement', methods=['POST'])
-def start_refinement():
+@app.route('/api/task_suggestions', methods=['POST'])
+def task_suggestions():
     logging.info("Choosing autogen agent.")
     thread_id = request.get_json().get('thread_id')
-    user_query = request.json.get('query')
     task = request.json.get('task')
     filters = request.json.get('filters')
 
@@ -603,29 +875,74 @@ def start_refinement():
 
     query_refiner = AssistantAgent(name="query_refiner", 
     system_message=f"""
-        You are a helpful assistant that refines search queries to make them specific. Users are currently exploring datasets and may not have a clear objective for the dataset in mind, so they require assistance in refining their intent. To be 'specific,' a query should include a topic and a clear task.
+        You are a helpful assistant that refines search queries to make them specific by returning a dictionary. Users are currently exploring datasets and may not have a clear objective for the dataset in mind, so they require assistance in refining their intent. To be 'specific,' a query should include a topic and a clear task. Use the requirements to generate the new queries: {task} and {filters}.
 
-        For example, 'I want a dataset on presidential elections' is too broad. Instead, an example of a query that is specific enough would be, 'I want a dataset to train a predictive model on voter turnout in presidential elections.' This query has a clear topic (presidential elections) and a defined task (training a predictive model on voter turnout).
+        For example, 'Presidential elections' is too broad. Instead, an example of a query that is specific enough would be, 'Train a predictive model on voter turnout in presidential elections.' This query has a clear topic (presidential elections) and a defined task (training a predictive model on voter turnout). 
 
-        Offer 3 alternative queries by stating 'Alternative queries:' followed by concise examples to help guide them towards a more specific query.  
+        Additionally, generate 1 reason less than 10 words why the new query will be an improvement of the user query given. 
+
+        Return 3 alternative queries as a 'dictionary' with unique keys being the improved query and the value as the reason. Make sure the final output is strictly a dictionary with this structure.
     """,
     llm_config=llm_config
     )
+
     try:
         logging.info("initiating autogen agent chat")
-        chat_result = user_proxy.initiate_chat(query_refiner, message=user_query, summary_method="reflection_with_llm", max_turns=1)
+        chat_result = user_proxy.initiate_chat(query_refiner, message=task, summary_method="reflection_with_llm", max_turns=1)
         logging.info("finished chat_result")
 
-        pattern = r'\d\.\s(.*)'
-        results = re.findall(pattern, chat_result.chat_history[1]["content"])
-
+        results = chat_result.chat_history[1]["content"]
         return jsonify({"query_suggestions": results, "status": chat_status}), 200
     
     except Exception as e:
         logging.error(f"Starting autogen refinement failed, Error: {e}")
         return jsonify({"error": "Search failed due to an internal error"}), 500  
     
+#########
+# This function is for the initial task suggestions based off settings generate.
+#########
+@app.route('/api/initial_task_suggestions', methods=['POST'])
+def initial_task_suggestions():
+    logging.info("Choosing autogen agent.")
+    thread_id = request.get_json().get('thread_id')
+    specificity = request.json.get('specificity')
+    goal = request.json.get('goal')
+    domain = request.json.get('domain')
 
+    user_proxy = UserProxyAgent(
+        name = "user_proxy",
+        system_message="A human admin.",
+        human_input_mode="ALWAYS",
+        llm_config=llm_config
+    )
+    query_refiner = AssistantAgent(name="query_refiner", 
+    system_message=f"""
+        ### System Instructions ###
+        You are a helpful assistant that constructs specific search queries. Users are exploring datasets and may not have a clear objective in mind, so they need assistance in refining their intent. A query should be considered "specific" when it includes both a topic and a clear task. An example of a specific query is: "Train a predictive model on voter turnout in presidential elections." This query clearly reflects the goal ("Train") and the topic (voter turnout in presidential elections). You will generate multiple queries using general topics related to the {domain}. 
+
+        ### Task Instruction ###
+        If the {goal} is "Not sure yet," it indicates the user is uncertain about where to start. Use DIFFERENT action verbs to help them brainstrom what kind of task they want. 
+        
+        Otherwise, you MUST USE 'only the goal': {goal} when generating the queries. For example, if the goal was "Analyze", all queries should start with "Analyze".
+
+        ### Output ###
+        Also, generate one reason 'less than 10 words' for why this new query will improve the user's original query. Return 3 queries as a dictionary with the query as the unique key and the value as the reason. Make sure the final output is strictly a dictionary with this structure.
+        
+    """,
+    llm_config=llm_config
+    )
+
+    try:
+        logging.info("initiating autogen agent chat")
+        chat_result = user_proxy.initiate_chat(query_refiner, message=f"""Provide query suggestions for {domain}. Use only {goal} for the action verb. If {goal} is "Not sure yet", then use different action verbs. """, summary_method="reflection_with_llm", max_turns=1)
+        logging.info("finished chat_result")
+        results = chat_result.chat_history[1]["content"]
+        return jsonify({"query_suggestions": results, "status": chat_status}), 200
+    
+    except Exception as e:
+        logging.error(f"Starting autogen refinement failed, Error: {e}")
+        return jsonify({"error": "Search failed due to an internal error"}), 500  
+ 
       
 #########
 # This function takes front end message and puts it in queue for agents.
