@@ -1,5 +1,5 @@
 import "../styles/ResultsTable.css";
-import { CircleArrowLeft, CircleArrowRight } from "lucide-react";
+// import { CircleArrowLeft, CircleArrowRight } from "lucide-react";
 import React, { useState, useEffect } from "react";
 //@ts-ignore
 import { CsvToHtmlTable } from "react-csv-to-table";
@@ -50,7 +50,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
   setCurrentPage,
 }: ResultsTableProps) => {
   const [selectedIndex, handleSelectedIndex] = useState(0);
-  const pageSize = 10;
+  const pageSize = 20;
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
 
@@ -136,7 +136,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
           }}
         >
           <div className="preview-subtitle">Description</div>
-          <div className="section-content" style={{ paddingRight: "16px" }}>
+          <div className="section-content" style={{ marginRight: "16px" }}>
             <ReactMarkdown className="markdown-content">
               {dataset.db_description}
             </ReactMarkdown>
@@ -199,12 +199,14 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
         </div>
         <div className="section" style={{ paddingBottom: "60px" }}>
           <div className="preview-subtitle">Example Records</div>
-          <div className="table-view">
-            <CsvToHtmlTable
-              data={dataset.example_rows_md}
-              csvDelimiter="|"
-              tableClassName="table table-striped table-hover"
-            />
+          <div className="table-scroll-container">
+            <div className="table-view">
+              <CsvToHtmlTable
+                data={dataset.example_rows_md}
+                csvDelimiter="|"
+                tableClassName="table table-striped table-hover"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -215,15 +217,16 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
   const [isBlankedOut, setIsBlankedOut] = useState(false);
 
   useEffect(() => {
+    console.log("CHECKING RESULTS");
     if (JSON.stringify(results) !== JSON.stringify(currentResults)) {
       // If results have changed, blank out the component for 1 second
       setIsBlankedOut(true);
-
+      setCurrentResults(results);
       // Set timeout to revert the blank out effect after 1 second
       setTimeout(() => {
         setIsBlankedOut(false);
-        setCurrentResults(results); // Update the results after the blank out
-      }, 1000); // 1 second
+        // Update the results after the blank out
+      }, 1000); // 0.5 second
     }
   }, [results, currentResults]);
 
@@ -238,7 +241,17 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
     >
       <div className="list">
         <div className="sticky-header">
-          <div style={{ display: "flex", alignItems: "center" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              position: "sticky",
+              top: 0,
+              backgroundColor: "white",
+              zIndex: 1,
+              padding: "16px 0",
+            }}
+          >
             <span
               style={{
                 fontWeight: "bold",
@@ -280,16 +293,16 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
             />
           ))}
         </div>
-        <div className="page-selector">
+        {/* <div className="page-selector">
           <div onClick={goToPreviousPage} style={{ cursor: "pointer" }}>
             <CircleArrowLeft /> Previous
           </div>{" "}
           <div onClick={goToNextPage} style={{ cursor: "pointer" }}>
             Next <CircleArrowRight />
           </div>
-        </div>
+        </div> */}
       </div>
-      <div className={`preview-container ${open ? "small" : ""}`}>
+      <div className="preview-container">
         <ResultPreview dataset={results[selectedIndex]}></ResultPreview>
       </div>
     </div>

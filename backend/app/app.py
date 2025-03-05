@@ -9,6 +9,7 @@ from backend.app.actions.handle_action import handle_semantic_fields, handle_raw
 from backend.app.chat.handle_chat_history import append_user_query, append_system_response, get_user_queries, get_last_results, get_mentioned_fields
 from backend.app.db.table_schema import table_schema_dict
 
+import json
 import ast
 import os
 import time
@@ -23,6 +24,9 @@ from collections import Counter
 import matplotlib.pyplot as plt
 import re
 import numpy as np
+import pandas as pd
+from sklearn.cluster import KMeans
+from sklearn.metrics.pairwise import cosine_similarity
 
 
 
@@ -152,15 +156,16 @@ def initial_search():
 
     try:
         logging.info("Starting hyse")
-        initial_results, _, _ = hyse_search(initial_query, search_space=None, num_schema=1, k=100)  # Keep top 100 results in initial search
-        append_system_response(chat_history, thread_id, initial_results, refine_type="semantic")
+        initial_results, _, _ = hyse_search(initial_query, search_space=None, num_schema=1, k=20)  # Keep top 100 results in initial search
+        logging.info("finished hyse")
+        # append_system_response(chat_history, thread_id, initial_results, refine_type="semantic")
 
         # Update the cached results
-        chat_history[thread_id + '_cached_results'] = [result["table_name"] for result in initial_results]
+        # chat_history[thread_id + '_cached_results'] = [result["table_name"] for result in initial_results]
 
         response_data = {
             "top_results": initial_results[:10],
-            "complete_results": initial_results[:100],
+            "complete_results": initial_results[:20],
         }
 
         logging.info(f"✅Search successful for query: {initial_query}")
@@ -312,6 +317,181 @@ def refine_metadata():
     except Exception as e:
         logging.error(f"Search refinement failed, Error: {e}")
         return jsonify({"error": "Search refinement failed due to an internal error"}), 500
+
+
+# Route to suggest relevant columns based on a task and provided results
+@app.route('/api/suggest_relevant_cols', methods=['POST'])
+def suggest_relevant_cols():
+    task_description = request.json.get('task')  
+    results_data = request.json.get('results')  
+    results_df = pd.DataFrame(results_data)  # Convert results to a DataFrame for easier processing
+
+    # Initialize lists to store embeddings, column names, and dataset names
+    column_embeddings = []  
+    column_names = []  
+    dataset_names = []  
+
+    # Iterate through each row in the results DataFrame and extract the example schema
+    for _, row in results_df.iterrows():
+        column_embedding_dict = ast.literal_eval(row['example_cols_embed'])
+        dataset_name = row['table_name'] 
+        for column_name, embedding in column_embedding_dict.items():
+            column_names.append(column_name)  
+            column_embeddings.append(embedding) 
+            dataset_names.append(dataset_name) 
+
+    # Log the number of columns processed
+    logging.info(f"Processed {len(column_names)} columns.")
+
+    # Convert the list of embeddings into a NumPy array (one embedding per row)
+    embedding_matrix = np.array(column_embeddings)
+    logging.info(f"Embedding matrix shape: {embedding_matrix.shape}")
+
+    # Perform K-Means clustering on the embeddings
+    num_clusters = 15  # Number of clusters to create (can be adjusted based on data)
+    kmeans = KMeans(n_clusters=num_clusters, random_state=42)
+    kmeans.fit(embedding_matrix)
+
+    # Initialize dictionaries to store columns and datasets by cluster
+    columns_by_cluster = {}  
+    datasets_by_cluster = {}  
+
+    # Assign columns and datasets to their respective clusters
+    for idx, column_name in enumerate(column_names):
+        cluster_id = kmeans.labels_[idx]  
+        dataset_name = dataset_names[idx] 
+
+        # Initialize lists for the cluster if they don't exist
+        if cluster_id not in columns_by_cluster:
+            columns_by_cluster[cluster_id] = []
+            datasets_by_cluster[cluster_id] = []
+
+        columns_by_cluster[cluster_id].append(column_name)
+        datasets_by_cluster[cluster_id].append(dataset_name)
+
+    # Log the columns and datasets in each cluster
+    for cluster_id, columns in sorted(columns_by_cluster.items()):
+        logging.info(f"Cluster {cluster_id} columns: {columns}")
+        logging.info(f"Cluster {cluster_id} datasets: {datasets_by_cluster[cluster_id]}")
+
+    # Calculate the average embedding for each cluster
+    average_embeddings_by_cluster = {}
+    for idx, cluster_id in enumerate(kmeans.labels_):
+        if cluster_id not in average_embeddings_by_cluster:
+            average_embeddings_by_cluster[cluster_id] = []
+        average_embeddings_by_cluster[cluster_id].append(embedding_matrix[idx])
+
+    # Compute the mean embedding for each cluster
+    mean_embeddings_by_cluster = {}
+    for cluster_id, embeddings in average_embeddings_by_cluster.items():
+        mean_embeddings_by_cluster[cluster_id] = np.mean(np.array(embeddings), axis=0)
+
+    # Calculate the similarity between the task embedding and each cluster's mean embedding
+    task_embedding = openai_client.generate_embeddings(task_description)  # Generate embedding for the task
+    similarity_by_cluster = {}
+
+    for cluster_id, mean_embedding in mean_embeddings_by_cluster.items():
+        mean_embedding = np.array(mean_embedding).reshape(1, -1) 
+        task_embedding = np.array(task_embedding).reshape(1, -1) 
+        similarity = cosine_similarity(mean_embedding, task_embedding)[0][0]  # 
+        similarity_by_cluster[cluster_id] = similarity
+
+    # Sort clusters by similarity in descending order
+    sorted_clusters_by_similarity = sorted(
+        similarity_by_cluster.items(), key=lambda x: x[1], reverse=True
+    )
+    
+    # Format the top clusters for the response
+    top_clusters = [
+        {"cluster": int(cluster_id), "similarity": float(similarity)}
+        for cluster_id, similarity in sorted_clusters_by_similarity
+    ]
+
+    # Extract column and dataset information for the top clusters
+    top_columns_by_cluster = {
+        int(item["cluster"]): columns_by_cluster[int(item["cluster"])]
+        for item in top_clusters
+    }
+
+    top_datasets_by_cluster = {
+    int(item["cluster"]): list(set(datasets_by_cluster[int(item["cluster"])]))
+    for item in top_clusters
+    }
+
+    # Log the top clusters and their details
+    logging.info(f"Top clusters by similarity: {type(top_clusters)}")
+    logging.info(f"Columns in top clusters: {type(top_columns_by_cluster)}")
+    logging.info(f"Datasets in top clusters: {type(top_datasets_by_cluster)}")
+
+    # Consolidate the results (assuming a function `consolidate` exists)
+    consolidated_results = list(consolidate(top_columns_by_cluster.values()))
+    logging.info(f"Datasets in top clusters: {type(consolidated_results)}")
+
+
+    response_data = {
+    "top_clusters": list(top_clusters),
+    "columns_in_clusters": [list(cols) for cols in top_columns_by_cluster.values()],
+    "datasets_in_clusters": [list(set(datasets)) for datasets in top_datasets_by_cluster.values()],
+    "consolidated_results": consolidated_results
+}
+    # Return the results as a JSON response
+    return jsonify(response_data)
+
+def consolidate(clusters):
+        logging.info("CONSOLIDATION")
+        logging.info(clusters)
+        clusters_serializable = [list(cluster) for cluster in clusters]
+        logging.info(f"Consolidate clusters: {type(clusters_serializable)}")
+
+        messages = [ 
+        {"role": "system", 
+         "content": f"""You are an assistant that returns a flat list of distinct English words. The input will be a list with nested elements. For each nested element, extract one or two representative words that describe it. The words should be single words without special characters (like hyphens or underscores). The output must be a valid JSON array with no extra formatting or symbols."""
+
+        },
+        {"role": "user", "content": json.dumps(clusters_serializable)}
+        ]
+    
+        result = openai_client.infer_metadata_wo_instructor(messages)
+        logging.info(f"RESULT: {type(result)}")
+        if isinstance(result, str):  # Checking if result is a string
+            try:
+                # Try parsing as JSON first
+                try:
+                    result = json.loads(result)
+                except json.JSONDecodeError:
+                    # If JSON decoding fails, fall back to safely evaluating with ast.literal_eval
+                    try:
+                        result = ast.literal_eval(result)
+                    except (ValueError, SyntaxError) as e:
+                        # Handle possible exceptions during evaluation
+                        logging.error(f"Error evaluating string: {e}")
+                        # Treat the result as plain text
+                        result = {"text": result}
+            except Exception as e:
+                logging.error(f"Error processing result: {e}")
+                return jsonify({"error": "Unexpected error during result processing"}), 500
+                
+        logging.info(f"RESULT: {type(result)}")
+        logging.info(result)
+ 
+        return result
+
+@app.route('/api/and_dataset_filter', methods=['POST'])
+def and_dataset_filter():
+    unique_datasets = request.json.get('uniqueDatasets')
+    task = request.json.get('task')
+    results = request.json.get('results')
+    
+    # Filter the DataFrame to include only rows where 'table_name' is in unique_datasets
+    results_df = pd.DataFrame(results)
+    filtered_results_df = results_df[results_df["table_name"].isin(unique_datasets)]
+
+
+    return jsonify({
+        "filtered_results": filtered_results_df.to_dict(orient="records"),
+    })
+
+
 
 @app.route('/api/reset_search_space', methods=['POST'])
 def reset_search_space():
@@ -904,10 +1084,14 @@ def task_suggestions():
 @app.route('/api/initial_task_suggestions', methods=['POST'])
 def initial_task_suggestions():
     logging.info("Choosing autogen agent.")
-    thread_id = request.get_json().get('thread_id')
+    # thread_id = request.get_json().get('thread_id')
     specificity = request.json.get('specificity')
     goal = request.json.get('goal')
     domain = request.json.get('domain')
+    logging.info(specificity)
+    logging.info(goal)
+    logging.info(domain)
+
 
     user_proxy = UserProxyAgent(
         name = "user_proxy",

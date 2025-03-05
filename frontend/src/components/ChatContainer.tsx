@@ -14,6 +14,17 @@ interface ChatContainerProps {
   results: ResultProp[];
   currentPage: number;
   setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
+  task: string;
+  setTask: React.Dispatch<React.SetStateAction<string>>;
+  settingsSpecificity: string;
+  setSettingsSpecificity: React.Dispatch<React.SetStateAction<string>>;
+  settingsGoal: string;
+  setSettingsGoal: React.Dispatch<React.SetStateAction<string>>;
+  settingsDomain: string;
+  setSettingsDomain: React.Dispatch<React.SetStateAction<string>>;
+  settingsGenerate: boolean;
+  setSettingsGenerate: React.Dispatch<React.SetStateAction<boolean>>;
+  setTaskRec: React.Dispatch<React.SetStateAction<[string, any][]>>;
 }
 
 const ChatContainer: React.FC<ChatContainerProps> = ({
@@ -23,23 +34,34 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
   results,
   currentPage,
   setCurrentPage,
+  task,
+  setTask,
+  settingsSpecificity,
+  setSettingsSpecificity,
+  setSettingsGoal,
+  settingsGoal,
+  settingsDomain,
+  setSettingsDomain,
+  settingsGenerate,
+  setSettingsGenerate,
+  setTaskRec,
 }) => {
-  useEffect(() => {
-    // Fetch most popular datasets when the component mounts
-    const fetchMostPopularDatasets = async () => {
-      try {
-        const response = await axios.get(
-          "http://127.0.0.1:5000/api/most_popular_datasets"
-        );
-        console.log("POPULAR RESULTS: ", response);
+  // useEffect(() => {
+  //   // Fetch most popular datasets when the component mounts
+  //   const fetchMostPopularDatasets = async () => {
+  //     try {
+  //       const response = await axios.get(
+  //         "http://127.0.0.1:5000/api/most_popular_datasets"
+  //       );
+  //       console.log("POPULAR RESULTS: ", response);
 
-        setResults(response.data); // Set results with the fetched data
-      } catch (error) {
-        console.error("Error fetching top 10 popular datasets:", error);
-      }
-    };
-    fetchMostPopularDatasets();
-  }, [setResults]); // Dependency array includes setResults
+  //       setResults(response.data); // Set results with the fetched data
+  //     } catch (error) {
+  //       console.error("Error fetching top 10 popular datasets:", error);
+  //     }
+  //   };
+  //   fetchMostPopularDatasets();
+  // }, [setResults]); // Dependency array includes setResults
 
   const suggested_tasks = {
     "Train a predictive model on voter turnout in presidential elections":
@@ -216,16 +238,11 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
     // },
   ]);
 
-  const [task, setTask] = useState<string>("");
   const [filters, setFilters] = useState<string[]>([]);
   const [iconVisibility, setIconVisibility] = useState<boolean[]>(
     new Array(filters.length).fill(true)
   );
 
-  const [settingsSpecificity, setSettingsSpecificity] = useState<string>("");
-  const [settingsGoal, setSettingsGoal] = useState<string>("");
-  const [settingsDomain, setSettingsDomain] = useState<string>("");
-  const [settingsGenerate, setSettingsGenerate] = useState(false);
   const [pendingFilter, setPendingFilter] = useState<string | null>(null);
 
   return (
@@ -252,12 +269,12 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
             setMessages={setMessages}
             pendingFilter={pendingFilter}
             setPendingFilter={setPendingFilter}
+            results={results}
             setResults={setResults}
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
-
           />
-          <ChatBot
+          {/* <ChatBot
             setResults={setResults}
             results={results}
             task={task}
@@ -277,7 +294,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
             setPendingFilter={setPendingFilter}
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
-          />
+          /> */}
         </>
       )}
     </div>

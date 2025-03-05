@@ -217,7 +217,7 @@ def execute_sql(text_to_sql_instance, search_space):
 
     with DatabaseConnection() as db:
         # Base query with initial WHERE condition for the search space
-        query_base = sql.SQL("SELECT DISTINCT table_name, popularity, db_description, tags, col_num, time_granu, geo_granu, comb_embed, query_embed FROM eval_data_all WHERE table_name = ANY(%s)")
+        query_base = sql.SQL("SELECT DISTINCT table_name, popularity, db_description, tags, col_num, time_granu, geo_granu, comb_embed, query_embed FROM eval_col_test  WHERE table_name = ANY(%s)")
         where_conditions = []  # List to hold additional conditions
         logging.info(where_conditions)
         ordering = []  # List to hold ORDER BY conditions
@@ -269,7 +269,7 @@ def execute_sql(text_to_sql_instance, search_space):
 def execute_metadata_sql(sql_clauses, search_space):
     with DatabaseConnection() as db:
         # Base query with initial WHERE condition for the search space
-        query_base = sql.SQL("SELECT DISTINCT * FROM eval_data_all WHERE table_name = ANY(%s)")
+        query_base = sql.SQL("SELECT DISTINCT * FROM eval_col_test  WHERE table_name = ANY(%s)")
         where_conditions = []  # List to hold additional conditions
         parameters = [search_space]  # List to hold all parameters for the SQL query
 

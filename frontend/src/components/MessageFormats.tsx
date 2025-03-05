@@ -1,10 +1,7 @@
 import axios from "axios";
 import "../styles/MessageItem.css";
 import React from "react";
-import SettingsIcon from "@mui/icons-material/Settings";
 import { useState } from "react";
-
-
 interface SettingsProps {
   settingsSpecificity: string;
   setSettingsSpecificity: React.Dispatch<React.SetStateAction<string>>;
@@ -13,7 +10,9 @@ interface SettingsProps {
   settingsDomain: string;
   setSettingsDomain: React.Dispatch<React.SetStateAction<string>>;
   settingsGenerate: boolean;
-  setSettingsGenerate:  React.Dispatch<React.SetStateAction<boolean>>;
+  setSettingsGenerate: React.Dispatch<React.SetStateAction<boolean>>;
+  onStart: () => void;
+  setTaskRec: React.Dispatch<React.SetStateAction<[string, any][]>>;
 }
 
 const Settings = ({
@@ -24,7 +23,9 @@ const Settings = ({
   settingsDomain,
   setSettingsDomain,
   settingsGenerate,
-  setSettingsGenerate
+  setSettingsGenerate,
+  onStart,
+  setTaskRec,
 }: SettingsProps) => {
   const taskOptions = ["I have a specific task", "I am exploring"];
   const [goalOptions, setGoalOptions] = useState([
@@ -58,10 +59,10 @@ const Settings = ({
         ...goalOptions.slice(0, -1),
         newGoal,
         "+ Add other option",
-      ]); 
-      setSettingsGoal(newGoal); 
-      setNewGoal(""); 
-      setShowInput(false); 
+      ]);
+      setSettingsGoal(newGoal);
+      setNewGoal("");
+      setShowInput(false);
     }
   };
 
@@ -69,9 +70,35 @@ const Settings = ({
     setSettingsDomain(e.target.value);
   };
 
+  const fetchTaskSuggestions = async () => {
+    const taskSuggestionsURL =
+      "http://127.0.0.1:5000/api/initial_task_suggestions";
+    console.log(settingsSpecificity);
+    console.log(settingsGoal);
+    console.log(settingsDomain);
+    const searchResponse = await axios.post(taskSuggestionsURL, {
+      // thread_id: threadId,
+      specificity: settingsSpecificity,
+      goal: settingsGoal,
+      domain: settingsDomain,
+    });
+    console.log(searchResponse.data);
+    const querySuggestions = searchResponse.data.query_suggestions;
+    console.log(querySuggestions);
+    const queryObject =
+      typeof querySuggestions === "string"
+        ? JSON.parse(querySuggestions)
+        : querySuggestions;
+    const queryArray = Object.entries(queryObject);
+    console.log(queryArray);
+    setTaskRec(queryArray);
+  };
+
   const handleGenerateChange = () => {
     setSettingsGenerate(true);
-    console.log(settingsGenerate)
+    fetchTaskSuggestions();
+    onStart();
+    console.log(settingsGenerate);
     console.log("Specificity:", settingsSpecificity);
     console.log("Goal:", settingsGoal);
     console.log("Domain:", settingsDomain);
@@ -79,22 +106,11 @@ const Settings = ({
 
   return (
     <div className="settings-container">
-      <div className="settings-title">
-        <h4>Task Brainstorming</h4>
-        <SettingsIcon
-          style={{
-            fontSize: 40,
-            color: "gray",
-            position: "absolute",
-            right: "0px",
-            bottom: "0",
-          }}
-        />
-      </div>
-      <h6>
-        Do you have a specific task in mind, or are you exploring available
+      <div className="settings-title"></div>
+      <h4>
+        1. Do you have a specific task in mind, or are you exploring available
         options?
-      </h6>
+      </h4>
       <div className="settings-options">
         {taskOptions.map((option) => (
           <button
@@ -112,8 +128,8 @@ const Settings = ({
         ))}
       </div>
 
-      <h6>What is the primary goal of your task?</h6>
-      <div style={{ marginBottom: "20px" }}>
+      <h4>2. What is the primary goal of your task?</h4>
+      <div style={{ marginBottom: "12px" }}>
         {goalOptions.map((goal) => (
           <button
             className="settings-button"
@@ -128,7 +144,7 @@ const Settings = ({
           </button>
         ))}
         {showInput && (
-          <div className = "settings-newGoal" style={{ marginTop: "10px" }}>
+          <div className="settings-newGoal" style={{ marginTop: "8px" }}>
             <input
               type="text"
               value={newGoal}
@@ -137,7 +153,7 @@ const Settings = ({
               style={{
                 padding: "4px 12px",
                 width: "50%",
-                marginLeft:"5px",
+                marginLeft: "5px",
                 marginRight: "5px",
                 borderRadius: "10px",
                 border: "1px solid #ccc",
@@ -160,7 +176,7 @@ const Settings = ({
         )}
       </div>
 
-      <h6>What domains/subjects are you interested in? Provide keywords.</h6>
+      <h4>3. What domains/subjects are you interested in? Provide keywords.</h4>
       <div className="settings-interest">
         <textarea
           id="keywords"
@@ -168,7 +184,6 @@ const Settings = ({
           onChange={handleKeywordsChange}
           rows={3}
           placeholder="E.g., healthcare, finance, machine learning..."
-
         />
       </div>
 
@@ -180,12 +195,10 @@ const Settings = ({
         }}
         onClick={handleGenerateChange}
       >
-        Generate
+        Get Started
       </button>
     </div>
   );
 };
 
 export default Settings;
-
-

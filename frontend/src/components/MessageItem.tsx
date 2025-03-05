@@ -1,4 +1,3 @@
-import axios from "axios";
 import "../styles/MessageItem.css";
 import React, { useState, useEffect } from "react";
 import { VegaLite } from "react-vega";

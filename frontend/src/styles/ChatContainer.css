@@ -1,16 +1,11 @@
 .chat-container {
-    border-left: 1px solid black;
-    width: 300px;
-    right: 0;
-    transition: transform 1.5s ease-in-out; 
-    transform: translateX(0); 
-    
+    box-shadow: 3px 3px 12px rgba(123, 152, 206, 0.25); /* Softer, more diffused shadow */
+    border: 1px solid rgba(131, 131, 131, 0.5); /* Lighter, semi-transparent blue */
+    border-radius: 12px; /* Slightly smoother corners */
+}
 
-}
-.container.closed {
-    transform: translateX(100%);
-    padding: 0px;
-}
+
+
 .chat-button{
     position: absolute;
     margin-top: 16px;

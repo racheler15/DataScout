@@ -63,7 +63,7 @@ class TableSchema(BaseModel):
     data_types: List[str]
     example_row: List[Any]
 
-def hyse_search(initial_query, search_space=None, num_schema=1, k=10, table_name="eval_data_train", column_name="example_rows_embed"):
+def hyse_search(initial_query, search_space=None, num_schema=1, k=10, table_name="eval_col_test ", column_name="example_rows_embed"):
     # Step 0: Initialize the results list and num_left
     results = []
     num_left = num_schema
@@ -137,7 +137,7 @@ def infer_multiple_hypothetical_schema(initial_query, num_left):
     m = len(response)
     return response, m
 
-def cos_sim_search(input_embedding, search_space, table_name="eval_data_train", column_name="example_rows_embed"):  
+def cos_sim_search(input_embedding, search_space, table_name="eval_col_test ", column_name="example_rows_embed"):  
     # Ensure input_embedding is a list before passing to execute
     if isinstance(input_embedding, np.ndarray):
         input_embedding = input_embedding.tolist()
@@ -195,6 +195,7 @@ def aggregate_hyse_search_results(results):
         task_queries = result['task_queries']
         metadata_queries = result['metadata_queries']
         example_rows_embed = result['example_rows_embed']
+        example_cols_embed = result['example_cols_embed']
 
         
         if not isinstance(cosine_similarity, (int, float)):
@@ -219,6 +220,7 @@ def aggregate_hyse_search_results(results):
                 'task_queries': task_queries,
                 'metadata_queries': metadata_queries,
                 'example_rows_embed': example_rows_embed,
+                'example_cols_embed': example_cols_embed,
                 'cosine_similarity': [cosine_similarity]
             }
         else:
@@ -245,8 +247,9 @@ def most_popular_datasets():
         # No specific search space, search through all table names
         query = f"""
             SELECT *
-            FROM eval_data_all
+            FROM eval_col_test 
             ORDER BY usability_rating DESC
+            LIMIT 10
         """
         db.cursor.execute(query)    
         results = db.cursor.fetchall()
@@ -257,7 +260,7 @@ def get_datasets():
         # No specific search space, search through all table names
         query = f"""
             SELECT *
-            FROM eval_data_all
+            FROM eval_col_test 
         """
         db.cursor.execute(query)    
         results = db.cursor.fetchall()
