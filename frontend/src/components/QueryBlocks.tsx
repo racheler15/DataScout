@@ -95,6 +95,7 @@ const QueryBlocks = ({
     });
     setActiveColumns((prevActiveColumns) => {
       const filterToToggle = filters[index]; // Get the corresponding filter
+      console.log(filterToToggle);
 
       if (!iconVisibility[index]) {
         // If the icon was previously hidden (false), add the filter back to activeColumns
@@ -104,6 +105,7 @@ const QueryBlocks = ({
         return prevActiveColumns.filter((col) => !filterToToggle.includes(col));
       }
     });
+    setShouldRemove(true);
   };
 
   const removeFilter = (index: number) => {
@@ -522,9 +524,9 @@ const QueryBlocks = ({
               <span>
                 <b>Include columns that contain: </b>
               </span>
-              <div>
+              {/* <div>
                 <u>Number of datasets</u> in search result: {datasetCount}
-              </div>
+              </div> */}
               {filteredColRecWithIndices.map(
                 ({ key, value, originalIndex }, filteredIndex) => (
                   <div key={key}>
@@ -548,6 +550,9 @@ const QueryBlocks = ({
                   </div>
                 )
               )}
+                <div>
+                <u>Number of datasets</u> in search result: {datasetCount}
+              </div>
 
               <button
                 onClick={() => {
@@ -569,6 +574,10 @@ const QueryBlocks = ({
           messages={messages}
           setMessages={setMessages}
           activeFilters={activeFilters}
+          results={results}
+          setResults={setResults}
+          setFilters={setFilters}
+          setIconVisibility={setIconVisibility}
         />
       </div>
     </div>

@@ -16,14 +16,11 @@
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  width: 500px; 
+  width: 600px;
 }
 
 .filter-content button {
   border-radius: 16px;
-}
-.filter-content button:hover {
-  border: 1px solid black;
 }
 
 .remaining-attributes {
@@ -47,4 +44,70 @@
   font-weight: normal;
   padding: 6px 12px;
   border-radius: 16px;
+}
+
+.individual-filter-container {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  
+  /* gap: 12px; */
+  margin-bottom: 15px;
+}
+
+
+.dropdown-container {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  
+}
+
+
+.dropdown-container label {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.dropdown-container select,
+.dropdown-container input[type="text"] {
+  padding: 8px;
+  font-size: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 180px;
+  outline: none;
+  height: 36px;
+}
+
+
+.dropdown-container input[type="text"] {
+  width: 180px;
+  height: 36px;
+
+}
+
+.dropdown-container select {
+  cursor: pointer;
+  background-color: #f6f6f6; /* Light gray background */
+  color: #333; /* Dark text for readability */
+
+}
+
+.table-container {
+  padding-right: 4px;
+  max-height: 200px;  /* Sets the maximum width to 100% of the parent container */
+  overflow-y: auto; /* Enables horizontal scrolling when the table exceeds max width */
+}
+
+.table {
+  width: 100%; /* Ensures the table stretches to its container width */
+  font-weight: normal; /* Removes bold text styling */
+  font-size: 12px;
+}
+
+.table {
+  --bs-table-striped-bg: #cee6fd49 !important; /* Blue striped rows */
 }

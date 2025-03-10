@@ -137,7 +137,50 @@ def infer_multiple_hypothetical_schema(initial_query, num_left):
     m = len(response)
     return response, m
 
-def cos_sim_search(input_embedding, search_space, table_name="eval_col_test ", column_name="example_rows_embed"):  
+def hnsw_search(column, search_space, table_name="eval_test_column_embeddings", column_name="embedding"):
+    logging.info(column)
+    given_column_embedding = openai_client.generate_embeddings(column) 
+    table_names = [item['table_name'] for item in search_space]
+    logging.info(search_space)
+    with DatabaseConnection() as db:
+        if table_names:
+            # Filter by specific table names
+            query = f"""
+                SELECT *, 1 - ({column_name} <=> %s::VECTOR(1536)) AS cosine_similarity
+                FROM {table_name}
+                WHERE table_name = ANY(%s)
+                ORDER BY cosine_similarity DESC;
+            """
+            db.cursor.execute(query, (given_column_embedding, table_names))
+        
+        logging.info("FETCH ")
+        results = db.cursor.fetchall()
+        if results:
+            table_names = []
+
+            for idx, result in enumerate(results, start=1):
+                # Extract cosine_similarity, table_name, and column_name
+                cos_sim = result['cosine_similarity']
+                table_name = result['table_name']
+
+                # Print only results with cosine_similarity > 0.4 (40%)
+                if cos_sim > 0.4:
+                    logging.info(f"Rank {idx}: {cos_sim} - Table: {table_name}, Column: {result['column_name']}")
+
+                    # Append table name if it has a cosine similarity greater than 40%
+                    table_names.append(table_name)
+
+        # Get unique table names where cosine similarity is greater than 40%
+        unique_table_names = list(set(table_names))
+        logging.info(f"Unique table names with cosine_similarity > 40%: {unique_table_names}")
+        logging.info(len(unique_table_names))
+
+        logging.info("Search Space: %s", search_space)
+        filtered_datasets = [dataset for dataset in search_space if dataset['table_name'] in unique_table_names]
+        logging.info(filtered_datasets)
+        return filtered_datasets
+
+def cos_sim_search(input_embedding, search_space, table_name="eval_col_test", column_name="example_rows_embed"):  
     # Ensure input_embedding is a list before passing to execute
     if isinstance(input_embedding, np.ndarray):
         input_embedding = input_embedding.tolist()
@@ -153,7 +196,8 @@ def cos_sim_search(input_embedding, search_space, table_name="eval_col_test ", c
                 SELECT *, 1 - ({column_name} <=> %s::VECTOR(1536)) AS cosine_similarity
                 FROM {table_name}
                 WHERE table_name = ANY(%s)
-                ORDER BY cosine_similarity DESC;
+                ORDER BY cosine_similarity DESC
+                LIMIT 50;
             """
             db.cursor.execute(query, (input_embedding, search_space))
         else:
@@ -161,7 +205,8 @@ def cos_sim_search(input_embedding, search_space, table_name="eval_col_test ", c
             query = f"""
                 SELECT *, 1 - ({column_name} <=> %s::VECTOR(1536)) AS cosine_similarity
                 FROM {table_name}
-                ORDER BY cosine_similarity DESC;
+                ORDER BY cosine_similarity DESC
+                LIMIT 50;
             """
             db.cursor.execute(query, (input_embedding,))
         
@@ -175,7 +220,7 @@ def cos_sim_search(input_embedding, search_space, table_name="eval_col_test ", c
 def aggregate_hyse_search_results(results):
     # Flatten the list of results
     flat_results = [item for sublist in results for item in sublist]
-    
+    logging.info("AGGREGATE_HYSE")
     # Aggregate by table name and calculate mean cosine similarity
     aggregated_results = {}
     for result in flat_results:
@@ -196,6 +241,7 @@ def aggregate_hyse_search_results(results):
         metadata_queries = result['metadata_queries']
         example_rows_embed = result['example_rows_embed']
         example_cols_embed = result['example_cols_embed']
+        new_schema = result.get('new_schema')
 
         
         if not isinstance(cosine_similarity, (int, float)):
@@ -221,7 +267,8 @@ def aggregate_hyse_search_results(results):
                 'metadata_queries': metadata_queries,
                 'example_rows_embed': example_rows_embed,
                 'example_cols_embed': example_cols_embed,
-                'cosine_similarity': [cosine_similarity]
+                'cosine_similarity': [cosine_similarity],
+                'new_schema': new_schema
             }
         else:
             # Add cosine similarity to existing entry
@@ -240,7 +287,7 @@ def aggregate_hyse_search_results(results):
     final_results.sort(key=lambda x: x['cosine_similarity'], reverse=True)
 
     return final_results
-
+    
 
 def most_popular_datasets():
     with DatabaseConnection() as db:        

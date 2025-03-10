@@ -14,5 +14,80 @@ table_schema_dict = {
     "keywords": "TEXT[]",
     "task_queries": "TEXT[]",
     "metadata_queries": "JSONB",
-    "example_rows_embed": "VECTOR(1536)"
+    "example_rows_embed": "VECTOR(1536)",
+    "example_cows_embed": "TEXT"
+}
+
+table_schema_dict_frontend = {
+    "column_specification": "TEXT",
+    "table_name": "TEXT",
+    "database_name": "TEXT",
+    "time_granu": "TEXT",
+    "geo_granu": "TEXT",
+    "db_description": "TEXT",
+    "col_num": "INT",
+    "row_num": "INT",
+    "popularity": "INT",
+    "usability_rating": "DECIMAL",
+    "tags": "TEXT[]",
+    "file_size_in_byte": "INT",
+    "keywords": "TEXT[]",
+    "task_queries": "TEXT[]",
+    "metadata_queries": "JSONB",
+    
+}
+
+metadata_filtering_operations = {
+    "column_specification": ["is"],
+    "table_name": ["includes"],
+    "database_name": ["includes"],
+    "time_granu": ["is"],
+    "geo_granu": ["is"],
+    "db_description": ["includes"],
+    "col_num": ["equal", "less than", "greater than", "less than or equal", "greater than or equal"],
+    "row_num": ["equal", "less than", "greater than", "less than or equal", "greater than or equal"],
+    "popularity": ["equal", "less than", "greater than", "less than or equal", "greater than or equal"],
+    "usability_rating": ["equal", "less than", "greater than", "less than or equal", "greater than or equal"],
+    "tags": ["includes"],
+    "file_size_in_byte": ["equal", "less than", "greater than", "less than or equal", "greater than or equal"],
+    "keywords": ["includes"],
+    "task_queries": ["includes"],
+    "metadata_queries": ["includes"],
+}
+
+metadata_values = {
+    "column_specification": [],
+    "table_name": [],
+    "database_name": [],
+    "time_granu": ['decade', 'day', 'half hour', 'hour', 'match', 'millisecond', 'minute', 'month', 'months', 'patch', 'quarter', 'season', 'second', 'version', 'week', 'weekday', 'year', '30 minutes'],
+    "geo_granu": ['city', 'comuna', 'continent', 'country', 'county', 'district', 'global', 'island', 'latitude/longitude', 'location', 'neighbourhood', 'postal code', 'prefecture', 'province', 'region', 'state', 'store', 'zip code', 'world'],
+    "db_description": [],
+    "col_num": [],
+    "row_num": [],
+    "popularity": [],
+    "usability_rating": [],
+    "tags": [],
+    "file_size_in_byte": [],
+    "keywords": [],
+    "task_queries": [],
+    "metadata_queries": [],
+    
+}
+
+metadata_descriptions = {
+    "column_specification": "Search over column name.",
+    "table_name": "Name of the table.",
+    "database_name": "Name of the database.",
+    "time_granu": "Time granularity (e.g., Year, Month).",
+    "geo_granu": "Geographic granularity (e.g., Country, City).",
+    "db_description": "Short description of the dataset.",
+    "col_num": "Number of columns in the table.",
+    "row_num": "Number of rows in the table.",
+    "popularity": "Popularity rank of the dataset.",
+    "usability_rating": "User rating of dataset usability, scale from 0% to 100%.",
+    "tags": "Tags associated with the dataset.",
+    "file_size_in_byte": "Size of the dataset in bytes.",
+    "keywords": "Keywords related to the dataset.",
+    "task_queries": "Queries for dataset-related tasks.",
+    "metadata_queries": "Queries for filtering metadata.",
 }

@@ -28,8 +28,12 @@ body {
   place-items: center;
   box-sizing: border-box;
   overflow-x: hidden;
-  overflow-y: hidden;
+}
 
+/* Set white background for input and textarea elements */
+input, textarea {
+  background-color: white;
+  color: black; 
 }
 
 h1 {

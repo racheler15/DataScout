@@ -242,7 +242,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
   const [iconVisibility, setIconVisibility] = useState<boolean[]>(
     new Array(filters.length).fill(true)
   );
-
+  
   const [pendingFilter, setPendingFilter] = useState<string | null>(null);
 
   return (

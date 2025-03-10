@@ -3,11 +3,11 @@ from flask_cors import CORS
 from uuid import uuid4
 import logging
 from backend.app.table_representation.openai_client import OpenAIClient
-from backend.app.hyse.hypo_schema_search import hyse_search, most_popular_datasets, get_datasets
+from backend.app.hyse.hypo_schema_search import hyse_search, most_popular_datasets, get_datasets, hnsw_search
 from backend.app.actions.infer_action import infer_action, infer_mentioned_metadata_fields, prune_query
 from backend.app.actions.handle_action import handle_semantic_fields, handle_raw_fields, handle_raw_filters
 from backend.app.chat.handle_chat_history import append_user_query, append_system_response, get_user_queries, get_last_results, get_mentioned_fields
-from backend.app.db.table_schema import table_schema_dict
+from backend.app.db.table_schema import table_schema_dict, table_schema_dict_frontend, metadata_filtering_operations, metadata_values, metadata_descriptions
 
 import json
 import ast
@@ -156,7 +156,7 @@ def initial_search():
 
     try:
         logging.info("Starting hyse")
-        initial_results, _, _ = hyse_search(initial_query, search_space=None, num_schema=1, k=20)  # Keep top 100 results in initial search
+        initial_results, _, _ = hyse_search(initial_query, search_space=None, num_schema=1, k=50)  # Keep top 50 results in initial search
         logging.info("finished hyse")
         # append_system_response(chat_history, thread_id, initial_results, refine_type="semantic")
 
@@ -165,7 +165,7 @@ def initial_search():
 
         response_data = {
             "top_results": initial_results[:10],
-            "complete_results": initial_results[:20],
+            "complete_results": initial_results[:50],
         }
 
         logging.info(f"✅Search successful for query: {initial_query}")
@@ -556,7 +556,33 @@ def remaining_attributes():
     logging.info(attribute)
     result = {key: table_schema_dict[key] for key in table_schema_dict if key not in attribute}
 
-    return jsonify({"attributes": result})
+    # Converting data into the desired format
+    filters = []
+
+    for key in table_schema_dict_frontend.keys():
+        # Get the filter data for the current key
+        operations = metadata_filtering_operations.get(key, [])
+        values = metadata_values.get(key, [])
+        
+        # Create the filter object for the current key
+        filter_obj = {
+            "name": key,  # Keeping the key as the name
+            "operations": operations,
+            "values": values
+        }
+        
+        filters.append(filter_obj)
+
+    # Convert schema dictionary to DataFrame
+    df = pd.DataFrame(table_schema_dict_frontend.items(), columns=["Metadata Attribute", "Data Type"])
+
+    # Add descriptions to the DataFrame
+    df["Description"] = df["Metadata Attribute"].map(metadata_descriptions)
+
+    # Convert the DataFrame to CSV format
+    csv_data = df.to_csv(index=False, sep="|")
+
+    return jsonify({"attributes": result, "filters": filters, "csv_data": csv_data})
     
 
 #########
@@ -569,6 +595,26 @@ def prune_prompt():
         prompt = prune_query(query)
         logging.info(f"✅Prune successful for query: {query}")
         return jsonify({"pruned_query": prompt})
+
+#########
+# This function takes in a prompt and prunes it of unnecessary words, keeping only relevant content.
+#########
+@app.route('/api/manual_metadata', methods=['POST'])
+def manual_metadata():
+    selected_filter = request.get_json().get('selectedFilter')
+    selected_operation = request.get_json().get('selectedOperation')
+    input = request.get_json().get('value')
+    logging.info(input)
+    results = request.get_json().get('results')
+    logging.info(selected_filter)
+    if selected_filter == 'column_specification':
+        logging.info("COLUMN")
+        results = hnsw_search(input, results)
+    
+    return jsonify({"results": results})
+
+
+
 
 #########
 # This function takes in a user message and determines which agent response to return.
@@ -894,7 +940,8 @@ def generate_histogram_spec(attribute, datasets):
     except Exception as e:
         logging.error(f"Starting autogen refinement failed, Error: {e}")
         return jsonify({"error": "Search failed due to an internal error"}), 500  
-     
+
+
 
 @app.route('/api/suggest_and_generate', methods=['POST'])
 def suggest_and_generate():

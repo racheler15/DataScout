@@ -24,6 +24,7 @@ export type ResultProp = {
   metadata_queries: string[];
   example_rows_embed: number[];
   cosine_similarity: number;
+  new_schema: string;
 };
 export interface ResultsTableProps {
   results: ResultProp[];
@@ -50,7 +51,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
   setCurrentPage,
 }: ResultsTableProps) => {
   const [selectedIndex, handleSelectedIndex] = useState(0);
-  const pageSize = 20;
+  const pageSize = 50;
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
 
