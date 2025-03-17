@@ -24,7 +24,14 @@ export type ResultProp = {
   metadata_queries: string[];
   example_rows_embed: number[];
   cosine_similarity: number;
-  new_schema: string;
+  dataset_context: string;
+  dataset_purpose: string;
+  dataset_source: string;
+  dataset_collection_method: string;
+  dataset_column_dictionary: string;
+  dataset_references: string;
+  dataset_acknowledgements: string;
+  
 };
 export interface ResultsTableProps {
   results: ResultProp[];
@@ -134,13 +141,12 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
             paddingLeft: "12px",
             paddingTop: "12px",
             marginRight: "12px",
+            paddingBottom:"4px"
           }}
         >
           <div className="preview-subtitle">Description</div>
-          <div className="section-content" style={{ marginRight: "16px" }}>
-            <ReactMarkdown className="markdown-content">
-              {dataset.db_description}
-            </ReactMarkdown>
+          <div className="section-content" style={{ marginRight: "16px", marginBottom:"16px" }}>
+              {dataset.dataset_context}
           </div>
         </div>
         <div className="section">
