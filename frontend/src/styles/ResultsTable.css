@@ -84,10 +84,14 @@
   display: flex;
   flex-direction: column;
   margin-top: 4px;
-  font-weight: 500;
   font-size: 14px;
   flex: 1;
   justify-content: space-between;
+  color: #434242;
+  font-weight: 500;
+}
+.dataset-stats span {
+  margin-bottom: 4px;
 }
 .page-selector {
   margin-top: 1rem;
@@ -110,20 +114,44 @@
 
 .preview-title {
   font-weight: bold;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
   font-size: 20px;
 }
 .preview-subtitle {
   font-weight: bold;
+  margin-bottom: 8px;
 }
 
 .section {
   width: 100%;
   margin-bottom: 20px;
-  margin-right: 12px;
   box-sizing: border-box;
 }
+.section-row {
+  display: flex;
+  flex-direction: row;
+  gap: 8px; 
+  margin-bottom: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
 
+.section-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid #d1d1d1;
+  padding: 4px 12px;
+  border-radius: 8px;
+  background-color: #f7f7f7; 
+}
+
+.section-item svg {
+  width: 18px;
+  height: 18px;
+  color: #777;
+}
+ 
 .section-content {
   overflow-y: auto;
   font-size: 14px;

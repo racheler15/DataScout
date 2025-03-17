@@ -225,6 +225,7 @@ def aggregate_hyse_search_results(results):
     aggregated_results = {}
     for result in flat_results:
         table_name = result['table_name']
+        database_name = result['database_name']
         cosine_similarity = result['cosine_similarity']
         example_rows_md = result['example_rows_md']
         time_granu = result['time_granu']
@@ -258,6 +259,7 @@ def aggregate_hyse_search_results(results):
         if table_name not in aggregated_results:
             aggregated_results[table_name] = {
                 'table_name': table_name,
+                'database_name': database_name,
                 'example_rows_md': example_rows_md,
                 'time_granu': time_granu,
                 'geo_granu': geo_granu,

@@ -1,10 +1,11 @@
 import "../styles/ResultsTable.css";
 // import { CircleArrowLeft, CircleArrowRight } from "lucide-react";
 import React, { useState, useEffect } from "react";
-//@ts-ignore
-import { CsvToHtmlTable } from "react-csv-to-table";
+import DownloadIcon from "@mui/icons-material/Download";
 import ReactMarkdown from "react-markdown";
 
+//@ts-ignore
+import { CsvToHtmlTable } from "react-csv-to-table";
 // CUSTOMIZE RESULTPROP DEPENDING ON DATABASE
 export type ResultProp = {
   table_name: string;
@@ -31,7 +32,6 @@ export type ResultProp = {
   dataset_column_dictionary: string;
   dataset_references: string;
   dataset_acknowledgements: string;
-  
 };
 export interface ResultsTableProps {
   results: ResultProp[];
@@ -91,26 +91,37 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
       >
         <div className="dataset-index"> {index + 1}. </div>
         <div className="dataset-details">
-          <div className="dataset-title"> {dataset.table_name}</div>
+          <div className="dataset-title"> {dataset.database_name}</div>
           <div className="dataset-stats">
             <span>
               {dataset.cosine_similarity !== undefined &&
               dataset.cosine_similarity !== null
-                ? `Similarity: ${dataset.cosine_similarity.toFixed(2)} · `
+                ? `Relevance Score: ${Math.round(
+                    dataset.cosine_similarity * 100
+                  ).toFixed(0)}% · `
                 : ""}
               Usability score:{" "}
               {Math.round(
                 parseFloat(dataset.usability_rating.toString()) * 100
               ) + "% "}
             </span>
-            <span>{formatBytes(dataset.file_size_in_byte)}</span>
             <span>
-              {dataset.col_num} cols &middot; {dataset.row_num} rows
+              {dataset.col_num} cols &middot; {dataset.row_num} rows &middot;{" "}
+              {formatBytes(dataset.file_size_in_byte)} &middot;{" "}
+              <DownloadIcon style={{ color: "#ccccc", width: "20px" }} />{" "}
+              {formatPopularity(dataset.popularity)}
             </span>
           </div>
         </div>
       </div>
     );
+  };
+
+  const formatPopularity = (popularity: number) => {
+    if (popularity >= 1000) {
+      return `${(Math.round(popularity / 100) / 10).toFixed(1)}k`;
+    }
+    return popularity;
   };
 
   function formatBytes(bytes: number) {
@@ -127,13 +138,31 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
   }
 
   const ResultPreview: React.FC<ResultPreviewProps> = ({ dataset }) => {
+    const [expanded, setExpanded] = useState(false);
+
     if (!dataset) return <div>No dataset selected</div>;
     return (
       <div>
+        <div className="preview-title">{dataset.database_name}</div>
         <div className="preview-title">{dataset.table_name}</div>
 
+        <div className="section-row">
+          <div className="section-item">{dataset.col_num} cols </div>
+          <div className="section-item">{dataset.row_num} rows </div>
+          <div className="section-item">
+            {" "}
+            {formatBytes(dataset.file_size_in_byte)}{" "}
+          </div>
+          <div className="section-item">
+            {" "}
+            <DownloadIcon style={{ color: "#ccccc", width: "20px" }} />{" "}
+            {formatPopularity(dataset.popularity)}{" "}
+          </div>
+        </div>
+        <div className="preview-subtitle">Description</div>
+
         <div
-          className="section"
+          className="description section"
           style={{
             // border: "1px solid gray",
             borderRadius: "12px",
@@ -141,15 +170,45 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
             paddingLeft: "12px",
             paddingTop: "12px",
             marginRight: "12px",
-            paddingBottom:"4px"
+            paddingBottom: "4px",
           }}
         >
-          <div className="preview-subtitle">Description</div>
-          <div className="section-content" style={{ marginRight: "16px", marginBottom:"16px" }}>
-              {dataset.dataset_context}
+          <div className="section-content">
+            {expanded ? (
+              <ReactMarkdown>{dataset.db_description}</ReactMarkdown>
+            ) : (
+              dataset.dataset_context
+            )}
           </div>
+
+          {dataset.db_description !== dataset.dataset_context && (
+            <div style={{ textAlign: "right" }}>
+              <button
+                onClick={() => setExpanded(!expanded)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "#007bff",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                }}
+              >
+                {expanded ? "Show Less" : "Show More"}
+              </button>
+            </div>
+          )}
         </div>
         <div className="section">
+          <div className="preview-subtitle">Collection Method</div>
+          <div className="section-content">
+            {dataset.dataset_collection_method ? (
+              dataset.dataset_collection_method
+            ) : (
+              <div>N/A</div>
+            )}
+          </div>
+        </div>
+        {/* <div className="section">
           <div className="preview-subtitle" style={{ marginBottom: "8px" }}>
             Recommended keywords
           </div>
@@ -160,21 +219,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
               <div>No recommendations available</div>
             )}
           </div>
-        </div>
-        <div className="section">
-          <div className="preview-subtitle">Columns</div>
-          <div className="section-content">{dataset.col_num}</div>
-        </div>
-        <div className="section">
-          <div className="preview-subtitle">Rows</div>
-          <div className="section-content">{dataset.row_num}</div>
-        </div>
-        <div className="section">
-          <div className="preview-subtitle">Size</div>
-          <div className="section-content">
-            {formatBytes(dataset.file_size_in_byte)}
-          </div>
-        </div>
+        </div> */}
 
         <div className="section">
           <div className="preview-subtitle">Tags</div>
@@ -186,9 +231,9 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
             )}
           </div>
         </div>
-        <div className="section">
+        {/* <div className="section">
           <div className="preview-subtitle" style={{ marginBottom: "8px" }}>
-            Previous queries
+            Potential Use Cases
           </div>
           <div className="previous-query-container">
             {dataset.task_queries ? (
@@ -203,8 +248,8 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
               </div>
             )}
           </div>
-        </div>
-        <div className="section" style={{ paddingBottom: "60px" }}>
+        </div> */}
+        <div className="section">
           <div className="preview-subtitle">Example Records</div>
           <div className="table-scroll-container">
             <div className="table-view">
@@ -214,6 +259,14 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
                 tableClassName="table table-striped table-hover"
               />
             </div>
+          </div>
+        </div>
+        <div className="section">
+          <div className="preview-subtitle" style={{ marginBottom: "8px" }}>
+            Source
+          </div>
+          <div className="section-content">
+            {dataset.dataset_source ? dataset.dataset_source : <div>N/A</div>}
           </div>
         </div>
       </div>
