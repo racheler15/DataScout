@@ -524,9 +524,7 @@ const QueryBlocks = ({
               <span>
                 <b>Include columns that contain: </b>
               </span>
-              {/* <div>
-                <u>Number of datasets</u> in search result: {datasetCount}
-              </div> */}
+      
               {filteredColRecWithIndices.map(
                 ({ key, value, originalIndex }, filteredIndex) => (
                   <div key={key}>

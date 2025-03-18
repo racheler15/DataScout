@@ -27,8 +27,7 @@ import numpy as np
 import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.metrics.pairwise import cosine_similarity
-
-
+from thefuzz import fuzz, process
 
 
 # Flask app configuration
@@ -603,18 +602,44 @@ def prune_prompt():
 def manual_metadata():
     selected_filter = request.get_json().get('selectedFilter')
     selected_operation = request.get_json().get('selectedOperation')
-    input = request.get_json().get('value')
+    search_input = request.get_json().get('value')
     logging.info(input)
     results = request.get_json().get('results')
     logging.info(selected_filter)
+
+    # HNSW search
     if selected_filter == 'column_specification':
         logging.info("COLUMN")
-        results = hnsw_search(input, results)
+        final_results = hnsw_search(input, results)    
+
+    # Fuzzy search based on search input
+    elif selected_filter in ["table_name", "database_name", "db_description", "tags", "keywords", "metadata_queries"]:
+        final_results = []
+        for row in results:
+            value = row.get(selected_filter)
+            logging.info(value)
+            if isinstance(value, list):  # Handle lists (e.g., tags, keywords)
+                if any(fuzzy_match(search_input, str(item), 70) for item in value):
+                    final_results.append(row)
+
+            elif isinstance(value, str):  # Handle single string fields
+                # Split the string into individual words and check each word
+                words_in_value = value.split()  # This will break the string into words
+                if any(fuzzy_match(search_input, word, 70) for word in words_in_value):
+                    final_results.append(row)
     
-    return jsonify({"results": results})
+    # elif selected_filter in ["popularity", "col_num", "row_num", "usability_rating", "file_size_in_byte"]:
+
+    # elif selected_filter == "time_granu":
+    
+    # elif selected_filter == "geo_granu":
+
+    return jsonify({"results": final_results})
 
 
-
+def fuzzy_match(query, value, threshold=70):
+    """Returns True if the fuzzy match score is above the threshold."""
+    return fuzz.partial_ratio(query.lower(), value.lower()) >= threshold
 
 #########
 # This function takes in a user message and determines which agent response to return.

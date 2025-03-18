@@ -1,8 +1,9 @@
 import "../styles/ResultsTable.css";
 // import { CircleArrowLeft, CircleArrowRight } from "lucide-react";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import DownloadIcon from "@mui/icons-material/Download";
 import ReactMarkdown from "react-markdown";
+import { Tooltip } from "react-tooltip";
 
 //@ts-ignore
 import { CsvToHtmlTable } from "react-csv-to-table";
@@ -77,6 +78,12 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
       setCurrentPage(currentPage - 1);
     }
   };
+  const previewContainerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (selectedIndex !== null && previewContainerRef.current) {
+      previewContainerRef.current.scrollTo({ top: 0, left: 0 }); // Scroll the container to the top
+    }
+  }, [selectedIndex]);
 
   const ResultItem: React.FC<ResultItemProps> = ({
     dataset,
@@ -138,14 +145,22 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
   }
 
   const ResultPreview: React.FC<ResultPreviewProps> = ({ dataset }) => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
     const [expanded, setExpanded] = useState(false);
-
     if (!dataset) return <div>No dataset selected</div>;
+    const source =
+      dataset.dataset_source && dataset.dataset_source !== "N/A"
+        ? dataset.dataset_source
+        : null;
+    const collectionMethod =
+      dataset.dataset_collection_method &&
+      dataset.dataset_collection_method !== "N/A"
+        ? dataset.dataset_collection_method
+        : null;
     return (
       <div>
         <div className="preview-title">{dataset.database_name}</div>
         <div className="preview-title">{dataset.table_name}</div>
-
         <div className="section-row">
           <div className="section-item">{dataset.col_num} cols </div>
           <div className="section-item">{dataset.row_num} rows </div>
@@ -158,13 +173,28 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
             <DownloadIcon style={{ color: "#ccccc", width: "20px" }} />{" "}
             {formatPopularity(dataset.popularity)}{" "}
           </div>
+          {dataset.time_granu ? (
+            <div
+              className="section-item"
+              style={{ backgroundColor: "#a9c7ff3b" }}
+            >
+              {dataset.time_granu}-Level Granularity{" "}
+            </div>
+          ) : null}
+          {dataset.geo_granu ? (
+            <div
+              className="section-item"
+              style={{ backgroundColor: "#a9c7ff3b" }}
+            >
+              {dataset.geo_granu}-Level Granularity
+            </div>
+          ) : null}{" "}
         </div>
         <div className="preview-subtitle">Description</div>
-
         <div
           className="description section"
           style={{
-            // border: "1px solid gray",
+            border: "1px solid #d1d1d1",
             borderRadius: "12px",
             background: "rgba(136, 136, 136, 0.1)",
             paddingLeft: "12px",
@@ -198,36 +228,43 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
             </div>
           )}
         </div>
-        <div className="section">
-          <div className="preview-subtitle">Collection Method</div>
-          <div className="section-content">
-            {dataset.dataset_collection_method ? (
-              dataset.dataset_collection_method
-            ) : (
-              <div>N/A</div>
-            )}
+
+        {(source || collectionMethod) && (
+          <div className="section">
+            <div className="preview-subtitle">
+              Data Source & Collection Method
+            </div>
+            <div className="section-content">
+              {collectionMethod && <p>{collectionMethod}</p>}
+              {source && <p>Data source references: {source}</p>}
+            </div>
           </div>
-        </div>
+        )}
         {/* <div className="section">
           <div className="preview-subtitle" style={{ marginBottom: "8px" }}>
-            Recommended keywords
+            Tags
           </div>
           <div className="section-content">
-            {dataset.keywords ? (
-              dataset.keywords.join(", ")
+            {dataset.tags ? (
+              dataset.tags.join(", ")
             ) : (
               <div>No recommendations available</div>
             )}
           </div>
         </div> */}
-
         <div className="section">
           <div className="preview-subtitle">Tags</div>
-          <div className="section-content">
+          <div className="previous-query-container">
             {dataset.tags ? (
-              dataset.tags.join(", ")
+              dataset.tags.map((query, index) => (
+                <div key={index} className="previous-query">
+                  {query}
+                </div>
+              ))
             ) : (
-              <div>No tags available</div>
+              <div style={{ fontSize: "12px" }}>
+                No tags available
+              </div>
             )}
           </div>
         </div>
@@ -259,14 +296,6 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
                 tableClassName="table table-striped table-hover"
               />
             </div>
-          </div>
-        </div>
-        <div className="section">
-          <div className="preview-subtitle" style={{ marginBottom: "8px" }}>
-            Source
-          </div>
-          <div className="section-content">
-            {dataset.dataset_source ? dataset.dataset_source : <div>N/A</div>}
           </div>
         </div>
       </div>
@@ -362,7 +391,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
           </div>
         </div> */}
       </div>
-      <div className="preview-container">
+      <div className="preview-container" ref={previewContainerRef}>
         <ResultPreview dataset={results[selectedIndex]}></ResultPreview>
       </div>
     </div>
