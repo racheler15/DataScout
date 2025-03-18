@@ -300,3 +300,29 @@ def execute_metadata_sql(sql_clauses, search_space):
         except Exception as e:
             logging.error(f"SQL execution failed, Error: {e}")
             return []
+        
+def execute_metadata_sql(db_field, operator, value, search_space):
+    with DatabaseConnection() as db:
+        # Base query with initial WHERE condition for the search space
+        query_base = sql.SQL("SELECT DISTINCT * FROM eval_final_all_with_descriptions WHERE table_name = ANY(%s)")
+        where_conditions = []  # List to hold additional conditions
+        parameters = [search_space]  # List to hold all parameters for the SQL query
+
+        condition = sql.SQL("{} {} %s").format(sql.Identifier(db_field), sql.SQL(operator))
+        where_conditions.append(condition)
+        parameters.append(value)  # Add value to parameters list
+
+        # Combine additional WHERE conditions and ORDER BY clauses into the base query
+        if where_conditions:
+            query_base = query_base + sql.SQL(" AND ") + sql.SQL(" AND ").join(where_conditions)
+       
+        logging.info("🏃Executing query: %s", query_base.as_string(db.conn))
+
+        # Execute the query
+        try:
+            db.cursor.execute(query_base, parameters)  # Pass the parameters list
+            results = db.cursor.fetchall()
+            return results
+        except Exception as e:
+            logging.error(f"SQL execution failed, Error: {e}")
+            return []

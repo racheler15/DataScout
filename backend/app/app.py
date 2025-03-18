@@ -444,7 +444,7 @@ def consolidate(clusters):
 
         messages = [ 
         {"role": "system", 
-         "content": f"""You are an assistant that returns a flat list of distinct English words. The input will be a list with nested elements. For each nested element, extract one or two representative words that describe it. The words should be single words without special characters (like hyphens or underscores). The output must be a valid JSON array with no extra formatting or symbols."""
+         "content": f"""You are an assistant that returns a flat list of distinct English words. The input will be a list with nested elements. For each nested element, extract one or two representative words that describe it. The words should be lower case single words without special characters (like hyphens or underscores). The output must be a valid JSON array with no extra formatting or symbols."""
 
         },
         {"role": "user", "content": json.dumps(clusters_serializable)}
@@ -595,6 +595,71 @@ def prune_prompt():
         logging.info(f"✅Prune successful for query: {query}")
         return jsonify({"pruned_query": prompt})
 
+
+@app.route('/api/remove_metadata_update', methods=['POST'])
+def remove_metadata_update():
+    data = request.get_json()
+    filters = data.get("filters")
+    results = data.get("results")
+    unique_datasets = data.get("uniqueDatasets")
+
+    logging.info(filters)
+
+    final_results = results  # Start with all results
+    for filter in filters:
+        selected_filter = filter["subject"]
+        search_value = filter["value"]
+        selected_operand = filter["operand"]
+
+        if selected_filter == "column_specification":
+            final_results = hnsw_search(search_value, final_results)
+
+        elif selected_filter in ["table_name", "database_name", "db_description", "tags", "keywords", "metadata_queries", "time_granu", "geo_granu"]:
+            clean_search_input = clean_input_value(search_value)
+            logging.info(clean_search_input)
+
+            temp_results = []
+            for row in final_results:
+                matches_all_inputs = True  
+
+                for input_value in clean_search_input:
+                    value = row.get(selected_filter)
+                    if isinstance(value, list):  
+                        if not any(fuzzy_match(input_value, str(item), 70) for item in value):
+                            matches_all_inputs = False
+                            break  
+                    elif isinstance(value, str):  
+                        words_in_value = value.split()
+                        if not any(fuzzy_match(input_value, word, 70) for word in words_in_value):
+                            matches_all_inputs = False
+                            break  
+
+                if matches_all_inputs:
+                    temp_results.append(row)
+
+            final_results = temp_results  # Update after filtering
+
+        elif selected_filter in ["popularity", "col_num", "row_num", "usability_rating", "file_size_in_byte"]:
+            df = pd.DataFrame(final_results)
+            if selected_filter == "usability_rating":
+                search_value = str(int(search_value) / 100)
+            elif selected_filter == "file_size_in_byte":
+                search_value = str(int(search_value) * 1024 * 1024)
+
+            query = f"{selected_filter} {selected_operand} {search_value}"
+            logging.info(query)
+            filtered_results = df.query(query).copy()
+            logging.info(len(filtered_results))
+            final_results = filtered_results.to_dict(orient="records")
+
+    results_df = pd.DataFrame(final_results)
+    filtered_results_df = results_df[results_df["table_name"].isin(unique_datasets)].copy()
+
+    return jsonify({"filtered_results": filtered_results_df.to_dict(orient="records")})
+
+
+           
+
 #########
 # This function takes in a prompt and prunes it of unnecessary words, keeping only relevant content.
 #########
@@ -603,7 +668,6 @@ def manual_metadata():
     selected_filter = request.get_json().get('selectedFilter')
     selected_operation = request.get_json().get('selectedOperation')
     search_input = request.get_json().get('value')
-    logging.info(input)
     results = request.get_json().get('results')
     logging.info(selected_filter)
 
@@ -613,33 +677,86 @@ def manual_metadata():
         final_results = hnsw_search(input, results)    
 
     # Fuzzy search based on search input
-    elif selected_filter in ["table_name", "database_name", "db_description", "tags", "keywords", "metadata_queries"]:
+    elif selected_filter in ["table_name", "database_name", "db_description", "tags", "keywords", "metadata_queries", "time_granu", "geo_granu"]:
+        clean_search_input = clean_input_value(search_input)
+        logging.info(clean_search_input)
         final_results = []
+
+        # Iterate over each row in the results
         for row in results:
-            value = row.get(selected_filter)
-            logging.info(value)
-            if isinstance(value, list):  # Handle lists (e.g., tags, keywords)
-                if any(fuzzy_match(search_input, str(item), 70) for item in value):
-                    final_results.append(row)
+            # For each row, check if all inputs in clean_search_input match
+            matches_all_inputs = True  # Start assuming the row will match all inputs
+            
+            for input in clean_search_input:
+                value = row.get(selected_filter)
+                if isinstance(value, list):  # Handle lists (e.g., tags, keywords)
+                    # Check if any item in the list matches the current search input
+                    if not any(fuzzy_match(input, str(item), 70) for item in value):
+                        matches_all_inputs = False
+                        break  # No need to check further if one input doesn't match
 
-            elif isinstance(value, str):  # Handle single string fields
-                # Split the string into individual words and check each word
-                words_in_value = value.split()  # This will break the string into words
-                if any(fuzzy_match(search_input, word, 70) for word in words_in_value):
-                    final_results.append(row)
-    
-    # elif selected_filter in ["popularity", "col_num", "row_num", "usability_rating", "file_size_in_byte"]:
+                elif isinstance(value, str):  # Handle single string fields
+                    words_in_value = value.split()  # Split the string into individual words
+                    # Check if any word in the value matches the current search input
+                    if not any(fuzzy_match(input, word, 70) for word in words_in_value):
+                        matches_all_inputs = False
+                        break  # No need to check further if one input doesn't match
 
-    # elif selected_filter == "time_granu":
+            # If the row matches all inputs, add it to the final results
+            if matches_all_inputs:
+                final_results.append(row)
     
-    # elif selected_filter == "geo_granu":
+    elif selected_filter in ["popularity", "col_num", "row_num", "usability_rating", "file_size_in_byte"]:
+        df = pd.DataFrame(results)
+        if selected_filter == "usability_rating":
+            search_input = str(int(search_input) / 100)
+        elif selected_filter == "file_size_in_byte":
+            search_input = str(int(search_input) * 1024 * 1024)
+        query = selected_filter + selected_operation + search_input
+        logging.info(query)
+
+        filtered_results = df.query(query)
+        logging.info(len(filtered_results))
+        final_results = filtered_results.to_dict(orient="records")
+
+    
+       
 
     return jsonify({"results": final_results})
 
 
-def fuzzy_match(query, value, threshold=70):
+def fuzzy_match(query, value, threshold=80):
     """Returns True if the fuzzy match score is above the threshold."""
     return fuzz.partial_ratio(query.lower(), value.lower()) >= threshold
+
+def clean_input_value(search_input):
+    messages = [ 
+        {"role": "system", 
+        "content": f"""You are an assistant that processes user input and returns a list of strings. The user may provide search parameters in different formats. Here's how to handle each format:
+        
+        1. If the input is a single string (e.g., "x" or x), return a list with that string: [x].
+        2. If the input is multiple items separated by "and" (e.g., "x and y and z"), return a list with those items: [x, y, z].
+        3. If the input uses commas and "or" (e.g., "x, y, z or a, b, c"), return a combined list of all items from both parts: [x, y, z, a, b, c].
+        4. If the input uses "and" and commas together (e.g., "x, y and z"), split the input into individual items: [x, y, z].
+    
+        Your task is to parse the input and return the correct list of strings based on the format above.
+        """},
+        {"role": "user", "content": search_input}
+
+    ]
+
+
+    result = openai_client.infer_metadata_wo_instructor(messages)
+    logging.info(result)
+    if isinstance(result, str):  # Checking if result is a string
+        try:
+            # Safely evaluate the string to convert to a list or other Python literal
+            result = ast.literal_eval(result)
+        except (ValueError, SyntaxError) as e:
+            # Handle possible exceptions during evaluation
+            logging.error(f"Error evaluating string: {e}")
+            return jsonify({"error": "Invalid string format"}), 400
+    return result
 
 #########
 # This function takes in a user message and determines which agent response to return.

@@ -9,12 +9,13 @@ import { MessageProps } from "./MessageItem";
 import axios from "axios";
 import { ResultProp } from "./ResultsTable";
 import "../styles/MessageItem.css";
-
+// import { unique } from "vega-lite";
+import { MetadataFilter } from "./ChatContainer";
 interface QueryBlocksProps {
   task: string;
   setTask: React.Dispatch<React.SetStateAction<string>>;
-  filters: string[];
-  setFilters: React.Dispatch<React.SetStateAction<string[]>>;
+  filters: MetadataFilter[];
+  setFilters: React.Dispatch<React.SetStateAction<MetadataFilter[]>>;
   iconVisibility: boolean[];
   setIconVisibility: React.Dispatch<React.SetStateAction<boolean[]>>;
   messages: MessageProps[];
@@ -25,13 +26,6 @@ interface QueryBlocksProps {
   setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
   results: ResultProp[];
   setResults: (a: ResultProp[]) => unknown;
-}
-
-interface FilterItemProps {
-  filter: string;
-  isVisible: boolean;
-  onToggle: () => void;
-  onRemove: () => void;
 }
 
 const QueryBlocks = ({
@@ -53,40 +47,22 @@ const QueryBlocks = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [input, setInput] = useState(""); // State to track user input
-  const [taskRec, setTaskRec] = useState<string[]>([]);
-  const [colRec, setColRec] = useState<string[]>([]);
-  const [selectedColumns, setSelectedColumns] = useState<boolean[]>(
+  const [taskRec, setTaskRec] = useState<[string, string][]>([]);
+  const [colRec, setColRec] = useState<string[]>([]); // total list of all knn columns
+  const [selectedColumns, setSelectedColumns] = useState<boolean[]>( // keeps track of checked/unchecked columns in top 5 list
     Array(5).fill(false)
   );
   const [datasetCount, setDatasetCount] = useState<number>(results.length);
-  const [savedDatasets, setSavedDatasets] = useState<string[][]>([]);
-  const [initialResults, setInitialResults] = useState<ResultProp[]>([]);
-  const [activeColumns, setActiveColumns] = useState<string[]>([]);
-  const [colsToRemove, setColsToRemove] = useState<string[]>([]);
+  const [savedDatasets, setSavedDatasets] = useState<string[][]>([]); //current copy of dataset
+  const [initialResults, setInitialResults] = useState<ResultProp[]>([]); //original  copy of all dataset results
+  const [activeColumns, setActiveColumns] = useState<string[]>([]); // to keep track of active knn columns
+  const [colsToRemove, setColsToRemove] = useState<MetadataFilter[]>([]); // to keep track of which cols needed to delete
   const [shouldProcess, setShouldProcess] = useState(false);
   const [shouldRemove, setShouldRemove] = useState(false);
 
   // const [mergedDatasets, setMergedDatasets] = useState<string[]>([]);
 
-  const FilterItem: React.FC<FilterItemProps> = ({
-    filter,
-    isVisible,
-    onToggle,
-    onRemove,
-  }) => {
-    return (
-      <div className={`filter-prompt ${isVisible ? "" : "hidden"}`}>
-        <div style={{ flex: "0.95" }}>{filter}</div>
-        <Icon
-          icon={isVisible ? eyeIcon : eyeOffIcon}
-          style={{ width: "24px", height: "24px", cursor: "pointer" }}
-          onClick={onToggle}
-        />
-        <X size={24} style={{ cursor: "pointer" }} onClick={onRemove} />
-      </div>
-    );
-  };
-
+  // toggles a filter, called when user clicks eye on filter
   const toggleIcon = (index: number) => {
     setIconVisibility((prev) => {
       const newVisibility = [...prev];
@@ -105,20 +81,33 @@ const QueryBlocks = ({
         return prevActiveColumns.filter((col) => !filterToToggle.includes(col));
       }
     });
+    console.log(activeColumns);
     setShouldRemove(true);
   };
 
+  // remove a filter, called when user clicks x on filter
   const removeFilter = (index: number) => {
     setFilters((prevFilters) => {
       const filterToRemove = prevFilters[index]; // Get the filter at the given index
+      console.log("REMOVE", filterToRemove);
+
+      // Check if the filter contains "column group" (KNN filter)
+      const isKnnFilter = filterToRemove.type;
 
       // Store the removed filter separately
       setColsToRemove((prev) => [...prev, filterToRemove]);
 
       const updatedFilters = prevFilters.filter((_, i) => i !== index); // Remove the filter
-      setActiveColumns((prevActiveColumns) =>
-        prevActiveColumns.filter((col) => !filterToRemove.includes(col))
-      ); // Remove words from activeColumns
+
+      // Update activeColumns
+      if (isKnnFilter === "knn") {
+        const valueToRemove = filterToRemove.value;
+        setActiveColumns((prevActiveColumns) =>
+          prevActiveColumns.filter(
+            (col) => col.toLowerCase() !== valueToRemove.toLowerCase()
+          )
+        );
+      }
 
       return updatedFilters;
     });
@@ -127,28 +116,33 @@ const QueryBlocks = ({
     setShouldRemove(true);
   };
 
-  useEffect(() => {
-    if (colsToRemove.length > 0 && shouldRemove) {
-      removeFilteredDatasets();
-      setColsToRemove([]); // Reset after running
-      setShouldRemove(false);
-    }
-  }, [colsToRemove, shouldRemove, activeColumns]);
-
   const removeFilteredDatasets = async () => {
-    const filteredSavedDatasets = getFilteredSavedDatasets();
-    console.log("FILTERED", filteredSavedDatasets);
+    const isKnnFilter = colsToRemove.some((col) => col.type === "knn"); // check if removed filter is a knnfilter
 
-    console.log("Final unique datasets REMOVE:", filteredSavedDatasets);
+    const filteredSavedDatasets = isKnnFilter
+      ? getKnnFilteredDatasets()
+      : getNormalFilteredDatasets();
 
-    const colFilteredURL = "http://127.0.0.1:5000/api/and_dataset_filter";
+    console.log("REMOVE FILTERED", filteredSavedDatasets);
+
+    const normalFilters = filters.filter(
+      (filter) =>
+        filter.type === "normal" &&
+        !colsToRemove.some((removeFilter) =>
+          removeFilter.value.includes(filter.value)
+        )
+    );
+
+    console.log("NORMAL FILTERS", normalFilters);
+
+    const colFilteredURL = "http://127.0.0.1:5000/api/remove_metadata_update";
     try {
       const searchResponse = await axios.post(colFilteredURL, {
-        task: task,
+        filters: normalFilters,
         results: initialResults,
         uniqueDatasets: filteredSavedDatasets,
       });
-      console.log(searchResponse.data);
+      console.log("REMOVE SEARCH DATSETS", searchResponse.data);
 
       // Update datasetCount based on the filtered results
       setDatasetCount(searchResponse.data.filtered_results.length);
@@ -158,50 +152,69 @@ const QueryBlocks = ({
     }
   };
 
-  const getFilteredSavedDatasets = () => {
+  const getNormalFilteredDatasets = () => {
+    if (activeColumns.length === 0) {
+      console.log("NO ACTIVE COLUMNS LEFT");
+      const uniqueDatasets = [...savedDatasets.flat()];
+      return uniqueDatasets;
+    } else {
+      // Step 1: Find the original indices of activeColumns
+      const filteredColRec = Object.entries(colRec)
+        .map(([key, value], originalIndex) => ({ key, value, originalIndex }))
+        .filter(({ value }) => activeColumns.includes(value));
+
+      console.log(filteredColRec);
+      // Step 2: Extract the corresponding datasets from savedDatasets
+      const filteredDatasets = filteredColRec.map(
+        ({ originalIndex }) => savedDatasets[originalIndex]
+      );
+
+      const uniqueDatasets = filteredDatasets.reduce(
+        (acc, curr) => acc.filter((dataset) => curr.includes(dataset)),
+        filteredDatasets[0] || []
+      );
+      console.log("FILTERED", filteredDatasets);
+      console.log("UNIQUE", uniqueDatasets);
+      return uniqueDatasets;
+    }
+  };
+
+  const getKnnFilteredDatasets = () => {
     // If no active columns are selected, return all datasets
     if (activeColumns.length === 0) {
       console.log("NO ACTIVE COLUMNS LEFT");
-      console.log(savedDatasets);
-      const uniqueDatasets = [...new Set(savedDatasets.flat())];
+      const uniqueDatasets = [...savedDatasets.flat()];
+      return uniqueDatasets;
+    } else {
+      // Step 1: Find the original indices of activeColumns, excluding colStoreRemove
+      const filteredColRec = Object.entries(colRec)
+        .map(([key, value], originalIndex) => ({ key, value, originalIndex }))
+        .filter(
+          ({ value }) =>
+            activeColumns.includes(value) &&
+            !colsToRemove.some((filter) => filter.value.includes(value))
+        ); // Exclude colStoreRemove items
+
+      // Step 2: Extract the corresponding datasets from savedDatasets
+      const filteredDatasets = filteredColRec.map(
+        ({ originalIndex }) => savedDatasets[originalIndex]
+      );
+
+      const uniqueDatasets = filteredDatasets.reduce(
+        (acc, curr) => acc.filter((dataset) => curr.includes(dataset)),
+        filteredDatasets[0] || []
+      );
+
+      console.log("FILTERED", filteredDatasets);
+      console.log("UNIQUE", uniqueDatasets);
+
       return uniqueDatasets;
     }
-
-    // Step 1: Find the original indices of activeColumns, excluding colStoreRemove
-    const filteredColRec = Object.entries(colRec)
-      .map(([key, value], originalIndex) => ({ key, value, originalIndex })) // Track original indices
-      .filter(
-        ({ value }) =>
-          activeColumns.includes(value) && !colsToRemove.includes(value)
-      ); // Exclude colStoreRemove items
-
-    console.log("FILTEREDCOLREC", filteredColRec);
-
-    // Step 2: Extract the corresponding datasets from savedDatasets
-    const filteredSavedDatasets = filteredColRec.map(
-      ({ originalIndex }) => savedDatasets[originalIndex]
-    );
-
-    const uniqueDatasets = filteredSavedDatasets.reduce((acc, curr) =>
-      acc.filter((dataset) => curr.includes(dataset))
-    );
-
-    console.log("FILTERED", filteredSavedDatasets);
-    console.log("UNIQUE", uniqueDatasets);
-
-    return uniqueDatasets;
   };
 
   const handleClick = () => {
     setIsModalOpen(true); // Open the modal when "+" is clicked
   };
-
-  useEffect(() => {
-    if (pendingFilter) {
-      // handleNewFilterSubmit(pendingFilter);
-      setPendingFilter(null); // Reset after processing
-    }
-  }, [pendingFilter]);
 
   const generateTaskRec = async (task: string) => {
     try {
@@ -217,7 +230,8 @@ const QueryBlocks = ({
           ? JSON.parse(querySuggestions)
           : querySuggestions;
       const queryArray = Object.entries(queryObject);
-      setTaskRec(queryArray);
+      console.log(queryArray);
+      setTaskRec(queryArray.map(([key, value]) => [key, String(value)]));
     } catch (error) {
       if (error instanceof Error) {
         console.error("Error updating task rec:", error.message);
@@ -230,6 +244,7 @@ const QueryBlocks = ({
   };
 
   const generateColRec = async (task: string) => {
+    // knn clustering recommendation
     try {
       const colSuggestionsURL =
         "http://127.0.0.1:5000/api/suggest_relevant_cols";
@@ -255,14 +270,17 @@ const QueryBlocks = ({
       }
     }
   };
+
   // Filter colRec to exclude activeColumns and get the next top 5 cols
   const filteredColRecWithIndices = Object.entries(colRec)
     .map(([key, value], originalIndex) => ({ key, value, originalIndex })) // Track original indices
     .filter(({ value }) => !activeColumns.includes(value)) // Exclude active columns
     .slice(0, 5); // Get only the first 5
 
+  // used for toggling checkboxes, will set values to true, calls processfiltereddatasets to update remaining results
   const updateSelectedColumns = (index: number, isChecked: boolean) => {
     setSelectedColumns((prev) => {
+      // set selected indice to true
       const updatedColumns = prev.map((val, i) =>
         i === index ? isChecked : val
       );
@@ -271,13 +289,7 @@ const QueryBlocks = ({
     setShouldProcess(true);
   };
 
-  useEffect(() => {
-    if (shouldProcess) {
-      processFilteredDatasets();
-      setShouldProcess(false); // Reset the flag after processing
-    }
-  }, [selectedColumns, shouldProcess]);
-
+  // for toggling the checkboxes and processing remaining datasets in list
   const processFilteredDatasets = async () => {
     console.log("SELECTED COLUMNS UPDATED");
     // Get the original indices of the current selected columns
@@ -290,6 +302,7 @@ const QueryBlocks = ({
       .filter((index) => index !== null) as number[];
 
     // Map these indices back to the original savedDatasets array
+    // list of lists where each child is datasets associated with it
     const filteredDatasets = selectedIndices.map(
       (index) => savedDatasets[index]
     );
@@ -301,12 +314,17 @@ const QueryBlocks = ({
 
     let uniqueDatasets;
     if (filteredDatasets.length === 0) {
+      //base case where nothing is checked, should display total count of total results
       uniqueDatasets = results.map((item) => item.table_name);
     } else {
       // Compute intersection of datasets
-      uniqueDatasets = filteredDatasets.reduce((acc, curr) =>
-        acc.filter((dataset) => curr.includes(dataset))
-      );
+      // uniqueDatasets = filteredDatasets.reduce((acc, curr) =>
+      //   acc.filter((dataset) => curr.includes(dataset))
+      // );
+      uniqueDatasets = filteredDatasets.reduce(
+        (acc, curr) => acc.filter((dataset) => curr.includes(dataset)),
+        filteredDatasets[0] || []
+      ); // Use the first dataset as the initial accumulator
     }
 
     console.log("Final unique datasets:", uniqueDatasets);
@@ -328,8 +346,9 @@ const QueryBlocks = ({
     }
   };
 
+  // called when try button is clicked for the metadata block
   const updateFilteredDatasets = async () => {
-    // Get the indices of the selected columns
+    // Get the original indices of the selected columns
     const selectedIndices = selectedColumns
       .map((isSelected, filteredIndex) =>
         isSelected
@@ -344,39 +363,50 @@ const QueryBlocks = ({
     );
 
     // Find unique datasets across all selected columns
-    const uniqueDatasets =
-      filteredDatasets.length > 0
-        ? filteredDatasets.reduce((acc, curr) =>
-            acc.filter((dataset) => curr.includes(dataset))
-          )
-        : [];
+    // const uniqueDatasets =
+    //   filteredDatasets.length > 0
+    //     ? filteredDatasets.reduce((acc, curr) =>
+    //         acc.filter((dataset) => curr.includes(dataset))
+    //       )
+    //     : [];
+    const uniqueDatasets = filteredDatasets.reduce(
+      (acc, curr) => acc.filter((dataset) => curr.includes(dataset)),
+      filteredDatasets[0] || []
+    );
 
     console.log(uniqueDatasets);
 
     // Get the column names of the selected columns
     const columnContent = selectedIndices.map((index) => colRec[index]);
+    console.log("COLUMN CONTENT", columnContent);
 
-    // Update active columns
+    // Update active columns with the selected columns name
     setActiveColumns((prevSelectedColumns) => [
       ...prevSelectedColumns,
       ...columnContent,
     ]);
 
-    console.log(activeColumns);
+    console.log("ACTIVE COLUMNS", activeColumns);
 
     // Create a new filter based on the selected columns
-    const newFilters =
+    const newFilterObjects: MetadataFilter[] =
       columnContent.length > 0
-        ? columnContent.map((content) => `Column Content = ${content}`)
+        ? columnContent.map((content) => ({
+            type: "knn",
+            filter: `column group include ${content}`,
+            value: content,
+            operand: "include",
+            subject: "column group",
+          }))
         : [];
 
-    setFilters((prev) => [...prev, ...newFilters]);
-    setIconVisibility((prev) => [...prev, ...newFilters.map(() => true)]);
+    setFilters((prev) => [...prev, ...newFilterObjects]);
+    setIconVisibility((prev) => [...prev, ...newFilterObjects.map(() => true)]);
 
     try {
       const colFilteredURL = "http://127.0.0.1:5000/api/and_dataset_filter";
       console.log("SENDING AND COLUMNS API");
-      console.log(results);
+
       const searchResponse = await axios.post(colFilteredURL, {
         task: task,
         results: results,
@@ -384,8 +414,6 @@ const QueryBlocks = ({
       });
       console.log(searchResponse.data);
       setResults(searchResponse.data.filtered_results);
-
-      setSelectedColumns(Array(5).fill(false));
     } catch (error) {
       if (error instanceof Error) {
         console.error("Error updating filtered datasets:", error.message);
@@ -397,6 +425,21 @@ const QueryBlocks = ({
     }
   };
 
+  useEffect(() => {
+    if (colsToRemove.length > 0 && shouldRemove) {
+      removeFilteredDatasets();
+      setColsToRemove([]); // Reset after running
+      setShouldRemove(false);
+    }
+  }, [colsToRemove, shouldRemove, activeColumns]);
+
+  useEffect(() => {
+    // for toggling to see how many datasets in search results
+    if (shouldProcess) {
+      processFilteredDatasets();
+      setShouldProcess(false); // Reset the flag after processing
+    }
+  }, [selectedColumns, shouldProcess]);
   // generate task recommendations
   useEffect(() => {
     setInput(task);
@@ -408,7 +451,7 @@ const QueryBlocks = ({
     // generate col rec on first render, keep a local copy of initial results
     if (!hasInitialized.current && results.length > 0) {
       hasInitialized.current = true; // Mark as executed
-      setInitialResults(results);
+      setInitialResults(results); // keep copy of original results
       generateColRec(task);
     }
     setSelectedColumns(Array(5).fill(false));
@@ -524,7 +567,7 @@ const QueryBlocks = ({
               <span>
                 <b>Include columns that contain: </b>
               </span>
-      
+
               {filteredColRecWithIndices.map(
                 ({ key, value, originalIndex }, filteredIndex) => (
                   <div key={key}>
@@ -548,7 +591,7 @@ const QueryBlocks = ({
                   </div>
                 )
               )}
-                <div>
+              <div>
                 <u>Number of datasets</u> in search result: {datasetCount}
               </div>
 
@@ -617,6 +660,32 @@ const TaskSuggestionBlock = ({
       >
         try
       </button>
+    </div>
+  );
+};
+
+interface FilterItemProps {
+  filter: MetadataFilter;
+  isVisible: boolean;
+  onToggle: () => void;
+  onRemove: () => void;
+}
+
+const FilterItem: React.FC<FilterItemProps> = ({
+  filter,
+  isVisible,
+  onToggle,
+  onRemove,
+}) => {
+  return (
+    <div className={`filter-prompt ${isVisible ? "" : "hidden"}`}>
+      <div style={{ flex: "0.95" }}>{filter.filter}</div>
+      <Icon
+        icon={isVisible ? eyeIcon : eyeOffIcon}
+        style={{ width: "24px", height: "24px", cursor: "pointer" }}
+        onClick={onToggle}
+      />
+      <X size={24} style={{ cursor: "pointer" }} onClick={onRemove} />
     </div>
   );
 };

@@ -26,6 +26,13 @@ interface ChatContainerProps {
   setSettingsGenerate: React.Dispatch<React.SetStateAction<boolean>>;
   setTaskRec: React.Dispatch<React.SetStateAction<[string, any][]>>;
 }
+export interface MetadataFilter {
+  type: "knn" | "normal"; // Add other types as needed
+  filter: string; // The whole filter
+  value: string;
+  operand: string;
+  subject: string;
+}
 
 const ChatContainer: React.FC<ChatContainerProps> = ({
   chatOpen,
@@ -238,11 +245,11 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
     // },
   ]);
 
-  const [filters, setFilters] = useState<string[]>([]);
+  const [filters, setFilters] = useState<MetadataFilter[]>([]);
   const [iconVisibility, setIconVisibility] = useState<boolean[]>(
     new Array(filters.length).fill(true)
   );
-  
+
   const [pendingFilter, setPendingFilter] = useState<string | null>(null);
 
   return (

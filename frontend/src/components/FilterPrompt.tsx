@@ -5,7 +5,7 @@ import axios from "axios";
 //@ts-ignore
 import { CsvToHtmlTable } from "react-csv-to-table";
 import { ResultProp } from "./ResultsTable";
-
+import { MetadataFilter } from "./ChatContainer";
 interface FilterPromptProps {
   isOpen: boolean;
   onClose: () => void;
@@ -15,7 +15,7 @@ interface FilterPromptProps {
   activeFilters: string[];
   results: ResultProp[];
   setResults: (a: ResultProp[]) => unknown;
-  setFilters: React.Dispatch<React.SetStateAction<string[]>>;
+  setFilters: React.Dispatch<React.SetStateAction<MetadataFilter[]>>;
   setIconVisibility: React.Dispatch<React.SetStateAction<boolean[]>>;
 }
 
@@ -74,21 +74,23 @@ const FilterPrompt: React.FC<FilterPromptProps> = ({
     console.log(results.length);
     console.log(inputValue);
     console.log(results);
-    try {
-      const fetchResponse = await axios.post(
-        "http://127.0.0.1:5000/api/manual_metadata",
-        {
-          selectedFilter: selectedFilter.name,
-          selectedOperation: selectedOperation,
-          value: inputValue,
-          results: results,
-        }
-      );
-      console.log(fetchResponse.data);
+    if (selectedFilter) {
+      try {
+        const fetchResponse = await axios.post(
+          "http://127.0.0.1:5000/api/manual_metadata",
+          {
+            selectedFilter: selectedFilter.name,
+            selectedOperation: selectedOperation,
+            value: inputValue,
+            results: results,
+          }
+        );
+        console.log(fetchResponse.data);
 
-      setResults(fetchResponse.data.results);
-    } catch (error) {
-      console.error("Error fetching data:", error);
+        setResults(fetchResponse.data.results);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
     }
   };
 
@@ -97,7 +99,16 @@ const FilterPrompt: React.FC<FilterPromptProps> = ({
       const filterString = `${selectedFilter.name} ${selectedOperation} ${inputValue}`;
       console.log(filterString);
       handleMetadata();
-      setFilters((prev) => [...prev, filterString]);
+      setFilters((prev) => [
+        ...prev,
+        {
+          type: "normal",
+          filter: filterString,
+          value: inputValue,
+          operand: selectedOperation,
+          subject: selectedFilter.name,
+        },
+      ]);
       setIconVisibility((prev) => [...prev, true]);
 
       onSubmit(filterString);
@@ -246,10 +257,14 @@ const IndividualFilter: React.FC<IndividualFilterProps> = ({
         ) : (
           <span
             style={{
+              padding: "8px",
+              fontSize: "12px",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              width: "180px",
+              outline: "none",
               height: "36px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+              backgroundColor: "#f6f6f6",
             }}
           >
             {selectedFilter.operations[0]}
@@ -277,7 +292,29 @@ const IndividualFilter: React.FC<IndividualFilterProps> = ({
             type="text"
             value={inputValue}
             onChange={handleValueChange}
-            placeholder="Enter custom value"
+            placeholder={
+              selectedFilter.name === "file_size_in_byte"
+                ? "Enter integer value in MB"
+                : [
+                    "table_name",
+                    "database_name",
+                    "db_description",
+                    "tags",
+                    "keywords",
+                    "metadata_queries",
+                    "task_queries",
+                  ].includes(selectedFilter.name)
+                ? "Enter keywords"
+                : selectedFilter.name === "usability_rating"
+                ? "Enter % from 0-100"
+                : selectedFilter.name == "row_num" ||
+                  selectedFilter.name == "col_num" ||
+                  selectedFilter.name == "popularity"
+                ? "Enter integer value"
+                : selectedFilter.name == "column_specification"
+                ? "Enter column name"
+                : "Enter custom value"
+            }
           />
         )}
       </div>

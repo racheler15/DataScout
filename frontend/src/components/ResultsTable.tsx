@@ -3,7 +3,8 @@ import "../styles/ResultsTable.css";
 import React, { useState, useEffect, useRef } from "react";
 import DownloadIcon from "@mui/icons-material/Download";
 import ReactMarkdown from "react-markdown";
-import { Tooltip } from "react-tooltip";
+import Tippy from "@tippyjs/react";
+import "tippy.js/dist/tippy.css";
 
 //@ts-ignore
 import { CsvToHtmlTable } from "react-csv-to-table";
@@ -144,7 +145,80 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
     return `${size.toFixed(1)} ${units[unitIndex]}`;
   }
 
+  interface CsvToHtmlTableProps {
+    data: string;
+    csvDelimiter: string;
+    tableClassName: string;
+    columnDescriptions: string;
+  }
+  interface TableHeaderProps {
+    children: string;
+  }
+  type ColumnDescription = {
+    col_name: string;
+    type_and_description: string;
+  };
+  const EnhancedCsvToHtmlTable: React.FC<CsvToHtmlTableProps> = ({
+    data,
+    csvDelimiter,
+    tableClassName,
+    columnDescriptions,
+  }) => {
+    // Convert columnDescriptions to a dictionary for easier lookup
+    const fixedColumnDescriptions = columnDescriptions.replace(/'/g, '"');
+    const parsed: ColumnDescription[] = JSON.parse(fixedColumnDescriptions);
+
+    const columnDescriptionsMap = parsed.reduce(
+      (acc: Record<string, string>, { col_name, type_and_description }) => {
+        acc[col_name] = type_and_description;
+        return acc;
+      },
+      {} // Initial empty object for the accumulator
+    );
+
+    console.log(columnDescriptionsMap);
+
+    // CustomHeader component that shows a tooltip on hover
+    const CustomHeader: React.FC<{ children?: React.ReactNode }> = ({
+      children,
+    }) => {
+      const headerText = children?.toString() || "";
+      return (
+        <Tippy
+          content={
+            columnDescriptionsMap[headerText] || "No description available"
+          }
+          placement="top"
+          delay={[100, 0]}
+          duration={200}
+        >
+          <th style={{ cursor: "help", position: "relative" }}>{children}</th>
+        </Tippy>
+      );
+    };
+
+    return (
+      <CsvToHtmlTable
+        data={data}
+        csvDelimiter={csvDelimiter}
+        tableClassName={tableClassName}
+        tableHeaderRenderer={(props) => <CustomHeader {...props} />}
+        hasHeader={true}
+        renderCell={(cell) => cell}
+      />
+    );
+  };
+
   const ResultPreview: React.FC<ResultPreviewProps> = ({ dataset }) => {
+    // useEffect(() => {
+    //   if (dataset?.dataset_column_dictionary) {
+    //     console.log(dataset.dataset_column_dictionary);
+    //     const fixedColumnDescriptions =
+    //       dataset.dataset_column_dictionary.replace(/'/g, '"');
+    //     const columnDescriptions = JSON.parse(fixedColumnDescriptions);
+    //     console.log(columnDescriptions);
+    //   }
+    // }, [dataset]);
     window.scrollTo({ top: 0, behavior: "smooth" });
     const [expanded, setExpanded] = useState(false);
     if (!dataset) return <div>No dataset selected</div>;
@@ -262,9 +336,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
                 </div>
               ))
             ) : (
-              <div style={{ fontSize: "12px" }}>
-                No tags available
-              </div>
+              <div style={{ fontSize: "12px" }}>No tags available</div>
             )}
           </div>
         </div>
@@ -290,6 +362,12 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
           <div className="preview-subtitle">Example Records</div>
           <div className="table-scroll-container">
             <div className="table-view">
+              {/* <EnhancedCsvToHtmlTable
+                data={dataset.example_rows_md}
+                csvDelimiter="|"
+                tableClassName="table table-striped table-hover"
+                columnDescriptions={dataset.dataset_column_dictionary}
+              /> */}
               <CsvToHtmlTable
                 data={dataset.example_rows_md}
                 csvDelimiter="|"
@@ -310,12 +388,12 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
     if (JSON.stringify(results) !== JSON.stringify(currentResults)) {
       // If results have changed, blank out the component for 1 second
       setIsBlankedOut(true);
-      setCurrentResults(results);
       // Set timeout to revert the blank out effect after 1 second
       setTimeout(() => {
         setIsBlankedOut(false);
         // Update the results after the blank out
       }, 1000); // 0.5 second
+      setCurrentResults(results);
     }
   }, [results, currentResults]);
 
