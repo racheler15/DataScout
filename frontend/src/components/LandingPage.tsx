@@ -54,7 +54,6 @@ const LandingPage: React.FC<LandingPageProps> = ({
         "http://127.0.0.1:5000/api/hyse_search",
         {
           query: tempTask,
-          thread_id: threadId,
         }
       );
       console.log("FETCHED DATA FROM HYSE:", searchResponse);

@@ -6,7 +6,8 @@ import AttachFileIcon from "@mui/icons-material/AttachFile";
 import ReactMarkdown from "react-markdown";
 import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
-
+import axios from "axios";
+import { MetadataFilter } from "../App";
 //@ts-ignore
 import { CsvToHtmlTable } from "react-csv-to-table";
 // CUSTOMIZE RESULTPROP DEPENDING ON DATABASE
@@ -42,6 +43,8 @@ export interface ResultsTableProps {
   onResetSearch: () => Promise<void>;
   currentPage: number;
   setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
+  task: string;
+  filters: MetadataFilter[];
 }
 interface ResultItemProps {
   index: number;
@@ -51,6 +54,7 @@ interface ResultItemProps {
 }
 interface ResultPreviewProps {
   dataset: ResultProp;
+  index: number;
 }
 
 const ResultsTable: React.FC<ResultsTableProps> = ({
@@ -59,6 +63,8 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
   onResetSearch,
   currentPage,
   setCurrentPage,
+  task,
+  filters,
 }: ResultsTableProps) => {
   const [selectedIndex, handleSelectedIndex] = useState(0);
   const pageSize = 50;
@@ -210,7 +216,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
     );
   };
 
-  const ResultPreview: React.FC<ResultPreviewProps> = ({ dataset }) => {
+  const ResultPreview: React.FC<ResultPreviewProps> = ({ dataset, index }) => {
     // useEffect(() => {
     //   if (dataset?.dataset_column_dictionary) {
     //     console.log(dataset.dataset_column_dictionary);
@@ -242,10 +248,9 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
             marginBottom: "12px",
             display: "flex",
             alignItems: "center",
-            gap:"8px",
+            gap: "8px",
           }}
         >
-          
           <AttachFileIcon />
           {dataset.table_name}
         </div>
@@ -279,19 +284,44 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
             </div>
           ) : null}{" "}
         </div>
+        {index < 10 && (
+          <>
+            <div className="preview-subtitle">
+              Why this dataset is relevant?
+            </div>
+            <div
+              className="description section"
+              style={{
+                backgroundColor: "#d9fcddb7",
+                border: "1px solid #68ca73",
+                minHeight: "40px",
+              }}
+            >
+              {relevanceMap[index].isRelevant}
+            </div>
+          </>
+        )}
+
+        {index < 10 && (
+          <>
+            <div className="preview-subtitle">
+              Why this dataset is not relevant?
+            </div>
+            <div
+              className="description section"
+              style={{
+                backgroundColor: "#fff4d6",
+                border: "1px solid #f6da86",
+                minHeight: "40px",
+              }}
+            >
+              {relevanceMap[index].notRelevant}
+            </div>
+          </>
+        )}
+
         <div className="preview-subtitle">Description</div>
-        <div
-          className="description section"
-          style={{
-            border: "1px solid #d1d1d1",
-            borderRadius: "12px",
-            background: "rgba(136, 136, 136, 0.1)",
-            paddingLeft: "12px",
-            paddingTop: "12px",
-            marginRight: "12px",
-            paddingBottom: "4px",
-          }}
-        >
+        <div className="description section">
           <div className="section-content">
             {expanded ? (
               <ReactMarkdown>{dataset.db_description}</ReactMarkdown>
@@ -402,6 +432,30 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
 
   const [currentResults, setCurrentResults] = useState(results);
   const [isBlankedOut, setIsBlankedOut] = useState(false);
+  interface relevanceMapProps {
+    isRelevant: string;
+    notRelevant: string;
+  }
+  const [relevanceMap, setRelevanceMap] = useState<relevanceMapProps[]>(
+    Array(10).fill({ isRelevant: "Loading...", notRelevant: "Loading..." })
+  );
+  const generateRelevance = async () => {
+    console.log("GENERATING RELEVANCE");
+    const relevanceURL = "http://127.0.0.1:5000/api/relevance_map";
+    try {
+      const searchResponse = await axios.post(relevanceURL, {
+        results: results,
+        task: task,
+        filters: filters,
+      });
+      console.log("RELEVANCE", searchResponse.data);
+      setRelevanceMap(searchResponse.data.results);
+
+      // Update datasetCount based on the filtered results
+    } catch (error) {
+      console.error("Error fetching filtered datasets:", error);
+    }
+  };
 
   useEffect(() => {
     console.log("CHECKING RESULTS");
@@ -413,7 +467,11 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
         setIsBlankedOut(false);
         // Update the results after the blank out
       }, 500); // 0.5 second
+      setRelevanceMap(
+        Array(10).fill({ isRelevant: "Loading...", notRelevant: "Loading..." })
+      );
       setCurrentResults(results);
+      generateRelevance();
     }
   }, [results, currentResults]);
 
@@ -491,7 +549,10 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
         </div> */}
       </div>
       <div className="preview-container" ref={previewContainerRef}>
-        <ResultPreview dataset={results[selectedIndex]}></ResultPreview>
+        <ResultPreview
+          dataset={results[selectedIndex]}
+          index={selectedIndex}
+        ></ResultPreview>
       </div>
     </div>
   );

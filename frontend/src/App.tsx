@@ -5,6 +5,15 @@ import LandingPage from "./components/LandingPage";
 import ChatContainer from "./components/ChatContainer";
 import axios from "axios";
 
+export interface MetadataFilter {
+  type: "knn" | "normal"; // Add other types as needed
+  filter: string; // The whole filter
+  value: string;
+  operand: string;
+  subject: string;
+  visible: boolean;
+}
+
 function App() {
   const [chatOpen, setChatOpen] = useState(true);
   const [results, setResults] = useState<ResultProp[]>([]);
@@ -17,7 +26,7 @@ function App() {
   const [settingsGenerate, setSettingsGenerate] = useState(false);
   const [threadId, setThreadId] = useState("");
   const [taskRec, setTaskRec] = useState<[string, string][]>([]);
-
+  const [filters, setFilters] = useState<MetadataFilter[]>([]);
 
 
   // useEffect(() => {
@@ -46,24 +55,6 @@ function App() {
     // Empty dependency array means this effect runs once when the component mounts
   }, []);
 
-  const fetchData = async () => {
-    console.log("hyse search");
-    try {
-      const searchResponse = await axios.post(
-        "http://127.0.0.1:5000/api/hyse_search",
-        {
-          query: task,
-          thread_id: threadId,
-        }
-      );
-      console.log("FETCHED DATA FROM HYSE:", searchResponse);
-      console.log("SETTING RESULTS");
-      setResults(searchResponse.data.complete_results);
-      setCurrentPage(1);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  };
 
   return showLanding ? (
     <LandingPage
@@ -106,6 +97,8 @@ function App() {
         setSettingsGenerate={setSettingsGenerate}
         setTaskRec={setTaskRec}
         taskRec = {taskRec}
+        filters = {filters}
+        setFilters = {setFilters}
       />
       <ResultsTable
         results={results}
@@ -113,6 +106,8 @@ function App() {
         onResetSearch={async () => {}}
         currentPage={currentPage}
         setCurrentPage={setCurrentPage}
+        task = {task}
+        filters = {filters}
       />
     </div>
   );

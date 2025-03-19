@@ -149,7 +149,8 @@ def hnsw_search(column, search_space, table_name="eval_final_all_column_embeddin
                 SELECT *, 1 - ({column_name} <=> %s::VECTOR(1536)) AS cosine_similarity
                 FROM {table_name}
                 WHERE table_name = ANY(%s)
-                ORDER BY cosine_similarity DESC;
+                ORDER BY cosine_similarity DESC
+                LIMIT 50;
             """
             db.cursor.execute(query, (given_column_embedding, table_names))
         

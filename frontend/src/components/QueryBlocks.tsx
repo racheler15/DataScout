@@ -10,7 +10,7 @@ import axios from "axios";
 import { ResultProp } from "./ResultsTable";
 import "../styles/MessageItem.css";
 // import { unique } from "vega-lite";
-import { MetadataFilter } from "./ChatContainer";
+import { MetadataFilter } from "../App";
 interface QueryBlocksProps {
   task: string;
   setTask: React.Dispatch<React.SetStateAction<string>>;

@@ -474,6 +474,61 @@ def consolidate(clusters):
  
         return result
 
+@app.route('/api/relevance_map', methods=['POST'])
+def relevance_map():
+    results = request.json.get('results')
+    task = request.json.get('task')
+    filters = request.json.get('filters')
+    logging.info(task)
+    logging.info(filters)
+    filter_content = []
+    for filter in filters:
+        filter_content.append(filter['filter'])
+    
+    logging.info(filter_content)
+
+    results_df = pd.DataFrame(results)
+    relevance_results = []
+    for i in range(10):  # Iterate over 15 datasets
+        schema = results_df.loc[i, 'example_rows_md']
+        description = results_df.loc[i, 'dataset_context']
+        source = results_df.loc[i, 'dataset_collection_method']
+
+        messages = [
+            {
+                "role": "system",
+                "content": f"""
+                You are an assistant that provides a dictionary with two keys: `isRelevant` and `notRelevant`. Given the following dataset details:
+                - **Description**: {description}
+                - **Example Rows**: {schema}
+                - **Collection Method**: {source}
+
+                Generate:
+                1. A concise reason why the dataset **is relevant** to the user's task, focusing on how its content aligns with the task’s needs, such as relevant attributes, quality of data, or matching dataset features.
+                2. A concise reason why the dataset **is not relevant**, based on aspects like missing data, insufficient attributes, irrelevant content, or mismatches with the task's focus.
+                
+                Return your response as a dictionary with two keys: **"isRelevant"** and **"notRelevant"**, 
+                where each value is a short, clear reason."""
+            },
+            {
+                "role": "user",
+                "content": f"Evaluate the dataset for my task: {task}, using these filters: {filter_content}."
+            }
+        ]
+
+        result = openai_client.infer_metadata_wo_instructor(messages)
+        if isinstance(result, str):
+            try:
+                result = ast.literal_eval(result)
+            except (ValueError, SyntaxError) as e:
+                print("Error evaluating the result string:", e)
+        relevance_results.append(result)
+        logging.info(relevance_results)
+
+    return jsonify({
+        "results": relevance_results,
+    })
+
 @app.route('/api/and_dataset_filter', methods=['POST'])
 def and_dataset_filter():
     unique_datasets = request.json.get('uniqueDatasets')
@@ -488,8 +543,6 @@ def and_dataset_filter():
     return jsonify({
         "filtered_results": filtered_results_df.to_dict(orient="records"),
     })
-
-
 
 @app.route('/api/reset_search_space', methods=['POST'])
 def reset_search_space():

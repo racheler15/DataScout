@@ -6,6 +6,7 @@ import { ArrowRightToLine, ArrowLeftFromLine } from "lucide-react";
 import { ResultProp } from "./ResultsTable";
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { MetadataFilter } from "../App";
 
 interface ChatContainerProps {
   chatOpen: boolean;
@@ -26,15 +27,8 @@ interface ChatContainerProps {
   setSettingsGenerate: React.Dispatch<React.SetStateAction<boolean>>;
   setTaskRec: React.Dispatch<React.SetStateAction<[string, string][]>>;
   taskRec: [string, string][];
-
-}
-export interface MetadataFilter {
-  type: "knn" | "normal"; // Add other types as needed
-  filter: string; // The whole filter
-  value: string;
-  operand: string;
-  subject: string;
-  visible: boolean;
+  filters: MetadataFilter[];
+  setFilters: React.Dispatch<React.SetStateAction<MetadataFilter[]>>;
 }
 
 const ChatContainer: React.FC<ChatContainerProps> = ({
@@ -55,7 +49,9 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
   settingsGenerate,
   setSettingsGenerate,
   setTaskRec,
-  taskRec
+  taskRec,
+  setFilters,
+  filters
 }) => {
   // useEffect(() => {
   //   // Fetch most popular datasets when the component mounts
@@ -249,7 +245,6 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
     // },
   ]);
 
-  const [filters, setFilters] = useState<MetadataFilter[]>([]);
   const [iconVisibility, setIconVisibility] = useState<boolean[]>(
     new Array(filters.length).fill(true)
   );
@@ -286,8 +281,8 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
             setCurrentPage={setCurrentPage}
             settingsGenerate={settingsGenerate}
             setSettingsGenerate={setSettingsGenerate}
-            setTaskRec = {setTaskRec}
-            taskRec = {taskRec}
+            setTaskRec={setTaskRec}
+            taskRec={taskRec}
           />
           {/* <ChatBot
             setResults={setResults}

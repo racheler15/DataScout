@@ -127,6 +127,14 @@
   margin-bottom: 20px;
   box-sizing: border-box;
 }
+.description {
+  border: 1px solid #d1d1d1;
+  border-radius: 12px;
+  background: rgba(136, 136, 136, 0.1);
+  padding: 8px 12px;
+
+
+}
 .section-row {
   display: flex;
   flex-direction: row;
