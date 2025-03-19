@@ -115,7 +115,7 @@
 .preview-title {
   font-weight: bold;
   margin-bottom: 8px;
-  font-size: 20px;
+  font-size: 24px;
 }
 .preview-subtitle {
   font-weight: bold;
@@ -130,7 +130,7 @@
 .section-row {
   display: flex;
   flex-direction: row;
-  gap: 8px; 
+  gap: 8px;
   margin-bottom: 16px;
   align-items: center;
   flex-wrap: wrap;
@@ -143,7 +143,7 @@
   border: 1px solid #d1d1d1;
   padding: 4px 12px;
   border-radius: 8px;
-  background-color: #f7f7f7; 
+  background-color: #f7f7f7;
 }
 
 .section-item svg {
@@ -151,7 +151,7 @@
   height: 18px;
   color: #777;
 }
- 
+
 .section-content {
   overflow-y: auto;
   font-size: 14px;
@@ -163,7 +163,9 @@
 .section-content::-webkit-scrollbar {
   display: none; /* For Chrome, Safari, and Edge */
 }
-
+.section-content p {
+  margin-bottom: 8px;
+}
 .previous-query-container {
   font-size: 14px;
   display: flex;

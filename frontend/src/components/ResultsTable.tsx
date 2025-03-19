@@ -2,6 +2,7 @@ import "../styles/ResultsTable.css";
 // import { CircleArrowLeft, CircleArrowRight } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
 import DownloadIcon from "@mui/icons-material/Download";
+import AttachFileIcon from "@mui/icons-material/AttachFile";
 import ReactMarkdown from "react-markdown";
 import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
@@ -234,7 +235,21 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
     return (
       <div>
         <div className="preview-title">{dataset.database_name}</div>
-        <div className="preview-title">{dataset.table_name}</div>
+        <div
+          className="preview-title"
+          style={{
+            fontSize: "20px",
+            marginBottom: "12px",
+            display: "flex",
+            alignItems: "center",
+            gap:"8px",
+          }}
+        >
+          
+          <AttachFileIcon />
+          {dataset.table_name}
+        </div>
+
         <div className="section-row">
           <div className="section-item">{dataset.col_num} cols </div>
           <div className="section-item">{dataset.row_num} rows </div>
@@ -304,13 +319,17 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
         </div>
 
         {(source || collectionMethod) && (
-          <div className="section">
+          <div className="section" style={{ marginBottom: "8px" }}>
             <div className="preview-subtitle">
               Data Source & Collection Method
             </div>
-            <div className="section-content">
+            <div className="section-content" style={{ marginBottom: "0px" }}>
               {collectionMethod && <p>{collectionMethod}</p>}
-              {source && <p>Data source references: {source}</p>}
+              {source && (
+                <p>
+                  Data source references: <i>{source}</i>
+                </p>
+              )}
             </div>
           </div>
         )}
@@ -358,6 +377,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
             )}
           </div>
         </div> */}
+
         <div className="section">
           <div className="preview-subtitle">Example Records</div>
           <div className="table-scroll-container">
@@ -416,7 +436,8 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
               top: 0,
               backgroundColor: "white",
               zIndex: 1,
-              padding: "16px 0",
+              paddingTop: "0px",
+              paddingBottom: "16px",
             }}
           >
             <span

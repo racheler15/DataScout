@@ -50,7 +50,7 @@ const QueryBlocks = ({
   settingsGenerate,
   setSettingsGenerate,
   taskRec,
-  setTaskRec
+  setTaskRec,
 }: QueryBlocksProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
@@ -69,6 +69,8 @@ const QueryBlocks = ({
   const [shouldRemove, setShouldRemove] = useState(false);
   const [shouldAdd, setShouldAdd] = useState(false);
   const [colsToAdd, setColsToAdd] = useState<MetadataFilter[]>([]);
+
+  const [newTask, setNewTask] = useState(false);
 
   // const [mergedDatasets, setMergedDatasets] = useState<string[]>([]);
 
@@ -582,7 +584,7 @@ const QueryBlocks = ({
         <img
           src="/lego-block.png"
           alt="Blocks Icon"
-          style={{ width: "40px", height: "40px" }}
+          style={{ width: "40px", height: "40px", marginTop: "-12px" }}
         />
       </div>{" "}
       <div className="blocks-container">
@@ -628,6 +630,7 @@ const QueryBlocks = ({
                   recommendation={key}
                   reason={String(value)}
                   setTask={setTask}
+                  setNewTask={setNewTask}
                 />
               ))}
             </div>
@@ -739,12 +742,14 @@ interface TaskSuggestionBlockProps {
   recommendation: string;
   reason: string;
   setTask: (task: string) => void;
+  setNewTask: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const TaskSuggestionBlock = ({
   recommendation,
   reason,
   setTask,
+  setNewTask
 }: TaskSuggestionBlockProps) => {
   return (
     <div className="task-suggestion-block-container">
@@ -763,7 +768,10 @@ const TaskSuggestionBlock = ({
       </div>
 
       <button
-        onClick={() => setTask(recommendation)}
+        onClick={() => {
+          setNewTask(true);
+          setTask(recommendation);
+        }}
         className="task-suggestion-button"
       >
         try
