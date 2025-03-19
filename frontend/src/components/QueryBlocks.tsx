@@ -26,6 +26,10 @@ interface QueryBlocksProps {
   setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
   results: ResultProp[];
   setResults: (a: ResultProp[]) => unknown;
+  settingsGenerate: boolean;
+  setSettingsGenerate: React.Dispatch<React.SetStateAction<boolean>>;
+  setTaskRec: React.Dispatch<React.SetStateAction<[string, string][]>>;
+  taskRec: [string, string][];
 }
 
 const QueryBlocks = ({
@@ -43,11 +47,15 @@ const QueryBlocks = ({
   setResults,
   currentPage,
   setCurrentPage,
+  settingsGenerate,
+  setSettingsGenerate,
+  taskRec,
+  setTaskRec
 }: QueryBlocksProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [input, setInput] = useState(""); // State to track user input
-  const [taskRec, setTaskRec] = useState<[string, string][]>([]);
+  // const [taskRec, setTaskRec] = useState<[string, string][]>([]);
   const [colRec, setColRec] = useState<string[]>([]); // total list of all knn columns
   const [selectedColumns, setSelectedColumns] = useState<boolean[]>( // keeps track of checked/unchecked columns in top 5 list
     Array(5).fill(false)
@@ -534,13 +542,21 @@ const QueryBlocks = ({
   }, [selectedColumns, shouldProcess]);
   // generate task recommendations
   useEffect(() => {
+    if (!settingsGenerate) {
+      generateTaskRec(task);
+    }
     setInput(task);
-    generateTaskRec(task);
-  }, [task]);
+    setSettingsGenerate(true);
+  }, [task, settingsGenerate]);
+
+  useEffect(() => {
+    console.log("Updated taskRec:", taskRec);
+  }, [taskRec]);
 
   const hasInitialized = useRef(false);
   useEffect(() => {
     // generate col rec on first render, keep a local copy of initial results
+    console.log("RESULTS UPDATED, GENERATE COL REC");
     if (!hasInitialized.current && results.length > 0) {
       hasInitialized.current = true; // Mark as executed
       setInitialResults(results); // keep copy of original results

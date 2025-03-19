@@ -129,6 +129,8 @@ class FilterClause(BaseModel):
 
 class TextToSQL(BaseModel):
     sql_clauses: List[SQLClause]
+class TaskReasonListResponse(BaseModel):
+    tasks: List[Dict[str, str]]
 
 def prune_query(text):
     messages = [ 

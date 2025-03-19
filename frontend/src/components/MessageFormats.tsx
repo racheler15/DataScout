@@ -2,6 +2,7 @@ import axios from "axios";
 import "../styles/MessageItem.css";
 import React from "react";
 import { useState } from "react";
+import { ResultProp } from "./ResultsTable";
 interface SettingsProps {
   settingsSpecificity: string;
   setSettingsSpecificity: React.Dispatch<React.SetStateAction<string>>;
@@ -12,7 +13,11 @@ interface SettingsProps {
   settingsGenerate: boolean;
   setSettingsGenerate: React.Dispatch<React.SetStateAction<boolean>>;
   onStart: () => void;
-  setTaskRec: React.Dispatch<React.SetStateAction<[string, any][]>>;
+  setTaskRec: React.Dispatch<React.SetStateAction<[string, string][]>>;
+  setResults: (a: ResultProp[]) => unknown;
+  setTask: React.Dispatch<React.SetStateAction<string>>;
+  taskRec: [string, string][];
+
 }
 
 const Settings = ({
@@ -25,7 +30,10 @@ const Settings = ({
   settingsGenerate,
   setSettingsGenerate,
   onStart,
+  taskRec,
   setTaskRec,
+  setResults,
+  setTask,
 }: SettingsProps) => {
   const taskOptions = ["I have a specific task", "I am exploring"];
   const [goalOptions, setGoalOptions] = useState([
@@ -71,6 +79,7 @@ const Settings = ({
   };
 
   const fetchTaskSuggestions = async () => {
+    console.log("FETCH TASK SUGGESTIONS");
     const taskSuggestionsURL =
       "http://127.0.0.1:5000/api/initial_task_suggestions";
     console.log(settingsSpecificity);
@@ -84,24 +93,43 @@ const Settings = ({
     });
     console.log(searchResponse.data);
     const querySuggestions = searchResponse.data.query_suggestions;
-    console.log(querySuggestions);
     const queryObject =
       typeof querySuggestions === "string"
         ? JSON.parse(querySuggestions)
         : querySuggestions;
     const queryArray = Object.entries(queryObject);
-    console.log(queryArray);
-    setTaskRec(queryArray);
+    console.log("QUERY ARRAY", queryArray);
+    setTaskRec(queryArray.map(([key, value]) => [key, String(value)]));
   };
 
   const handleGenerateChange = () => {
+    console.log("HANDLEGENERATECHANGE")
     setSettingsGenerate(true);
     fetchTaskSuggestions();
+    setTask(settingsDomain);
+    fetchData();
     onStart();
     console.log(settingsGenerate);
     console.log("Specificity:", settingsSpecificity);
     console.log("Goal:", settingsGoal);
     console.log("Domain:", settingsDomain);
+  };
+
+  const fetchData = async () => {
+    console.log("hyse search");
+    try {
+      const searchResponse = await axios.post(
+        "http://127.0.0.1:5000/api/hyse_search",
+        {
+          query: settingsDomain,
+        }
+      );
+      console.log("FETCHED DATA FROM HYSE:", searchResponse);
+      console.log("SETTING RESULTS");
+      setResults(searchResponse.data.complete_results);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
   };
 
   return (

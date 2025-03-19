@@ -4,7 +4,7 @@ from uuid import uuid4
 import logging
 from backend.app.table_representation.openai_client import OpenAIClient
 from backend.app.hyse.hypo_schema_search import hyse_search, most_popular_datasets, get_datasets, hnsw_search
-from backend.app.actions.infer_action import infer_action, infer_mentioned_metadata_fields, prune_query
+from backend.app.actions.infer_action import infer_action, infer_mentioned_metadata_fields, prune_query, TaskReasonListResponse
 from backend.app.actions.handle_action import handle_semantic_fields, handle_raw_fields, handle_raw_filters
 from backend.app.chat.handle_chat_history import append_user_query, append_system_response, get_user_queries, get_last_results, get_mentioned_fields
 from backend.app.db.table_schema import table_schema_dict, table_schema_dict_frontend, metadata_filtering_operations, metadata_values, metadata_descriptions
@@ -144,7 +144,6 @@ def get_most_popular_datasets():
 #########
 @app.route('/api/hyse_search', methods=['POST'])
 def initial_search():
-    thread_id = request.get_json().get('thread_id')
     initial_query = request.json.get('query')
 
     logging.info(f"✅THIS IS QUERY: {initial_query}")
@@ -444,7 +443,7 @@ def consolidate(clusters):
 
         messages = [ 
         {"role": "system", 
-         "content": f"""You are an assistant that returns a flat list of distinct English words. The input will be a list with nested elements. For each nested element, extract one or two representative words that describe it. The words should be lower case single words without special characters (like hyphens or underscores). The output must be a valid JSON array with no extra formatting or symbols."""
+         "content": f"""You are an assistant that returns a flat list of unique English words. The input will be a list with nested elements. For each nested element, extract one or two representative words that describe it. The words should be lower case single words without special characters (like hyphens or underscores). The output must be a valid JSON array with no extra formatting or symbols, and there should be no repeats."""
 
         },
         {"role": "user", "content": json.dumps(clusters_serializable)}
@@ -1272,24 +1271,16 @@ def task_suggestions():
 #########
 @app.route('/api/initial_task_suggestions', methods=['POST'])
 def initial_task_suggestions():
-    logging.info("Choosing autogen agent.")
-    # thread_id = request.get_json().get('thread_id')
+    logging.info("INITAL_ TASK SUGGESTIONS")
     specificity = request.json.get('specificity')
     goal = request.json.get('goal')
     domain = request.json.get('domain')
     logging.info(specificity)
     logging.info(goal)
     logging.info(domain)
-
-
-    user_proxy = UserProxyAgent(
-        name = "user_proxy",
-        system_message="A human admin.",
-        human_input_mode="ALWAYS",
-        llm_config=llm_config
-    )
-    query_refiner = AssistantAgent(name="query_refiner", 
-    system_message=f"""
+    messages = [ 
+    {"role": "system", 
+    "content": f"""   
         ### System Instructions ###
         You are a helpful assistant that constructs specific search queries. Users are exploring datasets and may not have a clear objective in mind, so they need assistance in refining their intent. A query should be considered "specific" when it includes both a topic and a clear task. An example of a specific query is: "Train a predictive model on voter turnout in presidential elections." This query clearly reflects the goal ("Train") and the topic (voter turnout in presidential elections). You will generate multiple queries using general topics related to the {domain}. 
 
@@ -1300,21 +1291,48 @@ def initial_task_suggestions():
 
         ### Output ###
         Also, generate one reason 'less than 10 words' for why this new query will improve the user's original query. Return 3 queries as a dictionary with the query as the unique key and the value as the reason. Make sure the final output is strictly a dictionary with this structure.
-        
-    """,
-    llm_config=llm_config
-    )
+    """
+    },
+    {"role": "user", "content": f"""Provide query suggestions for {domain}. Use only {goal} for the action verb. If {goal} is "Not sure yet", then use different action verbs."""}
+    ]
 
-    try:
-        logging.info("initiating autogen agent chat")
-        chat_result = user_proxy.initiate_chat(query_refiner, message=f"""Provide query suggestions for {domain}. Use only {goal} for the action verb. If {goal} is "Not sure yet", then use different action verbs. """, summary_method="reflection_with_llm", max_turns=1)
-        logging.info("finished chat_result")
-        results = chat_result.chat_history[1]["content"]
-        return jsonify({"query_suggestions": results, "status": chat_status}), 200
+    result = openai_client.infer_metadata_wo_instructor(messages)
+    logging.info("INTIAL TASK GENERATED")
+    logging.info(result)
+    return jsonify({"query_suggestions": result, "status": chat_status}), 200
+    # user_proxy = UserProxyAgent(
+    #     name = "user_proxy",
+    #     system_message="A human admin.",
+    #     human_input_mode="ALWAYS",
+    #     llm_config=llm_config
+    # )
+    # query_refiner = AssistantAgent(name="query_refiner", 
+    # system_message=f"""
+    #     ### System Instructions ###
+    #     You are a helpful assistant that constructs specific search queries. Users are exploring datasets and may not have a clear objective in mind, so they need assistance in refining their intent. A query should be considered "specific" when it includes both a topic and a clear task. An example of a specific query is: "Train a predictive model on voter turnout in presidential elections." This query clearly reflects the goal ("Train") and the topic (voter turnout in presidential elections). You will generate multiple queries using general topics related to the {domain}. 
+
+    #     ### Task Instruction ###
+    #     If the {goal} is "Not sure yet," it indicates the user is uncertain about where to start. Use DIFFERENT action verbs to help them brainstrom what kind of task they want. 
+        
+    #     Otherwise, you MUST USE 'only the goal': {goal} when generating the queries. For example, if the goal was "Analyze", all queries should start with "Analyze".
+
+    #     ### Output ###
+    #     Also, generate one reason 'less than 10 words' for why this new query will improve the user's original query. Return 3 queries as a dictionary with the query as the unique key and the value as the reason. Make sure the final output is strictly a dictionary with this structure.
+        
+    # """,
+    # llm_config=llm_config
+    # )
+
+    # try:
+    #     logging.info("initiating autogen agent chat")
+    #     chat_result = user_proxy.initiate_chat(query_refiner, message=f"""Provide query suggestions for {domain}. Use only {goal} for the action verb. If {goal} is "Not sure yet", then use different action verbs. """, summary_method="reflection_with_llm", max_turns=1)
+    #     logging.info("finished chat_result")
+    #     results = chat_result.chat_history[1]["content"]
+    #     return jsonify({"query_suggestions": results, "status": chat_status}), 200
     
-    except Exception as e:
-        logging.error(f"Starting autogen refinement failed, Error: {e}")
-        return jsonify({"error": "Search failed due to an internal error"}), 500  
+    # except Exception as e:
+    #     logging.error(f"Starting autogen refinement failed, Error: {e}")
+    #     return jsonify({"error": "Search failed due to an internal error"}), 500  
  
       
 #########

@@ -18,8 +18,10 @@ interface LandingPageProps {
   setSettingsGenerate: React.Dispatch<React.SetStateAction<boolean>>;
   results: ResultProp[];
   setResults: (a: ResultProp[]) => unknown;
-  threadId: String;
-  setTaskRec: React.Dispatch<React.SetStateAction<[string, any][]>>;
+  threadId: string;
+  setTaskRec: React.Dispatch<React.SetStateAction<[string, string][]>>;
+  taskRec: [string, string][];
+
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({
@@ -38,6 +40,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
   setResults,
   threadId,
   setTaskRec,
+  taskRec
 }) => {
   // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -108,7 +111,10 @@ const LandingPage: React.FC<LandingPageProps> = ({
             settingsGenerate={settingsGenerate}
             setSettingsGenerate={setSettingsGenerate}
             onStart={onStart}
+            taskRec={taskRec}
             setTaskRec={setTaskRec}
+            setTask = {setTask}
+            setResults={setResults}
           />
         </div>
       </div>

@@ -209,7 +209,6 @@ const ChatBot = ({
         "http://127.0.0.1:5000/api/hyse_search",
         {
           query: task,
-          thread_id: threadId,
         }
       );
       console.log("FETCHED DATA FROM HYSE:", searchResponse);

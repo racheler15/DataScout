@@ -16,7 +16,8 @@ function App() {
   const [settingsDomain, setSettingsDomain] = useState<string>("");
   const [settingsGenerate, setSettingsGenerate] = useState(false);
   const [threadId, setThreadId] = useState("");
-  const [taskRec, setTaskRec] = useState<Array<[string, any]>>([]);
+  const [taskRec, setTaskRec] = useState<[string, string][]>([]);
+
 
 
   // useEffect(() => {
@@ -81,6 +82,7 @@ function App() {
       onStart={() => setShowLanding(false)}
       threadId={threadId}
       setTaskRec={setTaskRec}
+      taskRec = {taskRec}
 
     />
   ) : (
@@ -103,6 +105,7 @@ function App() {
         settingsGenerate={settingsGenerate}
         setSettingsGenerate={setSettingsGenerate}
         setTaskRec={setTaskRec}
+        taskRec = {taskRec}
       />
       <ResultsTable
         results={results}

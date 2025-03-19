@@ -24,7 +24,9 @@ interface ChatContainerProps {
   setSettingsDomain: React.Dispatch<React.SetStateAction<string>>;
   settingsGenerate: boolean;
   setSettingsGenerate: React.Dispatch<React.SetStateAction<boolean>>;
-  setTaskRec: React.Dispatch<React.SetStateAction<[string, any][]>>;
+  setTaskRec: React.Dispatch<React.SetStateAction<[string, string][]>>;
+  taskRec: [string, string][];
+
 }
 export interface MetadataFilter {
   type: "knn" | "normal"; // Add other types as needed
@@ -53,6 +55,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
   settingsGenerate,
   setSettingsGenerate,
   setTaskRec,
+  taskRec
 }) => {
   // useEffect(() => {
   //   // Fetch most popular datasets when the component mounts
@@ -281,6 +284,10 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
             setResults={setResults}
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
+            settingsGenerate={settingsGenerate}
+            setSettingsGenerate={setSettingsGenerate}
+            setTaskRec = {setTaskRec}
+            taskRec = {taskRec}
           />
           {/* <ChatBot
             setResults={setResults}
