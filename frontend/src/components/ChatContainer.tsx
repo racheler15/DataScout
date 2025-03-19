@@ -32,6 +32,7 @@ export interface MetadataFilter {
   value: string;
   operand: string;
   subject: string;
+  visible: boolean;
 }
 
 const ChatContainer: React.FC<ChatContainerProps> = ({

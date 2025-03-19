@@ -674,7 +674,7 @@ def manual_metadata():
     # HNSW search
     if selected_filter == 'column_specification':
         logging.info("COLUMN")
-        final_results = hnsw_search(input, results)    
+        final_results = hnsw_search(search_input, results)    
 
     # Fuzzy search based on search input
     elif selected_filter in ["table_name", "database_name", "db_description", "tags", "keywords", "metadata_queries", "time_granu", "geo_granu"]:

@@ -59,6 +59,8 @@ const QueryBlocks = ({
   const [colsToRemove, setColsToRemove] = useState<MetadataFilter[]>([]); // to keep track of which cols needed to delete
   const [shouldProcess, setShouldProcess] = useState(false);
   const [shouldRemove, setShouldRemove] = useState(false);
+  const [shouldAdd, setShouldAdd] = useState(false);
+  const [colsToAdd, setColsToAdd] = useState<MetadataFilter[]>([]);
 
   // const [mergedDatasets, setMergedDatasets] = useState<string[]>([]);
 
@@ -69,20 +71,83 @@ const QueryBlocks = ({
       newVisibility[index] = !newVisibility[index];
       return newVisibility;
     });
-    setActiveColumns((prevActiveColumns) => {
-      const filterToToggle = filters[index]; // Get the corresponding filter
-      console.log(filterToToggle);
+    const filterToToggle = filters[index]; // Get the corresponding filter
 
-      if (!iconVisibility[index]) {
-        // If the icon was previously hidden (false), add the filter back to activeColumns
-        return [...prevActiveColumns, ...filterToToggle];
-      } else {
-        // If the icon was visible (true), remove the filter from activeColumns
-        return prevActiveColumns.filter((col) => !filterToToggle.includes(col));
-      }
-    });
-    console.log(activeColumns);
-    setShouldRemove(true);
+    setColsToAdd((prev) => [...prev, filterToToggle]);
+    console.log(filterToToggle);
+    setFilters((prevFilters) =>
+      prevFilters.map((filter) =>
+        filter === filterToToggle
+          ? { ...filter, visible: !filter.visible } // make filter visible = false/true
+          : filter
+      )
+    );
+    setShouldAdd(true);
+    // if (filterToToggle.visible) {
+    //   console.log("filter toggle false", filterToToggle);
+    //   setShouldRemove(true);
+    // } else {
+    //   console.log("filter toggle true", filterToToggle);
+    //   setShouldAdd(true);
+    // }
+
+    // const isKnnFilter = filterToToggle.type === "knn";
+    // if (isKnnFilter) {
+    //   setActiveColumns((prevActiveColumns) => {
+    //     const isIconHidden = !iconVisibility[index];
+    //     if (isIconHidden) {
+    //       setShouldAdd(true);
+    //       return [...prevActiveColumns, ...filterToToggle.value];
+    //     } else {
+    //       setShouldRemove(true);
+    //       return prevActiveColumns.filter(
+    //         (col) => !filterToToggle.value.includes(col)
+    //       );
+    //     }
+    //   });
+    // } else {
+    //   // Ensure safe state updates for `filterToToggle.visible`
+    //   setFilters((prevFilters) =>
+    //     prevFilters.map((filter) =>
+    //       filter === filterToToggle
+    //         ? { ...filter, visible: !filter.visible }
+    //         : filter
+    //     )
+    //   );
+
+    //   if (filterToToggle.visible) {
+    //     console.log("filter toggle false", filterToToggle);
+    //     setShouldRemove(true);
+    //   } else {
+    //     console.log("filter toggle true", filterToToggle);
+    //     setShouldAdd(true);
+    //   }
+    // }
+  };
+
+  const toggleFilteredDatasets = async () => {
+    const filteredSavedDatasets = getNormalFilteredDatasets();
+    const normalFilters = filters.filter(
+      (filter) => filter.type === "normal" && filter.visible
+    );
+
+    console.log("NORMAL FILTERS", normalFilters);
+
+    const colFilteredURL = "http://127.0.0.1:5000/api/remove_metadata_update";
+    try {
+      const searchResponse = await axios.post(colFilteredURL, {
+        filters: normalFilters,
+        results: initialResults,
+        uniqueDatasets: filteredSavedDatasets,
+      });
+      console.log("ADD SEARCH DATSETS", searchResponse.data);
+
+      // Update datasetCount based on the filtered results
+      setDatasetCount(searchResponse.data.filtered_results.length);
+      setResults(searchResponse.data.filtered_results);
+    } catch (error) {
+      console.error("Error fetching filtered datasets:", error);
+    }
   };
 
   // remove a filter, called when user clicks x on filter
@@ -128,6 +193,7 @@ const QueryBlocks = ({
     const normalFilters = filters.filter(
       (filter) =>
         filter.type === "normal" &&
+        filter.visible &&
         !colsToRemove.some((removeFilter) =>
           removeFilter.value.includes(filter.value)
         )
@@ -153,7 +219,11 @@ const QueryBlocks = ({
   };
 
   const getNormalFilteredDatasets = () => {
-    if (activeColumns.length === 0) {
+    if (
+      activeColumns.length === 0 ||
+      filters.every((filter) => filter.visible === false) ||
+      filters.length === 0
+    ) {
       console.log("NO ACTIVE COLUMNS LEFT");
       const uniqueDatasets = [...savedDatasets.flat()];
       return uniqueDatasets;
@@ -161,7 +231,13 @@ const QueryBlocks = ({
       // Step 1: Find the original indices of activeColumns
       const filteredColRec = Object.entries(colRec)
         .map(([key, value], originalIndex) => ({ key, value, originalIndex }))
-        .filter(({ value }) => activeColumns.includes(value));
+        .filter(
+          ({ value }) =>
+            activeColumns.includes(value) &&
+            filters.some(
+              (filter) => filter.value === value && filter.visible === true
+            )
+        );
 
       console.log(filteredColRec);
       // Step 2: Extract the corresponding datasets from savedDatasets
@@ -181,7 +257,11 @@ const QueryBlocks = ({
 
   const getKnnFilteredDatasets = () => {
     // If no active columns are selected, return all datasets
-    if (activeColumns.length === 0) {
+    if (
+      activeColumns.length === 0 ||
+      filters.every((filter) => filter.visible === false) ||
+      filters.length === 0
+    ) {
       console.log("NO ACTIVE COLUMNS LEFT");
       const uniqueDatasets = [...savedDatasets.flat()];
       return uniqueDatasets;
@@ -192,6 +272,9 @@ const QueryBlocks = ({
         .filter(
           ({ value }) =>
             activeColumns.includes(value) &&
+            filters.some(
+              (filter) => filter.value === value && filter.visible === true
+            ) &&
             !colsToRemove.some((filter) => filter.value.includes(value))
         ); // Exclude colStoreRemove items
 
@@ -397,6 +480,7 @@ const QueryBlocks = ({
             value: content,
             operand: "include",
             subject: "column group",
+            visible: true,
           }))
         : [];
 
@@ -426,12 +510,20 @@ const QueryBlocks = ({
   };
 
   useEffect(() => {
-    if (colsToRemove.length > 0 && shouldRemove) {
+    if (shouldRemove) {
       removeFilteredDatasets();
       setColsToRemove([]); // Reset after running
       setShouldRemove(false);
     }
-  }, [colsToRemove, shouldRemove, activeColumns]);
+  }, [activeColumns, shouldRemove, colsToRemove]);
+
+  useEffect(() => {
+    if (shouldAdd) {
+      toggleFilteredDatasets();
+      setColsToAdd([]);
+      setShouldAdd(false);
+    }
+  }, [shouldAdd, colsToAdd]);
 
   useEffect(() => {
     // for toggling to see how many datasets in search results
@@ -533,7 +625,7 @@ const QueryBlocks = ({
           <div className="filter-block">
             <span className="label">
               <div style={{ display: "flex" }}>metadata</div>
-              <div>({filters.length})</div>
+              <div>({filters.filter((filter) => filter.visible).length})</div>
               <button className="metadata-btn" onClick={handleClick}>
                 +
               </button>

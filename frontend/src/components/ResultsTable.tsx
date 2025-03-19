@@ -392,7 +392,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
       setTimeout(() => {
         setIsBlankedOut(false);
         // Update the results after the blank out
-      }, 1000); // 0.5 second
+      }, 500); // 0.5 second
       setCurrentResults(results);
     }
   }, [results, currentResults]);

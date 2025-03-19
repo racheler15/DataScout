@@ -107,6 +107,7 @@ const FilterPrompt: React.FC<FilterPromptProps> = ({
           value: inputValue,
           operand: selectedOperation,
           subject: selectedFilter.name,
+          visible: true,
         },
       ]);
       setIconVisibility((prev) => [...prev, true]);
