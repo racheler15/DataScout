@@ -57,6 +57,10 @@ const LandingPage: React.FC<LandingPageProps> = ({
         }
       );
       console.log("FETCHED DATA FROM HYSE:", searchResponse);
+      const textData = searchResponse.data.complete_results[0].dataset_column_dictionary
+      const fixedTextData = textData.replace(/'/g, '"');
+      console.log(JSON.parse(fixedTextData))
+
       console.log("SETTING RESULTS");
       setResults(searchResponse.data.complete_results);
     } catch (error) {
@@ -79,7 +83,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
     <div className="landing-container">
       <div className="search-path">
         {" "}
-        <h1 style={{ fontSize: "50px" }}>Dataset Search</h1>
+        <h1 style={{ fontSize: "50px" }}>DataScout</h1>
         <p>Finding datasets dynamically with ease.</p>
         <form className="search-form">
           <input

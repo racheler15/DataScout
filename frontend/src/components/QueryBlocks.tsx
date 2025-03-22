@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import { Icon } from "@iconify/react";
 import eyeIcon from "@iconify-icons/fluent/eye-20-regular";
 import eyeOffIcon from "@iconify-icons/fluent/eye-off-20-regular";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import { X } from "lucide-react";
 import FilterPrompt from "./FilterPrompt";
 import { MessageProps } from "./MessageItem";
@@ -602,7 +603,6 @@ const QueryBlocks = ({
                   outline: "none",
                   resize: "none",
                   height: "auto",
-                  minHeight: "80px",
                   maxHeight: "200px",
                 }}
                 value={input}
@@ -616,14 +616,19 @@ const QueryBlocks = ({
                 placeholder="Enter your task here..."
               />{" "}
               <X
-                size={24}
+                size={20}
                 style={{ marginLeft: "auto", cursor: "pointer" }}
                 onClick={() => setTask("")}
               />
             </div>
           </div>
+          <div></div>
           {taskRec?.length > 0 && (
             <div className="task-message-container" style={{ width: "100%" }}>
+              <div style={{ fontWeight: "600" }}>
+                Suggestions to refine your search query:
+              </div>
+
               {taskRec.map(([key, value], index) => (
                 <TaskSuggestionBlock
                   key={`${key}-${index}`}
@@ -639,12 +644,10 @@ const QueryBlocks = ({
 
         <div className="filter-block-container">
           <span>
-            <b>Filters</b>
+            <b>Filters ({filters.filter((filter) => filter.visible).length})</b>
           </span>
           <div className="filter-block">
             <span className="label">
-              <div style={{ display: "flex" }}>metadata</div>
-              <div>({filters.filter((filter) => filter.visible).length})</div>
               <button className="metadata-btn" onClick={handleClick}>
                 +
               </button>
@@ -675,9 +678,7 @@ const QueryBlocks = ({
 
           {colRec?.length > 0 && (
             <div className="col-rec-container" style={{ marginTop: "12px" }}>
-              <span>
-                <b>Include columns that contain: </b>
-              </span>
+              <div style={{ fontWeight: "600" }}>Filter by column topics:</div>
 
               {filteredColRecWithIndices.map(
                 ({ key, value, originalIndex }, filteredIndex) => (
@@ -702,10 +703,9 @@ const QueryBlocks = ({
                   </div>
                 )
               )}
-              <div>
-                <u>Number of datasets</u> in search result: {datasetCount}
+              <div style={{ fontWeight: "500", marginTop: "8px" }}>
+                <i>Remaining datasets: {datasetCount}</i>
               </div>
-
               <button
                 onClick={() => {
                   console.log("Selected Columns:", selectedColumns);
@@ -713,7 +713,7 @@ const QueryBlocks = ({
                 }}
                 className="metadata-button"
               >
-                try
+                apply filters
               </button>
             </div>
           )}
@@ -749,22 +749,37 @@ const TaskSuggestionBlock = ({
   recommendation,
   reason,
   setTask,
-  setNewTask
+  setNewTask,
 }: TaskSuggestionBlockProps) => {
   return (
     <div className="task-suggestion-block-container">
       <div
         className="task-suggestion"
-        style={{ position: "relative", width: "95%" }}
+        style={{ position: "relative", width: "98%" }}
       >
-        <ul style={{ margin: 0 }}>
-          <li>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            marginBottom: "4px",
+          }}
+        >
+          <AutoAwesomeIcon
+            style={{
+              height: "16px",
+              width: "16px",
+              color: "orange",
+              marginRight: "8px",
+              marginTop: "4px",
+            }}
+          />
+          <div>
             {recommendation}
-            <div className="tooltip" style={{ fontSize: "12px" }}>
+            <div className="tooltip" style={{ fontSize: "12px", marginTop:"-10px", lineHeight:"1.15"}}>
               {reason}
             </div>
-          </li>
-        </ul>
+          </div>
+        </div>
       </div>
 
       <button
@@ -773,6 +788,14 @@ const TaskSuggestionBlock = ({
           setTask(recommendation);
         }}
         className="task-suggestion-button"
+        // style={{
+        //   background: "none",
+        //   border: "none",
+        //   color: "#007bff",
+        //   cursor: "pointer",
+        //   fontSize: "12px",
+        //   padding: "2px 10px",
+        // }}
       >
         try
       </button>

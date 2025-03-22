@@ -27,8 +27,9 @@ function App() {
   const [threadId, setThreadId] = useState("");
   const [taskRec, setTaskRec] = useState<[string, string][]>([]);
   const [filters, setFilters] = useState<MetadataFilter[]>([]);
+  // prevent back refresh
 
-
+  
   // useEffect(() => {
   //   if (task) {
   //     console.log("Task bar updated:", task);
@@ -55,7 +56,6 @@ function App() {
     // Empty dependency array means this effect runs once when the component mounts
   }, []);
 
-
   return showLanding ? (
     <LandingPage
       task={task}
@@ -73,8 +73,7 @@ function App() {
       onStart={() => setShowLanding(false)}
       threadId={threadId}
       setTaskRec={setTaskRec}
-      taskRec = {taskRec}
-
+      taskRec={taskRec}
     />
   ) : (
     <div className={`app-container ${chatOpen ? "" : "chat-close"}`}>
@@ -96,9 +95,9 @@ function App() {
         settingsGenerate={settingsGenerate}
         setSettingsGenerate={setSettingsGenerate}
         setTaskRec={setTaskRec}
-        taskRec = {taskRec}
-        filters = {filters}
-        setFilters = {setFilters}
+        taskRec={taskRec}
+        filters={filters}
+        setFilters={setFilters}
       />
       <ResultsTable
         results={results}
@@ -106,8 +105,8 @@ function App() {
         onResetSearch={async () => {}}
         currentPage={currentPage}
         setCurrentPage={setCurrentPage}
-        task = {task}
-        filters = {filters}
+        task={task}
+        filters={filters}
       />
     </div>
   );

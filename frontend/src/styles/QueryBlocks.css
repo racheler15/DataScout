@@ -12,14 +12,15 @@
   padding: 16px;
   display: flex;
   align-items: center;
-  gap: 1.5rem;
   background-color: #fed5ff;
   border-radius: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+
 }
 .label {
   padding-left: 8px;
   padding-right: 12px;
-  width: 90px;
+  width: 80px;
   display: flex;
   flex-direction: column;
   flex-wrap: wrap;
@@ -35,13 +36,17 @@
   border: 1px solid #cb96d4;
   overflow-y: auto;
   display: flex;
-  width: 80%;
+  width: 100%;
   justify-content: space-between;
   align-items: center;
 }
 .task-reason {
   padding-top: 12px;
   padding-left: 8px;
+}
+.task-message-container {
+  margin-left: 8px;
+  
 }
 
 .filter-block-container{
@@ -55,6 +60,8 @@
   align-items: center;
   background-color: #b2caff;
   border-radius: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+
   
 }
 .col-rec-container {
@@ -78,15 +85,16 @@
   align-items: center;
 }
 .metadata-btn {
-  width: 60px;
+  display: flex;
+  align-items: center; 
+  justify-content: center;
+  width: 50px;
   padding: 0;
-  margin-top: 8px;
   background-color: white;
   border-radius: 12px;
   font-size: 16px;
-}
-.metadata-btn:hover {
-  border: 1px solid black;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+
 }
 
 .hidden {

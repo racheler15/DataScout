@@ -3,6 +3,7 @@ import "../styles/ResultsTable.css";
 import React, { useState, useEffect, useRef } from "react";
 import DownloadIcon from "@mui/icons-material/Download";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import ReactMarkdown from "react-markdown";
 import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
@@ -108,7 +109,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
         <div className="dataset-details">
           <div className="dataset-title"> {dataset.database_name}</div>
           <div className="dataset-stats">
-            <span>
+            {/* <span>
               {dataset.cosine_similarity !== undefined &&
               dataset.cosine_similarity !== null
                 ? `Relevance Score: ${Math.round(
@@ -119,7 +120,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
               {Math.round(
                 parseFloat(dataset.usability_rating.toString()) * 100
               ) + "% "}
-            </span>
+            </span> */}
             <span>
               {dataset.col_num} cols &middot; {dataset.row_num} rows &middot;{" "}
               {formatBytes(dataset.file_size_in_byte)} &middot;{" "}
@@ -167,36 +168,61 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
   };
   const EnhancedCsvToHtmlTable: React.FC<CsvToHtmlTableProps> = ({
     data,
-    csvDelimiter,
+    csvDelimiter = ",",
     tableClassName,
     columnDescriptions,
   }) => {
-    // Convert columnDescriptions to a dictionary for easier lookup
-    const fixedColumnDescriptions = columnDescriptions.replace(/'/g, '"');
-    const parsed: ColumnDescription[] = JSON.parse(fixedColumnDescriptions);
+    // Parse columnDescriptions with selective replacement of single quotes
+    let parsed: ColumnDescription[] = [];
+    try {
+      // Replace only single quotes used as delimiters (around keys and values)
+      const fixedColumnDescriptions = columnDescriptions
+        .replace(/'(\w+)':/g, '"$1":') // Replace keys
+        .replace(/: '(.*?)'/g, ': "$1"'); // Replace values
+
+      // Parse the JSON string
+      parsed = JSON.parse(fixedColumnDescriptions);
+    } catch (error) {
+      console.error("Error parsing columnDescriptions:", error);
+      parsed = [];
+    }
+
+    // Normalize keys in columnDescriptionsMap
+    const normalizeKey = (key: string) => key.trim().toLowerCase();
 
     const columnDescriptionsMap = parsed.reduce(
       (acc: Record<string, string>, { col_name, type_and_description }) => {
-        acc[col_name] = type_and_description;
+        acc[normalizeKey(col_name)] = type_and_description;
         return acc;
       },
-      {} // Initial empty object for the accumulator
+      {}
     );
 
-    console.log(columnDescriptionsMap);
+    // Extract CSV headers and rows
+    const rows = data.split("\n");
+    const headers = rows[0].split(csvDelimiter);
+
+    // Filter out empty columns from headers and rows
+    const filteredHeaders = headers.filter((header) => header.trim() !== "");
+    const filteredRows = rows.slice(1).map((row) => {
+      const cells = row.split(csvDelimiter);
+      return cells.filter((cell, index) => headers[index].trim() !== ""); // Align with filtered headers
+    });
 
     // CustomHeader component that shows a tooltip on hover
     const CustomHeader: React.FC<{ children?: React.ReactNode }> = ({
       children,
     }) => {
-      const headerText = children?.toString() || "";
+      const headerText = normalizeKey(children?.toString() || "");
+      const description =
+        columnDescriptionsMap[headerText] || "No description available";
+
       return (
         <Tippy
-          content={
-            columnDescriptionsMap[headerText] || "No description available"
-          }
-          placement="top"
+          content={description}
+          placement="bottom-start"
           delay={[100, 0]}
+          offset={[0, -1]}
           duration={200}
         >
           <th style={{ cursor: "help", position: "relative" }}>{children}</th>
@@ -205,27 +231,28 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
     };
 
     return (
-      <CsvToHtmlTable
-        data={data}
-        csvDelimiter={csvDelimiter}
-        tableClassName={tableClassName}
-        tableHeaderRenderer={(props) => <CustomHeader {...props} />}
-        hasHeader={true}
-        renderCell={(cell) => cell}
-      />
+      <table className={tableClassName}>
+        <thead>
+          <tr>
+            {filteredHeaders.map((header, index) => (
+              <CustomHeader key={index}>{header}</CustomHeader>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {filteredRows.map((row, rowIndex) => (
+            <tr key={rowIndex}>
+              {row.map((cell, cellIndex) => (
+                <td key={cellIndex}>{cell}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     );
   };
 
   const ResultPreview: React.FC<ResultPreviewProps> = ({ dataset, index }) => {
-    // useEffect(() => {
-    //   if (dataset?.dataset_column_dictionary) {
-    //     console.log(dataset.dataset_column_dictionary);
-    //     const fixedColumnDescriptions =
-    //       dataset.dataset_column_dictionary.replace(/'/g, '"');
-    //     const columnDescriptions = JSON.parse(fixedColumnDescriptions);
-    //     console.log(columnDescriptions);
-    //   }
-    // }, [dataset]);
     window.scrollTo({ top: 0, behavior: "smooth" });
     const [expanded, setExpanded] = useState(false);
     if (!dataset) return <div>No dataset selected</div>;
@@ -238,17 +265,28 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
       dataset.dataset_collection_method !== "N/A"
         ? dataset.dataset_collection_method
         : null;
+    console.log("Current Index:", index);
+    console.log(
+      "Does index exist in relevanceMap?",
+      relevanceMap.some((item) => item.index === index)
+    );
+    console.log(
+      "Found Item:",
+      relevanceMap.find((item) => item.index === index)
+    );
+
     return (
       <div>
-        <div className="preview-title">{dataset.database_name}</div>
+        <div className="preview-title">{dataset.database_name} </div>
         <div
           className="preview-title"
           style={{
-            fontSize: "20px",
+            fontSize: "16px",
             marginBottom: "12px",
             display: "flex",
             alignItems: "center",
             gap: "8px",
+            color: "gray",
           }}
         >
           <AttachFileIcon />
@@ -256,6 +294,11 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
         </div>
 
         <div className="section-row">
+          <div className="section-item">
+            Usability score:{" "}
+            {Math.round(parseFloat(dataset.usability_rating.toString()) * 100) +
+              "% "}
+          </div>
           <div className="section-item">{dataset.col_num} cols </div>
           <div className="section-item">{dataset.row_num} rows </div>
           <div className="section-item">
@@ -267,10 +310,27 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
             <DownloadIcon style={{ color: "#ccccc", width: "20px" }} />{" "}
             {formatPopularity(dataset.popularity)}{" "}
           </div>
+          {dataset.tags
+            ? dataset.tags.map((query, index) => (
+                <div
+                  key={index} // Adding a key to avoid React warnings
+                  className="section-item"
+                  style={{
+                    backgroundColor: "#feebfe",
+                    border: "1px solid #fdd4fd",
+                  }}
+                >
+                  {query}
+                </div>
+              ))
+            : null}
           {dataset.time_granu ? (
             <div
               className="section-item"
-              style={{ backgroundColor: "#a9c7ff3b" }}
+              style={{
+                backgroundColor: "#a9c7ff3b",
+                border: "1px solid #cdd6ff",
+              }}
             >
               {dataset.time_granu}-Level Granularity{" "}
             </div>
@@ -278,34 +338,26 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
           {dataset.geo_granu ? (
             <div
               className="section-item"
-              style={{ backgroundColor: "#a9c7ff3b" }}
+              style={{
+                backgroundColor: "#a9c7ff3b",
+                border: "1px solid #cdd6ff",
+              }}
             >
               {dataset.geo_granu}-Level Granularity
             </div>
           ) : null}{" "}
         </div>
-        {index < 10 && (
-          <>
-            <div className="preview-subtitle">
-              Why this dataset is relevant?
-            </div>
-            <div
-              className="description section"
-              style={{
-                backgroundColor: "#d9fcddb7",
-                border: "1px solid #68ca73",
-                minHeight: "40px",
-              }}
-            >
-              {relevanceMap[index].isRelevant}
-            </div>
-          </>
-        )}
 
-        {index < 10 && (
+        {relevanceMap.some((item) => item.index === index) && (
           <>
-            <div className="preview-subtitle">
-              Why this dataset is not relevant?
+            <div
+              className="preview-subtitle"
+              style={{ display: "flex", alignItems: "center" }}
+            >
+              <AutoAwesomeIcon
+                style={{ height: "16px", width: "16px", color: "orange" }}
+              />
+              &nbsp;<i>Why is this dataset relevant for your task?</i>
             </div>
             <div
               className="description section"
@@ -315,13 +367,22 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
                 minHeight: "40px",
               }}
             >
-              {relevanceMap[index].notRelevant}
+              <div style={{ marginBottom: "10px" }}>
+                <b>Utility: </b>
+                {relevanceMap.find((item) => item.index === index)
+                  ?.isRelevant || "Loading..."}
+              </div>
+              <div>
+                <b>Limitation: </b>
+                {relevanceMap.find((item) => item.index === index)
+                  ?.notRelevant || "Loading..."}
+              </div>
             </div>
           </>
         )}
 
         <div className="preview-subtitle">Description</div>
-        <div className="description section">
+        <div className="description section" style={{ position: "relative" }}>
           <div className="section-content">
             {expanded ? (
               <ReactMarkdown>{dataset.db_description}</ReactMarkdown>
@@ -329,9 +390,8 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
               dataset.dataset_context
             )}
           </div>
-
           {dataset.db_description !== dataset.dataset_context && (
-            <div style={{ textAlign: "right" }}>
+            <div style={{ marginTop: "16px" }}>
               <button
                 onClick={() => setExpanded(!expanded)}
                 style={{
@@ -339,13 +399,31 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
                   border: "none",
                   color: "#007bff",
                   cursor: "pointer",
-                  fontSize: "14px",
+                  fontSize: "12px",
+                  position: "absolute",
+                  right: "0",
+                  bottom: "0",
+                  textDecoration: "underline",
                 }}
               >
-                {expanded ? "Show Less" : "Show More"}
+                {expanded ? "Show Summary" : "Show More"}
               </button>
             </div>
           )}
+        </div>
+
+        <div className="section">
+          <div className="preview-subtitle">Dataset Preview</div>
+          <div className="table-scroll-container">
+            <div className="table-view">
+              <EnhancedCsvToHtmlTable
+                data={dataset.example_rows_md}
+                csvDelimiter="|"
+                tableClassName="table table-striped table-hover"
+                columnDescriptions={dataset.dataset_column_dictionary}
+              />
+            </div>
+          </div>
         </div>
 
         {(source || collectionMethod) && (
@@ -363,69 +441,6 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
             </div>
           </div>
         )}
-        {/* <div className="section">
-          <div className="preview-subtitle" style={{ marginBottom: "8px" }}>
-            Tags
-          </div>
-          <div className="section-content">
-            {dataset.tags ? (
-              dataset.tags.join(", ")
-            ) : (
-              <div>No recommendations available</div>
-            )}
-          </div>
-        </div> */}
-        <div className="section">
-          <div className="preview-subtitle">Tags</div>
-          <div className="previous-query-container">
-            {dataset.tags ? (
-              dataset.tags.map((query, index) => (
-                <div key={index} className="previous-query">
-                  {query}
-                </div>
-              ))
-            ) : (
-              <div style={{ fontSize: "12px" }}>No tags available</div>
-            )}
-          </div>
-        </div>
-        {/* <div className="section">
-          <div className="preview-subtitle" style={{ marginBottom: "8px" }}>
-            Potential Use Cases
-          </div>
-          <div className="previous-query-container">
-            {dataset.task_queries ? (
-              dataset.task_queries.slice(0, 3).map((query, index) => (
-                <div key={index} className="previous-query">
-                  {query}
-                </div>
-              ))
-            ) : (
-              <div style={{ fontSize: "12px" }}>
-                No previous queries available
-              </div>
-            )}
-          </div>
-        </div> */}
-
-        <div className="section">
-          <div className="preview-subtitle">Example Records</div>
-          <div className="table-scroll-container">
-            <div className="table-view">
-              {/* <EnhancedCsvToHtmlTable
-                data={dataset.example_rows_md}
-                csvDelimiter="|"
-                tableClassName="table table-striped table-hover"
-                columnDescriptions={dataset.dataset_column_dictionary}
-              /> */}
-              <CsvToHtmlTable
-                data={dataset.example_rows_md}
-                csvDelimiter="|"
-                tableClassName="table table-striped table-hover"
-              />
-            </div>
-          </div>
-        </div>
       </div>
     );
   };
@@ -435,27 +450,57 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
   interface relevanceMapProps {
     isRelevant: string;
     notRelevant: string;
+    index: number;
   }
   const [relevanceMap, setRelevanceMap] = useState<relevanceMapProps[]>(
-    Array(10).fill({ isRelevant: "Loading...", notRelevant: "Loading..." })
+    Array.from({ length: 5 }, (_, index) => ({
+      index,
+      isRelevant: "Loading...",
+      notRelevant: "Loading...",
+    }))
   );
-  const generateRelevance = async () => {
-    console.log("GENERATING RELEVANCE");
+
+  const generateRelevance = async (index: number) => {
+    console.log("GENERATING RELEVANCE FOR INDEX:", index);
     const relevanceURL = "http://127.0.0.1:5000/api/relevance_map";
     try {
       const searchResponse = await axios.post(relevanceURL, {
+        index: index,
         results: results,
         task: task,
         filters: filters,
       });
-      console.log("RELEVANCE", searchResponse.data);
-      setRelevanceMap(searchResponse.data.results);
+      console.log("Full Response Data:", searchResponse.data);
+      console.log("Results Object:", searchResponse.data.results);
 
-      // Update datasetCount based on the filtered results
+
+      // Update relevanceMap for the specific index
+      setRelevanceMap((prev) =>
+        prev.map((item) =>
+          item.index === index
+            ? {
+                ...item,
+                isRelevant: searchResponse.data.results[0].isRelevant,
+                notRelevant: searchResponse.data.results[0].notRelevant,
+              }
+            : item
+        )
+      );
     } catch (error) {
-      console.error("Error fetching filtered datasets:", error);
+      console.error("Error fetching relevance for index", index, error);
+      // Update relevanceMap to show an error for the specific index
+      setRelevanceMap((prev) =>
+        prev.map((item) =>
+          item.index === index
+            ? { ...item, isRelevant: "Error", notRelevant: "Error" }
+            : item
+        )
+      );
     }
   };
+  useEffect(() => {
+    console.log("USEEFFECT", relevanceMap);
+  }, [relevanceMap]);
 
   useEffect(() => {
     console.log("CHECKING RESULTS");
@@ -467,19 +512,47 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
         setIsBlankedOut(false);
         // Update the results after the blank out
       }, 500); // 0.5 second
+
+      // Reset relevanceMap to initial state
       setRelevanceMap(
-        Array(10).fill({ isRelevant: "Loading...", notRelevant: "Loading..." })
+        Array.from({ length: 5 }, (_, index) => ({
+          index,
+          isRelevant: "Loading...",
+          notRelevant: "Loading...",
+        }))
       );
+
       setCurrentResults(results);
-      generateRelevance();
+      for (let i = 0; i < 5; i++) {
+        generateRelevance(i);
+      }
     }
   }, [results, currentResults]);
+
+  const handleDatasetClick = (index: number) => {
+    // Check if the index already exists in relevanceMap
+    const itemExists = relevanceMap.some((item) => item.index === index);
+
+    // If the index doesn't exist, add a new entry with "Loading..." state
+    if (!itemExists) {
+      setRelevanceMap((prev) => [
+        ...prev,
+        { index: index, isRelevant: "Loading...", notRelevant: "Loading..." },
+      ]);
+
+      // Generate relevance for the clicked index
+      generateRelevance(index);
+    }
+
+    // Handle the selected index (your existing logic)
+    handleSelectedIndex(index);
+  };
 
   return (
     <div
       className="datasetlist-container"
       style={{
-        paddingBottom: "2rem",
+        paddingBottom: "1rem",
         opacity: isBlankedOut ? 0 : 1, // Make it blank out by changing opacity
         transition: "opacity 1s ease", // Smooth transition for opacity change
       }}
@@ -495,7 +568,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
               backgroundColor: "white",
               zIndex: 1,
               paddingTop: "0px",
-              paddingBottom: "16px",
+              paddingBottom: "4px",
             }}
           >
             <span
@@ -534,7 +607,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
               index={startIndex + index}
               isSelected={selectedIndex === startIndex + index}
               onClick={() => {
-                handleSelectedIndex(startIndex + index);
+                handleDatasetClick(startIndex + index);
               }}
             />
           ))}

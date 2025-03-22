@@ -479,51 +479,58 @@ def relevance_map():
     results = request.json.get('results')
     task = request.json.get('task')
     filters = request.json.get('filters')
+    index = request.json.get('index')
     logging.info(task)
     logging.info(filters)
     filter_content = []
     for filter in filters:
-        filter_content.append(filter['filter'])
-    
+        if filter["visible"]:
+            filter_content.append(filter['filter'])
     logging.info(filter_content)
 
     results_df = pd.DataFrame(results)
     relevance_results = []
-    for i in range(10):  # Iterate over 15 datasets
-        schema = results_df.loc[i, 'example_rows_md']
-        description = results_df.loc[i, 'dataset_context']
-        source = results_df.loc[i, 'dataset_collection_method']
+    schema = results_df.loc[index, 'example_rows_md']
+    description = results_df.loc[index, 'dataset_context']
+    source = results_df.loc[index, 'dataset_collection_method']
+    purpose = results_df.loc[index, 'dataset_purpose']
 
-        messages = [
-            {
-                "role": "system",
-                "content": f"""
-                You are an assistant that provides a dictionary with two keys: `isRelevant` and `notRelevant`. Given the following dataset details:
-                - **Description**: {description}
-                - **Example Rows**: {schema}
-                - **Collection Method**: {source}
+    messages = [
+        {
+            "role": "system",
+            "content": f"""
+            You are an assistant that provides a dictionary with two keys: `isRelevant` and `notRelevant`. 
 
-                Generate:
-                1. A concise reason why the dataset **is relevant** to the user's task, focusing on how its content aligns with the task’s needs, such as relevant attributes, quality of data, or matching dataset features.
-                2. A concise reason why the dataset **is not relevant**, based on aspects like missing data, insufficient attributes, irrelevant content, or mismatches with the task's focus.
-                
-                Return your response as a dictionary with two keys: **"isRelevant"** and **"notRelevant"**, 
-                where each value is a short, clear reason."""
-            },
-            {
-                "role": "user",
-                "content": f"Evaluate the dataset for my task: {task}, using these filters: {filter_content}."
-            }
-        ]
+            ### **Dataset Details:**
+                - **Description**: {description}  
+                - **Example Rows**: {schema}  
+                - **Purpose of dataset use**: {purpose}  
+                - **Collection Method**: {source} 
 
-        result = openai_client.infer_metadata_wo_instructor(messages)
-        if isinstance(result, str):
-            try:
-                result = ast.literal_eval(result)
-            except (ValueError, SyntaxError) as e:
-                print("Error evaluating the result string:", e)
-        relevance_results.append(result)
-        logging.info(relevance_results)
+            ### **Instructions:**  
+                - **"isRelevant"**: Provide **1-2 sentences** explaining how this dataset aligns with the task's needs (e.g., relevant attributes, data quality, matching features).  
+                - **"notRelevant"**: Provide **1-2 sentencs** explaining why this dataset may not be suitable (e.g., missing data, irrelevant content, attribute mismatch).  
+            
+            If the reason cannot be generated, do not hallucinate and output `"No supporting reason"`.
+            
+            ### **Expected Output Format:**  
+            Return your response as a dictionary with two keys: **"isRelevant"** and **"notRelevant"**, 
+            where each value is a short, clear reason."""
+        },
+        {
+            "role": "user",
+            "content": f"Evaluate the dataset for my task: {task}, using these filters: {filter_content}."
+        }
+    ]
+
+    result = openai_client.infer_metadata_wo_instructor(messages)
+    if isinstance(result, str):
+        try:
+            result = ast.literal_eval(result)
+        except (ValueError, SyntaxError) as e:
+            print("Error evaluating the result string:", e)
+    relevance_results.append(result)
+    logging.info(relevance_results)
 
     return jsonify({
         "results": relevance_results,

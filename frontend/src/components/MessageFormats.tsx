@@ -3,6 +3,7 @@ import "../styles/MessageItem.css";
 import React from "react";
 import { useState } from "react";
 import { ResultProp } from "./ResultsTable";
+
 interface SettingsProps {
   settingsSpecificity: string;
   setSettingsSpecificity: React.Dispatch<React.SetStateAction<string>>;
@@ -17,7 +18,6 @@ interface SettingsProps {
   setResults: (a: ResultProp[]) => unknown;
   setTask: React.Dispatch<React.SetStateAction<string>>;
   taskRec: [string, string][];
-
 }
 
 const Settings = ({
@@ -37,20 +37,25 @@ const Settings = ({
 }: SettingsProps) => {
   const taskOptions = ["I have a specific task", "I am exploring"];
   const [goalOptions, setGoalOptions] = useState([
-    "Analyze",
-    "Identify",
-    "Evaluate",
-    "Compare",
-    "Build",
-    "Investigate",
+    "Train a classifier",
+    "Train a regression model",
+    "Supervised learning",
+    "Unsupervised learning",
+    "Visualization",
+    "LLM pretraining",
+    "LLM finetuning",
+    "Question-Answering",
     "Not sure yet",
-    "+ Add other option",
+    "+ Add option",
   ]);
   const [showInput, setShowInput] = useState(false);
   const [newGoal, setNewGoal] = useState("");
 
   const handleTaskTypeChange = (type: string) => {
     setSettingsSpecificity(type);
+    if (type === "I am exploring") {
+      setSettingsGoal(""); // Reset goal if exploring
+    }
   };
 
   const handleGoalSelection = (goal: string) => {
@@ -86,7 +91,6 @@ const Settings = ({
     console.log(settingsGoal);
     console.log(settingsDomain);
     const searchResponse = await axios.post(taskSuggestionsURL, {
-      // thread_id: threadId,
       specificity: settingsSpecificity,
       goal: settingsGoal,
       domain: settingsDomain,
@@ -103,7 +107,7 @@ const Settings = ({
   };
 
   const handleGenerateChange = () => {
-    console.log("HANDLEGENERATECHANGE")
+    console.log("HANDLEGENERATECHANGE");
     setSettingsGenerate(true);
     fetchTaskSuggestions();
     setTask(settingsDomain);
@@ -156,62 +160,67 @@ const Settings = ({
         ))}
       </div>
 
-      <h4>2. What is the primary goal of your task?</h4>
-      <div style={{ marginBottom: "12px" }}>
-        {goalOptions.map((goal) => (
-          <button
-            className="settings-button"
-            key={goal}
-            onClick={() => handleGoalSelection(goal)}
-            style={{
-              backgroundColor: settingsGoal === goal ? "#007bff" : "#f9f9f9",
-              color: settingsGoal === goal ? "white" : "black",
-            }}
-          >
-            {goal}
-          </button>
-        ))}
-        {showInput && (
-          <div className="settings-newGoal" style={{ marginTop: "8px" }}>
-            <input
-              type="text"
-              value={newGoal}
-              onChange={(e) => setNewGoal(e.target.value)}
-              placeholder="Enter new goal"
-              style={{
-                padding: "4px 12px",
-                width: "50%",
-                marginLeft: "5px",
-                marginRight: "5px",
-                borderRadius: "10px",
-                border: "1px solid #ccc",
-              }}
-            />
-            <button
-              onClick={handleAddNewGoal}
-              style={{
-                padding: "5px 10px",
-                backgroundColor: "#007bff",
-                color: "white",
-                borderRadius: "5px",
-                border: "none",
-                cursor: "pointer",
-              }}
-            >
-              Add
-            </button>
+      {/* Conditionally render the goal section */}
+      {settingsSpecificity === "I have a specific task" && (
+        <>
+          <h4>What is the primary goal of your task?</h4>
+          <div style={{ marginBottom: "12px" }}>
+            {goalOptions.map((goal) => (
+              <button
+                className="settings-button"
+                key={goal}
+                onClick={() => handleGoalSelection(goal)}
+                style={{
+                  backgroundColor: settingsGoal === goal ? "#007bff" : "#f9f9f9",
+                  color: settingsGoal === goal ? "white" : "black",
+                }}
+              >
+                {goal}
+              </button>
+            ))}
+            {showInput && (
+              <div className="settings-newGoal" style={{ marginTop: "8px" }}>
+                <input
+                  type="text"
+                  value={newGoal}
+                  onChange={(e) => setNewGoal(e.target.value)}
+                  placeholder="Enter new goal"
+                  style={{
+                    padding: "4px 12px",
+                    width: "50%",
+                    marginLeft: "5px",
+                    marginRight: "5px",
+                    borderRadius: "10px",
+                    border: "1px solid #ccc",
+                  }}
+                />
+                <button
+                  onClick={handleAddNewGoal}
+                  style={{
+                    padding: "5px 10px",
+                    backgroundColor: "#007bff",
+                    color: "white",
+                    borderRadius: "5px",
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  Add
+                </button>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </>
+      )}
 
-      <h4>3. What domains/subjects are you interested in? Provide keywords.</h4>
+      <h4>2. What do you specifically want to do? Provide keywords or a sentence on the task you're interested in. </h4>
       <div className="settings-interest">
         <textarea
           id="keywords"
           value={settingsDomain}
           onChange={handleKeywordsChange}
           rows={3}
-          placeholder="E.g., healthcare, finance, machine learning..."
+          placeholder="E.g., 'finance', 'predicting stock prices', 'I would like to build a machine learning model to predict stock prices'"
         />
       </div>
 

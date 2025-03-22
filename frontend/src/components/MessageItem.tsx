@@ -141,7 +141,7 @@ const MessageItem = ({
           {message.type === "task_agent" ? (
             // Case 1: Task, input "{rec: reason}""
             <div className="task-message-container" style={{ width: "100%" }}>
-              <div style={{ marginBottom: "10px" }}>
+              <div style={{ marginBottom: "4px" }}>
                 <b>I. Task Recommendations:</b>
               </div>
               {message.text && typeof message.text === "string"

@@ -50,7 +50,6 @@ const FilterPrompt: React.FC<FilterPromptProps> = ({
             attributes: "[]",
           }
         );
-        console.log(fetchResponse.data);
         setSuggestedAttributes(fetchResponse.data.attributes);
         setCsvData(fetchResponse.data.csv_data);
 
