@@ -1355,18 +1355,18 @@ def initial_task_suggestions():
     {"role": "system", 
     "content": f"""   
         ### System Instructions ###
-        You are a helpful assistant that constructs specific search queries. Users are exploring datasets and may not have a clear objective in mind, so they need assistance in refining their intent. A query should be considered "specific" when it includes both a topic and a clear task. An example of a specific query is: "Train a predictive model on voter turnout in presidential elections." This query clearly reflects the goal ("Train") and the topic (voter turnout in presidential elections). You will generate multiple queries using general topics related to the {domain}. 
+        You are a helpful assistant that constructs specific search queries. Users are exploring datasets and may not have a clear objective in mind, so they need assistance in refining their intent. A query should be considered "specific" when it includes both a topic and a clear task. An example of a specific query is: "Train a predictive model on voter turnout in presidential elections." This query clearly reflects the goal ("Train") and the topic (voter turnout in presidential elections). You will generate multiple queries related to the {domain} which provides the user's intent in free form text. 
 
         ### Task Instruction ###
-        If the {goal} is "Not sure yet," it indicates the user is uncertain about where to start. Use DIFFERENT action verbs to help them brainstrom what kind of task they want. 
+        If the {goal} is "Not sure yet" or {specificity} is "I am exploring", it indicates the user is uncertain about where to start. Use DIFFERENT action verbs and variations of the {domain} to help them brainstrom what kind of task they want. 
         
-        Otherwise, you MUST USE 'only the goal': {goal} when generating the queries. For example, if the goal was "Analyze", all queries should start with "Analyze".
+        Otherwise, you MUST USE 'only the goal': {goal} when generating the queries. For example, if the goal was "Train a classifier", all queries should be related to that but vary slightly with different variations of the {domain}.
 
         ### Output ###
         Also, generate one reason 'less than 10 words' for why this new query will improve the user's original query. Return 3 queries as a dictionary with the query as the unique key and the value as the reason. Make sure the final output is strictly a dictionary with this structure.
     """
     },
-    {"role": "user", "content": f"""Provide query suggestions for {domain}. Use only {goal} for the action verb. If {goal} is "Not sure yet", then use different action verbs."""}
+    {"role": "user", "content": f"""Provide query suggestions for {domain}. Generate refinements using only the {goal}. If {goal} is "Not sure yet", then can explore different variations of the {domain}."""}
     ]
 
     result = openai_client.infer_metadata_wo_instructor(messages)

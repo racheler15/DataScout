@@ -81,6 +81,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
     }
   }, [selectedIndex]);
 
+
   const ResultItem: React.FC<ResultItemProps> = ({
     dataset,
     index,
@@ -197,7 +198,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
           delay={[100, 0]}
           offset={[0, -1]}
           duration={200}
-          theme="custom-tippy-theme" 
+          theme="custom-tippy-theme"
         >
           <th style={{ cursor: "help", position: "relative" }}>{children}</th>
         </Tippy>
@@ -239,7 +240,6 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
       dataset.dataset_collection_method !== "N/A"
         ? dataset.dataset_collection_method
         : null;
-  
 
     return (
       <div>
@@ -460,8 +460,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
       );
     }
   };
-  useEffect(() => {
-  }, [relevanceMap]);
+  useEffect(() => {}, [relevanceMap]);
 
   useEffect(() => {
     console.log("CHECKING RESULTS");
@@ -476,14 +475,16 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
 
       // Reset relevanceMap to initial state
       setRelevanceMap(
-        Array.from({ length: 5 }, (_, index) => ({
+        Array.from({ length: Math.min(results.length, 5) }, (_, index) => ({
           index,
           isRelevant: "Loading...",
           notRelevant: "Loading...",
         }))
       );
-      console.log("UPDATED TO NEW RESULTS")
+      console.log("UPDATED TO NEW RESULTS");
       setCurrentResults(results);
+      handleSelectedIndex(0);
+
       for (let i = 0; i < 5; i++) {
         generateRelevance(i);
       }

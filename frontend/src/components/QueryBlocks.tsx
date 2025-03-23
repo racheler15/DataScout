@@ -463,10 +463,6 @@ const QueryBlocks = ({
       //base case where nothing is checked, should display total count of total results
       uniqueDatasets = results.map((item) => item.table_name);
     } else {
-      // Compute intersection of datasets
-      // uniqueDatasets = filteredDatasets.reduce((acc, curr) =>
-      //   acc.filter((dataset) => curr.includes(dataset))
-      // );
       uniqueDatasets = filteredDatasets.reduce(
         (acc, curr) => acc.filter((dataset) => curr.includes(dataset)),
         filteredDatasets[0] || []
@@ -740,7 +736,7 @@ const QueryBlocks = ({
                   outline: "none",
                   resize: "none",
                   height: "auto",
-                  maxHeight: "200px",
+                  minHeight: "100px",
                 }}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
