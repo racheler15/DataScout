@@ -422,7 +422,7 @@ def suggest_relevant_cols():
     logging.info(f"Datasets in top clusters: {type(top_datasets_by_cluster)}")
 
     # Consolidate the results (assuming a function `consolidate` exists)
-    consolidated_results = list(consolidate(top_columns_by_cluster.values()))
+    consolidated_results = list(consolidate(top_columns_by_cluster.values(), task_description))
     logging.info(f"Datasets in top clusters: {type(consolidated_results)}")
 
 
@@ -435,7 +435,7 @@ def suggest_relevant_cols():
     # Return the results as a JSON response
     return jsonify(response_data)
 
-def consolidate(clusters):
+def consolidate(clusters, task):
         logging.info("CONSOLIDATION")
         logging.info(clusters)
         clusters_serializable = [list(cluster) for cluster in clusters]
@@ -443,7 +443,7 @@ def consolidate(clusters):
 
         messages = [ 
         {"role": "system", 
-         "content": f"""You are an assistant that returns a flat list of unique English words. The input will be a list with nested elements. For each nested element, extract one or two representative words that describe it. The words should be lower case single words without special characters (like hyphens or underscores). The output must be a valid JSON array with no extra formatting or symbols, and there should be no repeats."""
+         "content": f"""You are an assistant that returns a flat list of unique English words. The input will be a list with nested elements. For each nested element, return ** 1 to 2 representative words** that best represents the topic of the nested group. The representative word should also make sense in context with the {task}, so use 2 words if it will be more clear what the topic means in relation to the task. The words should be lower case single words without special characters (like hyphens or underscores). The output must be a valid JSON array with no extra formatting or symbols, and there should be no repeats."""
 
         },
         {"role": "user", "content": json.dumps(clusters_serializable)}
@@ -516,13 +516,13 @@ def relevance_map():
 
             2. **"notRelevant"** ❌ Identify **limitations** such as:
             - **Missing attributes**
-            - **Specific geographical location**
-            - **Time period**
+            - **Specific geographical location, e.g. "dataset is only in x location"**
+            - **Time period, e.g. "dataset is only between x and y range"**
             - **Incomplete data**
             - 🔹 If no major issues exist, return `"No significant limitations"`.
             
             ### **Guidelines:**  
-            - **Stay factual**: Base responses strictly on the provided dataset details. Do not assume information that isn’t explicitly stated.  
+            - **Stay factual**: Base responses strictly on the provided dataset details. Do not assume information that isn’t explicitly stated. Make sure to distinguish your sources from the example rows or description (includes description, purpose, and collection method). 
             - **Be concise**: Limit each response to 1-2 sentences.  
             - **Avoid hallucination**: If no strong reason exists for relevance or irrelevance, default to `"No significant utilities"` or `"No significant limitations"`.  
             
@@ -532,7 +532,7 @@ def relevance_map():
         },
         {
             "role": "user",
-            "content": f"Evaluate the dataset for my task: {task}, using these filters: {filter_content}."
+            "content": f"Evaluate the dataset for my task: {task}, using these filters: {filter_content}. Make sure to identify limitations that involve time and location. Distinguish if the information is from the description or the dataset preview. "
         }
     ]
 
@@ -921,9 +921,11 @@ def initial_task_suggestions():
         You are a helpful assistant that constructs specific search queries. Users are exploring datasets and may not have a clear objective in mind, so they need assistance in refining their intent. A query should be considered "specific" when it includes both a topic and a clear task. An example of a specific query is: "Train a predictive model on voter turnout in presidential elections." This query clearly reflects the goal ("Train") and the topic (voter turnout in presidential elections). You will generate multiple queries related to the {domain} which provides the user's intent in free form text. 
 
         ### Task Instruction ###
-        If the {goal} is "Not sure yet" or {specificity} is "I am exploring", it indicates the user is uncertain about where to start. Use DIFFERENT action verbs and variations of the {domain} to help them brainstrom what kind of task they want. 
+        If the {goal} is "Not sure yet" or {specificity} is "I am exploring", it indicates the user is uncertain about where to start. Use DIFFERENT action verbs and variations of the {domain} to help them brainstorm what kind of task they want. 
         
         Otherwise, you MUST USE 'only the goal': {goal} when generating the queries. For example, if the goal was "Train a classifier", all queries should be related to that but vary slightly with different variations of the {domain}.
+
+        Variations are just different factors that might impact the domain. For example, if the domain was "mental health", variations could be things that impact mental health like work life balance, living costs, job opportunity loss, etc. 
 
         ### Output ###
         Also, generate one reason 'less than 10 words' for why this new query will improve the user's original query. Return 3 queries as a dictionary with the query as the unique key and the value as the reason. Make sure the final output is strictly a dictionary with this structure.
