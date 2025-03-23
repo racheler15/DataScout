@@ -3,11 +3,9 @@ import "../styles/ResultsTable.css";
 import React, { useState, useEffect, useRef } from "react";
 import DownloadIcon from "@mui/icons-material/Download";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
-import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import ReactMarkdown from "react-markdown";
 import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
-import axios from "axios";
 import { MetadataFilter } from "../App";
 
 // CUSTOMIZE RESULTPROP DEPENDING ON DATABASE
@@ -80,7 +78,6 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
       previewContainerRef.current.scrollTo({ top: 0, left: 0 }); // Scroll the container to the top
     }
   }, [selectedIndex]);
-
 
   const ResultItem: React.FC<ResultItemProps> = ({
     dataset,
@@ -314,39 +311,6 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
           ) : null}{" "}
         </div>
 
-        {relevanceMap.some((item) => item.index === index) && (
-          <>
-            <div
-              className="preview-subtitle"
-              style={{ display: "flex", alignItems: "center" }}
-            >
-              <AutoAwesomeIcon
-                style={{ height: "16px", width: "16px", color: "orange" }}
-              />
-              &nbsp;<i>Why is this dataset relevant for your task?</i>
-            </div>
-            <div
-              className="description section"
-              style={{
-                backgroundColor: "#fff4d6",
-                border: "1px solid #f6da86",
-                minHeight: "40px",
-              }}
-            >
-              <div style={{ marginBottom: "10px" }}>
-                <b>Utility: </b>
-                {relevanceMap.find((item) => item.index === index)
-                  ?.isRelevant || "Loading..."}
-              </div>
-              <div>
-                <b>Limitation: </b>
-                {relevanceMap.find((item) => item.index === index)
-                  ?.notRelevant || "Loading..."}
-              </div>
-            </div>
-          </>
-        )}
-
         <div className="preview-subtitle">Description</div>
         <div className="description section" style={{ position: "relative" }}>
           <div className="section-content">
@@ -413,54 +377,6 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
 
   const [currentResults, setCurrentResults] = useState(results);
   const [isBlankedOut, setIsBlankedOut] = useState(false);
-  interface relevanceMapProps {
-    isRelevant: string;
-    notRelevant: string;
-    index: number;
-  }
-  const [relevanceMap, setRelevanceMap] = useState<relevanceMapProps[]>(
-    Array.from({ length: 5 }, (_, index) => ({
-      index,
-      isRelevant: "Loading...",
-      notRelevant: "Loading...",
-    }))
-  );
-
-  const generateRelevance = async (index: number) => {
-    const relevanceURL = "http://127.0.0.1:5000/api/relevance_map";
-    try {
-      const searchResponse = await axios.post(relevanceURL, {
-        index: index,
-        results: results,
-        task: task,
-        filters: filters,
-      });
-
-      // Update relevanceMap for the specific index
-      setRelevanceMap((prev) =>
-        prev.map((item) =>
-          item.index === index
-            ? {
-                ...item,
-                isRelevant: searchResponse.data.results[0].isRelevant,
-                notRelevant: searchResponse.data.results[0].notRelevant,
-              }
-            : item
-        )
-      );
-    } catch (error) {
-      console.error("Error fetching relevance for index", index, error);
-      // Update relevanceMap to show an error for the specific index
-      setRelevanceMap((prev) =>
-        prev.map((item) =>
-          item.index === index
-            ? { ...item, isRelevant: "Error", notRelevant: "Error" }
-            : item
-        )
-      );
-    }
-  };
-  useEffect(() => {}, [relevanceMap]);
 
   useEffect(() => {
     console.log("CHECKING RESULTS");
@@ -473,39 +389,13 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
         // Update the results after the blank out
       }, 500); // 0.5 second
 
-      // Reset relevanceMap to initial state
-      setRelevanceMap(
-        Array.from({ length: Math.min(results.length, 5) }, (_, index) => ({
-          index,
-          isRelevant: "Loading...",
-          notRelevant: "Loading...",
-        }))
-      );
       console.log("UPDATED TO NEW RESULTS");
       setCurrentResults(results);
       handleSelectedIndex(0);
-
-      for (let i = 0; i < 5; i++) {
-        generateRelevance(i);
-      }
     }
   }, [results, currentResults]);
 
   const handleDatasetClick = (index: number) => {
-    // Check if the index already exists in relevanceMap
-    const itemExists = relevanceMap.some((item) => item.index === index);
-
-    // If the index doesn't exist, add a new entry with "Loading..." state
-    if (!itemExists) {
-      setRelevanceMap((prev) => [
-        ...prev,
-        { index: index, isRelevant: "Loading...", notRelevant: "Loading..." },
-      ]);
-
-      // Generate relevance for the clicked index
-      generateRelevance(index);
-    }
-
     // Handle the selected index (your existing logic)
     handleSelectedIndex(index);
   };
@@ -514,7 +404,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
     <div
       className="datasetlist-container"
       style={{
-        paddingBottom: "1rem",
+        paddingBottom: "1av",
         opacity: isBlankedOut ? 0 : 1, // Make it blank out by changing opacity
         transition: "opacity 1s ease", // Smooth transition for opacity change
       }}

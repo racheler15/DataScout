@@ -727,7 +727,7 @@ def remove_metadata_update():
     results_df = pd.DataFrame(final_results)
     filtered_results_df = results_df[results_df["table_name"].isin(unique_datasets)].copy()
 
-    return jsonify({"filtered_results": filtered_results_df.to_dict(orient="records")})
+    return jsonify({"filtered_results": results_df.to_dict(orient="records")})
 
 
            

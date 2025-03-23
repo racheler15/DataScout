@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import "../styles/LandingPage.css";
-import Settings from "./MessageFormats";
 import { ResultProp } from "./ResultsTable";
 import axios from "axios";
 
@@ -20,25 +19,12 @@ interface LandingPageProps {
   setResults: (a: ResultProp[]) => unknown;
   setTaskRec: React.Dispatch<React.SetStateAction<[string, string][]>>;
   taskRec: [string, string][];
-
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({
-  task,
   setTask,
   onStart,
-  settingsSpecificity,
-  setSettingsSpecificity,
-  setSettingsGoal,
-  settingsGoal,
-  settingsDomain,
-  setSettingsDomain,
-  settingsGenerate,
-  setSettingsGenerate,
-  results,
   setResults,
-  setTaskRec,
-  taskRec
 }) => {
   // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,6 +62,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
     <div className="landing-container">
       <div className="search-path">
         {" "}
+        <div style={{marginTop:"10%"}}></div>
         <h1 style={{ fontSize: "50px" }}>DataScout</h1>
         <p>Finding datasets dynamically with ease.</p>
         <form className="search-form">
@@ -88,31 +75,6 @@ const LandingPage: React.FC<LandingPageProps> = ({
             className="search-input"
           />
         </form>
-      </div>
-
-      <div className="system-path">
-        <h2>Getting started?</h2>
-        <p>
-          Answer a few questions to help you get started and brainstorm ideas
-          for your task.
-        </p>
-        <div className="settings-block">
-          <Settings
-            settingsSpecificity={settingsSpecificity}
-            setSettingsSpecificity={setSettingsSpecificity}
-            settingsGoal={settingsGoal}
-            setSettingsGoal={setSettingsGoal}
-            settingsDomain={settingsDomain}
-            setSettingsDomain={setSettingsDomain}
-            settingsGenerate={settingsGenerate}
-            setSettingsGenerate={setSettingsGenerate}
-            onStart={onStart}
-            taskRec={taskRec}
-            setTaskRec={setTaskRec}
-            setTask = {setTask}
-            setResults={setResults}
-          />
-        </div>
       </div>
     </div>
   );

@@ -19,11 +19,8 @@ table_schema_dict = {
 }
 
 table_schema_dict_frontend = {
-    "column_specification": "TEXT",
     "table_name": "TEXT",
     "database_name": "TEXT",
-    "time_granu": "TEXT",
-    "geo_granu": "TEXT",
     "db_description": "TEXT",
     "col_num": "INT",
     "row_num": "INT",
@@ -32,17 +29,12 @@ table_schema_dict_frontend = {
     "tags": "TEXT[]",
     "file_size_in_byte": "INT",
     "keywords": "TEXT[]",
-    "task_queries": "TEXT[]",
-    "metadata_queries": "JSONB",
     
 }
 
 metadata_filtering_operations = {
-    "column_specification": ["includes"],
     "table_name": ["includes"],
     "database_name": ["includes"],
-    "time_granu": ["is"],
-    "geo_granu": ["is"],
     "db_description": ["includes"],
     "col_num": [">", "<", ">=", "<=", "="],
     "row_num": [">", "<", ">=", "<=", "="],
@@ -51,16 +43,11 @@ metadata_filtering_operations = {
     "tags": ["includes"],
     "file_size_in_byte": [">", "<", ">=", "<=", "="],
     "keywords": ["includes"],
-    "task_queries": ["includes"],
-    "metadata_queries": ["includes"],
 }
 
 metadata_values = {
-    "column_specification": [],
     "table_name": [],
     "database_name": [],
-    "time_granu": ['decade', 'day', 'half hour', 'hour', 'match', 'millisecond', 'minute', 'month', 'months', 'patch', 'quarter', 'season', 'second', 'version', 'week', 'weekday', 'year', '30 minutes'],
-    "geo_granu": ['city', 'comuna', 'continent', 'country', 'county', 'district', 'global', 'island', 'latitude/longitude', 'location', 'neighbourhood', 'postal code', 'prefecture', 'province', 'region', 'state', 'store', 'zip code', 'world'],
     "db_description": [],
     "col_num": [],
     "row_num": [],
@@ -69,17 +56,12 @@ metadata_values = {
     "tags": [],
     "file_size_in_byte": [],
     "keywords": [],
-    "task_queries": [],
-    "metadata_queries": [],
     
 }
 
 metadata_descriptions = {
-    "column_specification": "Search over column name.",
     "table_name": "Name of the table.",
     "database_name": "Name of the database.",
-    "time_granu": "Time granularity (e.g., Year, Month).",
-    "geo_granu": "Geographic granularity (e.g., Country, City).",
     "db_description": "Short description of the dataset.",
     "col_num": "Number of columns in the table.",
     "row_num": "Number of rows in the table.",
@@ -88,6 +70,4 @@ metadata_descriptions = {
     "tags": "Tags associated with the dataset.",
     "file_size_in_byte": "Size of the dataset in bytes.",
     "keywords": "Keywords related to the dataset.",
-    "task_queries": "Queries for dataset-related tasks.",
-    "metadata_queries": "Queries for filtering metadata.",
 }

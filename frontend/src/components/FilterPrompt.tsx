@@ -5,7 +5,7 @@ import axios from "axios";
 //@ts-ignore
 import { CsvToHtmlTable } from "react-csv-to-table";
 import { ResultProp } from "./ResultsTable";
-import { MetadataFilter } from "./ChatContainer";
+import { MetadataFilter } from "../App";
 interface FilterPromptProps {
   isOpen: boolean;
   onClose: () => void;
@@ -23,15 +23,12 @@ const FilterPrompt: React.FC<FilterPromptProps> = ({
   isOpen,
   onClose,
   onSubmit,
-  messages,
-  setMessages,
   activeFilters,
   results,
   setResults,
   setFilters,
   setIconVisibility,
 }) => {
-  const [metadataFilters, setMetadataFilters] = useState<Filter[]>([]);
   const [suggestedAttributes, setSuggestedAttributes] = useState<{
     [key: string]: string;
   }>({});

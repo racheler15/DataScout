@@ -1,9 +1,8 @@
 import "./App.css";
 import ResultsTable, { ResultProp } from "./components/ResultsTable";
-import { useState, useEffect } from "react";
+import { useState,  } from "react";
 import LandingPage from "./components/LandingPage";
 import ChatContainer from "./components/ChatContainer";
-import axios from "axios";
 
 export interface MetadataFilter {
   type: "knn" | "normal"; // Add other types as needed

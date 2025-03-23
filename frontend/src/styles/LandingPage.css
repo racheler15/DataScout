@@ -2,14 +2,13 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  /* justify-content: center; */
   width: 100vw;
-  /* text-align: center; */
+  height: 100vh;
   margin-bottom: 80px;
 }
 .search-path {
   text-align: center;
-
+  height: 100%;
   display: flex;
   flex-direction: column;
   background-color: #b2caff;
@@ -17,6 +16,7 @@
   padding-bottom: 6%;
 }
 .search-form {
+  
   display: flex;
   justify-content: center;
   width: 100vw;
@@ -31,18 +31,4 @@
   outline: none;
 }
 
-.system-path {
-  width: 60%;
-  padding-top: 32px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.settings-block {
-  display: flex;
-  width: 100%;
-  justify-content: center;
-  margin-top: 12px;
-}
 
