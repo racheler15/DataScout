@@ -1,17 +1,14 @@
 import { useState, useEffect } from "react";
 import "../styles/FilterPrompt.css";
-import { MessageProps } from "./MessageItem";
 import axios from "axios";
-//@ts-ignore
+//@ts-expect-error react-csv table unsupported by react18
 import { CsvToHtmlTable } from "react-csv-to-table";
 import { ResultProp } from "./ResultsTable";
-import { MetadataFilter } from "./ChatContainer";
+import { MetadataFilter } from "../App";
 interface FilterPromptProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (filter: string) => void;
-  messages: MessageProps[];
-  setMessages: React.Dispatch<React.SetStateAction<MessageProps[]>>;
   activeFilters: string[];
   results: ResultProp[];
   setResults: (a: ResultProp[]) => unknown;
@@ -23,20 +20,15 @@ const FilterPrompt: React.FC<FilterPromptProps> = ({
   isOpen,
   onClose,
   onSubmit,
-  messages,
-  setMessages,
   activeFilters,
   results,
   setResults,
   setFilters,
   setIconVisibility,
 }) => {
-  const [metadataFilters, setMetadataFilters] = useState<Filter[]>([]);
-  const [suggestedAttributes, setSuggestedAttributes] = useState<{
-    [key: string]: string;
-  }>({});
+  const dummyFilter: Filter = { name: "", operations: [], values: [] };
   const [avaliableFilters, setAvaliableFilters] = useState<Filter[]>([]);
-  const [selectedFilter, setSelectedFilter] = useState<Filter | null>(null);
+  const [selectedFilter, setSelectedFilter] = useState<Filter>(dummyFilter);
   const [selectedOperation, setSelectedOperation] = useState<string>("");
   const [inputValue, setInputValue] = useState<string>("");
   const [csvData, setCsvData] = useState("");
@@ -50,7 +42,6 @@ const FilterPrompt: React.FC<FilterPromptProps> = ({
             attributes: "[]",
           }
         );
-        setSuggestedAttributes(fetchResponse.data.attributes);
         setCsvData(fetchResponse.data.csv_data);
 
         const dataFilters = fetchResponse.data.filters;
@@ -154,13 +145,6 @@ const FilterPrompt: React.FC<FilterPromptProps> = ({
               className="table-blue"
             />
           </div>
-          {/* <div className="wrapped-attributes-container">
-            {Object.entries(suggestedAttributes).map(([key, value], index) => (
-              <div key={index} className="wrapped-attributes" title={value}>
-                {key}
-              </div>
-            ))}
-          </div> */}
         </div>
 
         <div

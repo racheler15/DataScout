@@ -6,14 +6,12 @@ import eyeOffIcon from "@iconify-icons/fluent/eye-off-20-regular";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import { X } from "lucide-react";
 import FilterPrompt from "./FilterPrompt";
-import { MessageProps } from "./MessageItem";
 import axios from "axios";
 import { ResultProp } from "./ResultsTable";
 import "../styles/MessageItem.css";
 import { MetadataFilter } from "../App";
 import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
-import { flushSync } from "react-dom";
 
 interface QueryBlocksProps {
   task: string;
@@ -22,8 +20,6 @@ interface QueryBlocksProps {
   setFilters: React.Dispatch<React.SetStateAction<MetadataFilter[]>>;
   iconVisibility: boolean[];
   setIconVisibility: React.Dispatch<React.SetStateAction<boolean[]>>;
-  messages: MessageProps[];
-  setMessages: React.Dispatch<React.SetStateAction<MessageProps[]>>;
   pendingFilter: string | null;
   setPendingFilter: React.Dispatch<React.SetStateAction<string | null>>;
   currentPage: number;
@@ -43,20 +39,15 @@ const QueryBlocks = ({
   setFilters,
   iconVisibility,
   setIconVisibility,
-  messages,
-  setMessages,
-  pendingFilter,
-  setPendingFilter,
   results,
   setResults,
-  currentPage,
-  setCurrentPage,
   settingsGenerate,
   setSettingsGenerate,
   taskRec,
   setTaskRec,
 }: QueryBlocksProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [input, setInput] = useState(""); // State to track user input
   const [colRec, setColRec] = useState<string[]>([]); // total list of all knn columns
@@ -816,6 +807,7 @@ const QueryBlocks = ({
               <div style={{ fontWeight: "600" }}>Filter by column topics:</div>
 
               {filteredColRecWithIndices.map(
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 ({ key, value, originalIndex }, filteredIndex) => (
                   <div key={key}>
                     <label
@@ -857,10 +849,7 @@ const QueryBlocks = ({
         <FilterPrompt
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)} // Close modal
-          // onSubmit={handleNewFilterSubmit} // Handle new filter submission
           onSubmit={() => {}} // Handle new filter submission
-          messages={messages}
-          setMessages={setMessages}
           activeFilters={activeFilters}
           results={results}
           setResults={setResults}

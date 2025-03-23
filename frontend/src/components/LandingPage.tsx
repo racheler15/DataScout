@@ -24,7 +24,6 @@ interface LandingPageProps {
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({
-  task,
   setTask,
   onStart,
   settingsSpecificity,
@@ -35,7 +34,6 @@ const LandingPage: React.FC<LandingPageProps> = ({
   setSettingsDomain,
   settingsGenerate,
   setSettingsGenerate,
-  results,
   setResults,
   setTaskRec,
   taskRec

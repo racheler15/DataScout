@@ -59,10 +59,7 @@ interface ResultPreviewProps {
 
 const ResultsTable: React.FC<ResultsTableProps> = ({
   results,
-  open,
-  onResetSearch,
   currentPage,
-  setCurrentPage,
   task,
   filters,
 }: ResultsTableProps) => {

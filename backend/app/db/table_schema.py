@@ -32,8 +32,7 @@ table_schema_dict_frontend = {
     "tags": "TEXT[]",
     "file_size_in_byte": "INT",
     "keywords": "TEXT[]",
-    "task_queries": "TEXT[]",
-    "metadata_queries": "JSONB",
+
     
 }
 
@@ -51,8 +50,7 @@ metadata_filtering_operations = {
     "tags": ["includes"],
     "file_size_in_byte": [">", "<", ">=", "<=", "="],
     "keywords": ["includes"],
-    "task_queries": ["includes"],
-    "metadata_queries": ["includes"],
+
 }
 
 metadata_values = {
@@ -69,8 +67,7 @@ metadata_values = {
     "tags": [],
     "file_size_in_byte": [],
     "keywords": [],
-    "task_queries": [],
-    "metadata_queries": [],
+
     
 }
 
@@ -88,6 +85,4 @@ metadata_descriptions = {
     "tags": "Tags associated with the dataset.",
     "file_size_in_byte": "Size of the dataset in bytes.",
     "keywords": "Keywords related to the dataset.",
-    "task_queries": "Queries for dataset-related tasks.",
-    "metadata_queries": "Queries for filtering metadata.",
 }
