@@ -12,6 +12,7 @@ export interface MetadataFilter {
   operand: string;
   subject: string;
   visible: boolean;
+  active: boolean; // for active knn filters when new task
 }
 
 function App() {
@@ -24,37 +25,9 @@ function App() {
   const [settingsGoal, setSettingsGoal] = useState<string>("");
   const [settingsDomain, setSettingsDomain] = useState<string>("");
   const [settingsGenerate, setSettingsGenerate] = useState(false);
-  const [threadId, setThreadId] = useState("");
   const [taskRec, setTaskRec] = useState<[string, string][]>([]);
   const [filters, setFilters] = useState<MetadataFilter[]>([]);
   // prevent back refresh
-
-  
-  // useEffect(() => {
-  //   if (task) {
-  //     console.log("Task bar updated:", task);
-  //     fetchData();
-  //     // taskSuggestions();
-  //     // metadataSuggestions();
-  //   }
-  // }, [task]); // Dependency array includes only taskBar
-
-  // called when component mounts
-  const startNewThread = async () => {
-    try {
-      const response = await axios.post("http://127.0.0.1:5000/api/start_chat");
-      const { thread_id } = response.data;
-      sessionStorage.setItem("threadId", thread_id); // Data stored in sessionStorage is available only for the current session
-      setThreadId(thread_id);
-    } catch (error) {
-      console.error("Error starting a new thread:", error);
-    }
-  };
-
-  useEffect(() => {
-    startNewThread();
-    // Empty dependency array means this effect runs once when the component mounts
-  }, []);
 
   return showLanding ? (
     <LandingPage
@@ -71,7 +44,6 @@ function App() {
       settingsGenerate={settingsGenerate}
       setSettingsGenerate={setSettingsGenerate}
       onStart={() => setShowLanding(false)}
-      threadId={threadId}
       setTaskRec={setTaskRec}
       taskRec={taskRec}
     />

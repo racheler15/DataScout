@@ -10,8 +10,11 @@ import { MessageProps } from "./MessageItem";
 import axios from "axios";
 import { ResultProp } from "./ResultsTable";
 import "../styles/MessageItem.css";
-// import { unique } from "vega-lite";
 import { MetadataFilter } from "../App";
+import Tippy from "@tippyjs/react";
+import "tippy.js/dist/tippy.css";
+import { flushSync } from "react-dom";
+
 interface QueryBlocksProps {
   task: string;
   setTask: React.Dispatch<React.SetStateAction<string>>;
@@ -56,7 +59,6 @@ const QueryBlocks = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [input, setInput] = useState(""); // State to track user input
-  // const [taskRec, setTaskRec] = useState<[string, string][]>([]);
   const [colRec, setColRec] = useState<string[]>([]); // total list of all knn columns
   const [selectedColumns, setSelectedColumns] = useState<boolean[]>( // keeps track of checked/unchecked columns in top 5 list
     Array(5).fill(false)
@@ -66,14 +68,13 @@ const QueryBlocks = ({
   const [initialResults, setInitialResults] = useState<ResultProp[]>([]); //original  copy of all dataset results
   const [activeColumns, setActiveColumns] = useState<string[]>([]); // to keep track of active knn columns
   const [colsToRemove, setColsToRemove] = useState<MetadataFilter[]>([]); // to keep track of which cols needed to delete
-  const [shouldProcess, setShouldProcess] = useState(false);
+  const [shouldProcess, setShouldProcess] = useState(false); // for the dataset check list toggling
   const [shouldRemove, setShouldRemove] = useState(false);
   const [shouldAdd, setShouldAdd] = useState(false);
   const [colsToAdd, setColsToAdd] = useState<MetadataFilter[]>([]);
 
   const [newTask, setNewTask] = useState(false);
-
-  // const [mergedDatasets, setMergedDatasets] = useState<string[]>([]);
+  const [toggle, setToggle] = useState(false);
 
   // toggles a filter, called when user clicks eye on filter
   const toggleIcon = (index: number) => {
@@ -94,52 +95,13 @@ const QueryBlocks = ({
       )
     );
     setShouldAdd(true);
-    // if (filterToToggle.visible) {
-    //   console.log("filter toggle false", filterToToggle);
-    //   setShouldRemove(true);
-    // } else {
-    //   console.log("filter toggle true", filterToToggle);
-    //   setShouldAdd(true);
-    // }
-
-    // const isKnnFilter = filterToToggle.type === "knn";
-    // if (isKnnFilter) {
-    //   setActiveColumns((prevActiveColumns) => {
-    //     const isIconHidden = !iconVisibility[index];
-    //     if (isIconHidden) {
-    //       setShouldAdd(true);
-    //       return [...prevActiveColumns, ...filterToToggle.value];
-    //     } else {
-    //       setShouldRemove(true);
-    //       return prevActiveColumns.filter(
-    //         (col) => !filterToToggle.value.includes(col)
-    //       );
-    //     }
-    //   });
-    // } else {
-    //   // Ensure safe state updates for `filterToToggle.visible`
-    //   setFilters((prevFilters) =>
-    //     prevFilters.map((filter) =>
-    //       filter === filterToToggle
-    //         ? { ...filter, visible: !filter.visible }
-    //         : filter
-    //     )
-    //   );
-
-    //   if (filterToToggle.visible) {
-    //     console.log("filter toggle false", filterToToggle);
-    //     setShouldRemove(true);
-    //   } else {
-    //     console.log("filter toggle true", filterToToggle);
-    //     setShouldAdd(true);
-    //   }
-    // }
   };
 
   const toggleFilteredDatasets = async () => {
+    console.log("TOGGLE", filters);
     const filteredSavedDatasets = getNormalFilteredDatasets();
     const normalFilters = filters.filter(
-      (filter) => filter.type === "normal" && filter.visible
+      (filter) => filter.type === "normal" && filter.visible && filter.active
     );
 
     console.log("NORMAL FILTERS", normalFilters);
@@ -158,6 +120,88 @@ const QueryBlocks = ({
       setResults(searchResponse.data.filtered_results);
     } catch (error) {
       console.error("Error fetching filtered datasets:", error);
+    }
+  };
+  type toggleDatasetsProps = (
+    activeColumns: string[],
+    filters: MetadataFilter[]
+  ) =>  Promise<string[] | undefined>; // Use Promise<void> if the function doesn't return anything
+
+  const toggleDatasets: toggleDatasetsProps = async (
+    activeColumns,
+    filters
+  ) => {
+    console.log("TOGGLE", filters);
+
+    // If no active columns or filters are visible, return all datasets
+    if (
+      activeColumns.length === 0 ||
+      filters.every((filter) => filter.visible === false) ||
+      filters.length === 0
+    ) {
+      console.log("NO ACTIVE COLUMNS LEFT");
+      const uniqueDatasets = [...savedDatasets.flat()];
+      return uniqueDatasets;
+    }
+
+    // Step 1: Find the original indices of activeColumns
+    console.log("ACTIVE COLUMNS", activeColumns);
+    const filteredColRec = Object.entries(colRec)
+      .map(([key, value], originalIndex) => ({ key, value, originalIndex }))
+      .filter(
+        ({ value }) =>
+          activeColumns.includes(value) &&
+          filters.some(
+            (filter) =>
+              filter.value === value &&
+              filter.visible === true &&
+              filter.active === true
+          )
+      );
+
+    console.log("FILTERED COL REC", filteredColRec);
+
+    // Step 2: Extract the corresponding datasets from savedDatasets
+    const filteredDatasets = filteredColRec.map(
+      ({ originalIndex }) => savedDatasets[originalIndex]
+    );
+
+    // Step 3: Compute the intersection of datasets
+    const uniqueDatasets = filteredDatasets.reduce(
+      (acc, curr) =>
+        acc.length > 0 ? acc.filter((dataset) => curr.includes(dataset)) : curr,
+      filteredDatasets[0] || []
+    );
+
+    console.log("FILTERED DATASETS", filteredDatasets);
+    console.log("UNIQUE DATASETS", uniqueDatasets);
+
+    // Step 4: Filter normal filters
+    const normalFilters = filters.filter(
+      (filter) => filter.type === "normal" && filter.visible && filter.active
+    );
+
+    console.log("NORMAL FILTERS", normalFilters);
+
+    // Step 5: Send request to backend to update results
+    const colFilteredURL = "http://127.0.0.1:5000/api/remove_metadata_update";
+    try {
+      const searchResponse = await axios.post(colFilteredURL, {
+        filters: normalFilters,
+        results: initialResults,
+        uniqueDatasets: uniqueDatasets,
+      });
+      console.log("ADD SEARCH DATASETS", searchResponse.data);
+
+      // Update datasetCount based on the filtered results
+      setDatasetCount(searchResponse.data.filtered_results.length);
+      setResults(searchResponse.data.filtered_results);
+
+      // Return the unique datasets for further processing if needed
+      return uniqueDatasets;
+    } catch (error) {
+      console.error("Error fetching filtered datasets:", error);
+      throw error; // Propagate the error to the caller
     }
   };
 
@@ -240,17 +284,21 @@ const QueryBlocks = ({
       return uniqueDatasets;
     } else {
       // Step 1: Find the original indices of activeColumns
+      console.log("ACTIVE COLUMNS", activeColumns);
       const filteredColRec = Object.entries(colRec)
         .map(([key, value], originalIndex) => ({ key, value, originalIndex }))
         .filter(
           ({ value }) =>
             activeColumns.includes(value) &&
             filters.some(
-              (filter) => filter.value === value && filter.visible === true
+              (filter) =>
+                filter.value === value &&
+                filter.visible === true &&
+                filter.active === true
             )
         );
 
-      console.log(filteredColRec);
+      console.log("FILTERED COL REC", filteredColRec);
       // Step 2: Extract the corresponding datasets from savedDatasets
       const filteredDatasets = filteredColRec.map(
         ({ originalIndex }) => savedDatasets[originalIndex]
@@ -284,7 +332,10 @@ const QueryBlocks = ({
           ({ value }) =>
             activeColumns.includes(value) &&
             filters.some(
-              (filter) => filter.value === value && filter.visible === true
+              (filter) =>
+                filter.value === value &&
+                filter.visible === true &&
+                filter.active === true
             ) &&
             !colsToRemove.some((filter) => filter.value.includes(value))
         ); // Exclude colStoreRemove items
@@ -324,7 +375,6 @@ const QueryBlocks = ({
           ? JSON.parse(querySuggestions)
           : querySuggestions;
       const queryArray = Object.entries(queryObject);
-      console.log(queryArray);
       setTaskRec(queryArray.map(([key, value]) => [key, String(value)]));
     } catch (error) {
       if (error instanceof Error) {
@@ -342,17 +392,19 @@ const QueryBlocks = ({
     try {
       const colSuggestionsURL =
         "http://127.0.0.1:5000/api/suggest_relevant_cols";
-      console.log("SENDING COL SUGGESTION API");
+      console.log("SENDING COL SUGGESTION API for", task);
       const searchResponse = await axios.post(colSuggestionsURL, {
         task: task,
         results: results,
       });
-      console.log(searchResponse.data);
-      console.log(searchResponse.data.columns_in_clusters);
-      console.log(searchResponse.data.consolidated_results);
-      console.log(searchResponse.data.datasets_in_clusters);
+      console.log("GENERATE COL REC", searchResponse.data);
+
+      console.log("setcolrec for generatecolrec");
 
       setColRec(searchResponse.data.consolidated_results);
+
+      // await new Promise(resolve => setTimeout(resolve, 500));
+
       setSavedDatasets(searchResponse.data.datasets_in_clusters);
     } catch (error) {
       if (error instanceof Error) {
@@ -455,14 +507,6 @@ const QueryBlocks = ({
     const filteredDatasets = selectedIndices.map(
       (index) => savedDatasets[index]
     );
-
-    // Find unique datasets across all selected columns
-    // const uniqueDatasets =
-    //   filteredDatasets.length > 0
-    //     ? filteredDatasets.reduce((acc, curr) =>
-    //         acc.filter((dataset) => curr.includes(dataset))
-    //       )
-    //     : [];
     const uniqueDatasets = filteredDatasets.reduce(
       (acc, curr) => acc.filter((dataset) => curr.includes(dataset)),
       filteredDatasets[0] || []
@@ -480,8 +524,6 @@ const QueryBlocks = ({
       ...columnContent,
     ]);
 
-    console.log("ACTIVE COLUMNS", activeColumns);
-
     // Create a new filter based on the selected columns
     const newFilterObjects: MetadataFilter[] =
       columnContent.length > 0
@@ -492,6 +534,7 @@ const QueryBlocks = ({
             operand: "include",
             subject: "column group",
             visible: true,
+            active: true,
           }))
         : [];
 
@@ -519,8 +562,64 @@ const QueryBlocks = ({
       }
     }
   };
+  const fetchData = async () => {
+    console.log("hyse search");
+    try {
+      const searchResponse = await axios.post(
+        "http://127.0.0.1:5000/api/hyse_search",
+        {
+          query: task,
+        }
+      );
+      console.log("FETCHED DATA FROM HYSE:", searchResponse);
+
+      setResults(searchResponse.data.complete_results);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+  useEffect(() => {
+    if (newTask) {
+      console.log("Task bar updated:", task);
+      fetchData();
+    }
+  }, [newTask, task]); // Dependency array includes only taskBar
 
   useEffect(() => {
+    console.log("USE EFFECT UPDATED FILTERS", filters);
+  }, [filters]);
+
+  useEffect(() => {
+    console.log("USE EFFECT UPDATED COL REC", colRec);
+  }, [colRec]);
+
+  const reapplyFilters = async () => {
+    console.log("REAPPLYFILTERS");
+    console.log(colRec);
+    console.log(activeColumns);
+    // Create a new array with updated `active` properties
+    const updatedFilters = filters.map((filter) => {
+      if (filter.type === "knn" && !colRec.includes(filter.value)) {
+        return { ...filter, active: false }; // Deactivate the filter
+      } else {
+        return { ...filter, active: true }; // Activate the filter
+      }
+    });
+    const updatedActiveColumns = activeColumns.filter((column) =>
+      colRec.includes(column)
+    );
+
+    setActiveColumns(updatedActiveColumns);
+    // Update the state with the new filters
+    setFilters(updatedFilters);
+
+    console.log(updatedFilters);
+    console.log(updatedActiveColumns);
+    return { updatedFilters, updatedActiveColumns };
+  };
+
+  useEffect(() => {
+    console.log("ACTIVE COLUMNS UPDATED", activeColumns);
     if (shouldRemove) {
       removeFilteredDatasets();
       setColsToRemove([]); // Reset after running
@@ -543,7 +642,8 @@ const QueryBlocks = ({
       setShouldProcess(false); // Reset the flag after processing
     }
   }, [selectedColumns, shouldProcess]);
-  // generate task recommendations
+
+  // generate task recommendations for helper block start
   useEffect(() => {
     if (!settingsGenerate) {
       generateTaskRec(task);
@@ -558,16 +658,53 @@ const QueryBlocks = ({
 
   const hasInitialized = useRef(false);
   useEffect(() => {
-    // generate col rec on first render, keep a local copy of initial results
-    console.log("RESULTS UPDATED, GENERATE COL REC");
-    if (!hasInitialized.current && results.length > 0) {
-      hasInitialized.current = true; // Mark as executed
-      setInitialResults(results); // keep copy of original results
-      generateColRec(task);
-    }
-    setSelectedColumns(Array(5).fill(false));
-    setDatasetCount(results.length);
-  }, [results]);
+    const handleResults = async () => {
+      console.log("RESULTS UPDATED, GENERATE COL REC");
+      setSelectedColumns(Array(5).fill(false));
+
+      if (!hasInitialized.current && results.length > 0) {
+        hasInitialized.current = true; // Mark as executed
+        setInitialResults(results); // keep copy of original results
+        console.log("NEW COL REC");
+        await generateColRec(task); // Wait for generateColRec to complete
+      }
+
+      if (newTask) {
+        console.log("NEW TASK invalidate nonexisting knn");
+        await generateTaskRec(task); // Wait for generateTaskRec to complete
+        await generateColRec(task); // Wait for generateColRec to complete
+        console.log("RESET INITAL RESULTS");
+        setInitialResults(results);
+
+        setToggle(true);
+        console.log("SET NEW TASK FALSE");
+        setNewTask(false);
+      }
+
+      setDatasetCount(results.length);
+    };
+
+    handleResults(); // Call the async function
+  }, [results]); // Add dependencies as needed
+
+  useEffect(() => {
+    const handleToggle = async () => {
+      if (toggle) {
+        console.log("RUNNING TOGGLE");
+
+        // Reapply filters and get updated values
+        const { updatedFilters, updatedActiveColumns } = await reapplyFilters();
+
+        // Call toggleDatasets with the updated filters and activeColumns
+        await toggleDatasets(updatedActiveColumns, updatedFilters);
+
+        // Reset the toggle state
+        setToggle(false);
+      }
+    };
+
+    handleToggle(); // Call the async function
+  }, [toggle]); // Dependency array includes toggle
 
   return (
     <div className="query-container">
@@ -610,7 +747,9 @@ const QueryBlocks = ({
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault(); // Prevent new line on Enter
+                    console.log("ENTER");
                     setTask(input);
+                    setNewTask(true);
                   }
                 }}
                 placeholder="Enter your task here..."
@@ -706,6 +845,7 @@ const QueryBlocks = ({
               <div style={{ fontWeight: "500", marginTop: "8px" }}>
                 <i>Remaining datasets: {datasetCount}</i>
               </div>
+
               <button
                 onClick={() => {
                   console.log("Selected Columns:", selectedColumns);
@@ -774,10 +914,14 @@ const TaskSuggestionBlock = ({
             }}
           />
           <div>
-            {recommendation}
-            <div className="tooltip" style={{ fontSize: "12px", marginTop:"-10px", lineHeight:"1.15"}}>
-              {reason}
-            </div>
+            <Tippy
+              content={reason}
+              placement="bottom-start"
+              theme="custom-tippy-theme"
+              offset={[0, -0.5]}
+            >
+              <span style={{ cursor: "help" }}>{recommendation}</span>
+            </Tippy>
           </div>
         </div>
       </div>
@@ -788,14 +932,6 @@ const TaskSuggestionBlock = ({
           setTask(recommendation);
         }}
         className="task-suggestion-button"
-        // style={{
-        //   background: "none",
-        //   border: "none",
-        //   color: "#007bff",
-        //   cursor: "pointer",
-        //   fontSize: "12px",
-        //   padding: "2px 10px",
-        // }}
       >
         try
       </button>
@@ -817,7 +953,11 @@ const FilterItem: React.FC<FilterItemProps> = ({
   onRemove,
 }) => {
   return (
-    <div className={`filter-prompt ${isVisible ? "" : "hidden"}`}>
+    <div
+      className={`filter-prompt ${isVisible ? "" : "hidden"} ${
+        !filter.active ? "inactive" : ""
+      }`}
+    >
       <div style={{ flex: "0.95" }}>{filter.filter}</div>
       <Icon
         icon={isVisible ? eyeIcon : eyeOffIcon}

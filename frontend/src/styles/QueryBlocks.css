@@ -14,8 +14,7 @@
   align-items: center;
   background-color: #fed5ff;
   border-radius: 16px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
-
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 .label {
   padding-left: 8px;
@@ -46,11 +45,11 @@
 }
 .task-message-container {
   margin-left: 8px;
-  
 }
 
-.filter-block-container{
+.filter-block-container {
   margin-top: 16px;
+
 }
 .filter-block {
   /* max-height: 160px; */
@@ -60,9 +59,9 @@
   align-items: center;
   background-color: #b2caff;
   border-radius: 16px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
 
-  
 }
 .col-rec-container {
   margin-left: 16px;
@@ -86,17 +85,21 @@
 }
 .metadata-btn {
   display: flex;
-  align-items: center; 
+  align-items: center;
   justify-content: center;
   width: 50px;
   padding: 0;
   background-color: white;
   border-radius: 12px;
   font-size: 16px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
-
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .hidden {
   background-color: #dedede;
+}
+
+.filter-prompt.inactive {
+  text-decoration: line-through; /* Cross out the text */
+  color: red; /* Optional: Add red color */
 }

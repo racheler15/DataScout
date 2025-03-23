@@ -9,8 +9,7 @@ import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
 import axios from "axios";
 import { MetadataFilter } from "../App";
-//@ts-ignore
-import { CsvToHtmlTable } from "react-csv-to-table";
+
 // CUSTOMIZE RESULTPROP DEPENDING ON DATABASE
 export type ResultProp = {
   table_name: string;
@@ -74,19 +73,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
 
   // Get the datasets to be displayed for the current page
   const limitedResults = results.slice(startIndex, endIndex);
-  const totalPages = Math.ceil(results.length / pageSize);
 
-  const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  const goToPreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
   const previewContainerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (selectedIndex !== null && previewContainerRef.current) {
@@ -109,18 +96,6 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
         <div className="dataset-details">
           <div className="dataset-title"> {dataset.database_name}</div>
           <div className="dataset-stats">
-            {/* <span>
-              {dataset.cosine_similarity !== undefined &&
-              dataset.cosine_similarity !== null
-                ? `Relevance Score: ${Math.round(
-                    dataset.cosine_similarity * 100
-                  ).toFixed(0)}% · `
-                : ""}
-              Usability score:{" "}
-              {Math.round(
-                parseFloat(dataset.usability_rating.toString()) * 100
-              ) + "% "}
-            </span> */}
             <span>
               {dataset.col_num} cols &middot; {dataset.row_num} rows &middot;{" "}
               {formatBytes(dataset.file_size_in_byte)} &middot;{" "}
@@ -159,9 +134,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
     tableClassName: string;
     columnDescriptions: string;
   }
-  interface TableHeaderProps {
-    children: string;
-  }
+
   type ColumnDescription = {
     col_name: string;
     type_and_description: string;
@@ -224,6 +197,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
           delay={[100, 0]}
           offset={[0, -1]}
           duration={200}
+          theme="custom-tippy-theme" 
         >
           <th style={{ cursor: "help", position: "relative" }}>{children}</th>
         </Tippy>
@@ -265,15 +239,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
       dataset.dataset_collection_method !== "N/A"
         ? dataset.dataset_collection_method
         : null;
-    console.log("Current Index:", index);
-    console.log(
-      "Does index exist in relevanceMap?",
-      relevanceMap.some((item) => item.index === index)
-    );
-    console.log(
-      "Found Item:",
-      relevanceMap.find((item) => item.index === index)
-    );
+  
 
     return (
       <div>
@@ -461,7 +427,6 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
   );
 
   const generateRelevance = async (index: number) => {
-    console.log("GENERATING RELEVANCE FOR INDEX:", index);
     const relevanceURL = "http://127.0.0.1:5000/api/relevance_map";
     try {
       const searchResponse = await axios.post(relevanceURL, {
@@ -470,9 +435,6 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
         task: task,
         filters: filters,
       });
-      console.log("Full Response Data:", searchResponse.data);
-      console.log("Results Object:", searchResponse.data.results);
-
 
       // Update relevanceMap for the specific index
       setRelevanceMap((prev) =>
@@ -499,7 +461,6 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
     }
   };
   useEffect(() => {
-    console.log("USEEFFECT", relevanceMap);
   }, [relevanceMap]);
 
   useEffect(() => {
@@ -521,7 +482,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
           notRelevant: "Loading...",
         }))
       );
-
+      console.log("UPDATED TO NEW RESULTS")
       setCurrentResults(results);
       for (let i = 0; i < 5; i++) {
         generateRelevance(i);
@@ -612,14 +573,6 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
             />
           ))}
         </div>
-        {/* <div className="page-selector">
-          <div onClick={goToPreviousPage} style={{ cursor: "pointer" }}>
-            <CircleArrowLeft /> Previous
-          </div>{" "}
-          <div onClick={goToNextPage} style={{ cursor: "pointer" }}>
-            Next <CircleArrowRight />
-          </div>
-        </div> */}
       </div>
       <div className="preview-container" ref={previewContainerRef}>
         <ResultPreview

@@ -484,7 +484,7 @@ def relevance_map():
     logging.info(filters)
     filter_content = []
     for filter in filters:
-        if filter["visible"]:
+        if filter["visible"] and filter['active']:
             filter_content.append(filter['filter'])
     logging.info(filter_content)
 
@@ -502,16 +502,29 @@ def relevance_map():
             You are an assistant that provides a dictionary with two keys: `isRelevant` and `notRelevant`. 
 
             ### **Dataset Details:**
-                - **Description**: {description}  
-                - **Example Rows**: {schema}  
-                - **Purpose of dataset use**: {purpose}  
-                - **Collection Method**: {source} 
+            - **Description**: {description}  
+            - **Example Rows**: {schema}  
+            - **Purpose of dataset use**: {purpose}  
+            - **Collection Method**: {source} 
 
             ### **Instructions:**  
-                - **"isRelevant"**: Provide **1-2 sentences** explaining how this dataset aligns with the task's needs (e.g., relevant attributes, data quality, matching features).  
-                - **"notRelevant"**: Provide **1-2 sentencs** explaining why this dataset may not be suitable (e.g., missing data, irrelevant content, attribute mismatch).  
+            1. **"isRelevant"** ✅ Identify the **strongest** factors that make this dataset useful. Consider:
+            - **Relevant attributes**
+            - **Data quality**
+            - **Matching features**
+            - 🔹 If there are **no strong advantages**, return `"No significant utilities"`.
+
+            2. **"notRelevant"** ❌ Identify **limitations** such as:
+            - **Missing attributes**
+            - **Specific geographical location**
+            - **Time period**
+            - **Incomplete data**
+            - 🔹 If no major issues exist, return `"No significant limitations"`.
             
-            If the reason cannot be generated, do not hallucinate and output `"No supporting reason"`.
+            ### **Guidelines:**  
+            - **Stay factual**: Base responses strictly on the provided dataset details. Do not assume information that isn’t explicitly stated.  
+            - **Be concise**: Limit each response to 1-2 sentences.  
+            - **Avoid hallucination**: If no strong reason exists for relevance or irrelevance, default to `"No significant utilities"` or `"No significant limitations"`.  
             
             ### **Expected Output Format:**  
             Return your response as a dictionary with two keys: **"isRelevant"** and **"notRelevant"**, 

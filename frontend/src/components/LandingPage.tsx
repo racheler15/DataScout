@@ -18,7 +18,6 @@ interface LandingPageProps {
   setSettingsGenerate: React.Dispatch<React.SetStateAction<boolean>>;
   results: ResultProp[];
   setResults: (a: ResultProp[]) => unknown;
-  threadId: string;
   setTaskRec: React.Dispatch<React.SetStateAction<[string, string][]>>;
   taskRec: [string, string][];
 
@@ -38,7 +37,6 @@ const LandingPage: React.FC<LandingPageProps> = ({
   setSettingsGenerate,
   results,
   setResults,
-  threadId,
   setTaskRec,
   taskRec
 }) => {
@@ -57,11 +55,6 @@ const LandingPage: React.FC<LandingPageProps> = ({
         }
       );
       console.log("FETCHED DATA FROM HYSE:", searchResponse);
-      const textData = searchResponse.data.complete_results[0].dataset_column_dictionary
-      const fixedTextData = textData.replace(/'/g, '"');
-      console.log(JSON.parse(fixedTextData))
-
-      console.log("SETTING RESULTS");
       setResults(searchResponse.data.complete_results);
     } catch (error) {
       console.error("Error fetching data:", error);

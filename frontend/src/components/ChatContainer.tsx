@@ -1,11 +1,8 @@
 import { MessageProps } from "./MessageItem";
-import ChatBot from "./ChatBot";
 import QueryBlocks from "./QueryBlocks";
 import "../styles/ChatContainer.css";
-import { ArrowRightToLine, ArrowLeftFromLine } from "lucide-react";
 import { ResultProp } from "./ResultsTable";
-import axios from "axios";
-import { useEffect, useState } from "react";
+import {  useState } from "react";
 import { MetadataFilter } from "../App";
 
 interface ChatContainerProps {
@@ -53,22 +50,6 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
   setFilters,
   filters
 }) => {
-  // useEffect(() => {
-  //   // Fetch most popular datasets when the component mounts
-  //   const fetchMostPopularDatasets = async () => {
-  //     try {
-  //       const response = await axios.get(
-  //         "http://127.0.0.1:5000/api/most_popular_datasets"
-  //       );
-  //       console.log("POPULAR RESULTS: ", response);
-
-  //       setResults(response.data); // Set results with the fetched data
-  //     } catch (error) {
-  //       console.error("Error fetching top 10 popular datasets:", error);
-  //     }
-  //   };
-  //   fetchMostPopularDatasets();
-  // }, [setResults]); // Dependency array includes setResults
 
   const suggested_tasks = {
     "Train a predictive model on voter turnout in presidential elections":
@@ -284,27 +265,6 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
             setTaskRec={setTaskRec}
             taskRec={taskRec}
           />
-          {/* <ChatBot
-            setResults={setResults}
-            results={results}
-            task={task}
-            setTask={setTask}
-            filters={filters}
-            setFilters={setFilters}
-            setIconVisibility={setIconVisibility}
-            messages={messages}
-            setMessages={setMessages}
-            settingsSpecificity={settingsSpecificity}
-            setSettingsSpecificity={setSettingsSpecificity}
-            settingsGoal={settingsGoal}
-            setSettingsGoal={setSettingsGoal}
-            settingsDomain={settingsDomain}
-            setSettingsDomain={setSettingsDomain}
-            pendingFilter={pendingFilter}
-            setPendingFilter={setPendingFilter}
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-          /> */}
         </>
       )}
     </div>

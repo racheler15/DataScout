@@ -80,17 +80,6 @@ const ChatBot = ({
     }
   };
 
-  const prunePrompt = async (message: string) => {
-    try {
-      const response = await axios.post(
-        "http://127.0.0.1:5000/api/prune_prompt",
-        { query: message }
-      );
-      setTask(response.data["pruned_query"]);
-    } catch (error) {
-      console.error("Error sending: " + message);
-    }
-  };
 
   const fetchMessages = async () => {
     try {

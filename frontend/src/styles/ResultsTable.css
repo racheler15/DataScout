@@ -230,3 +230,18 @@
   overflow-x: scroll;
   width: 100%;
 }
+
+.tippy-box[data-theme="custom-tippy-theme"] {
+  font-size: 11px; /* Smaller font size */
+  background-color: #f0f0f0; /* Gray background */
+  color:#3d3d3d;
+  border-radius: 4px; /* Optional: Add rounded corners */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Optional: Add shadow */
+  border: 1px solid #ccc; /* Smaller line width */
+
+}
+
+/* Arrow customization (optional) */
+.tippy-box[data-theme="custom-tippy-theme"] .tippy-arrow {
+  color: #f0f0f0; /* Match arrow color to background */
+}
