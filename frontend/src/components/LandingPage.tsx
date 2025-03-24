@@ -71,7 +71,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
             value={tempTask}
             onChange={handleSearchChange}
             onKeyDown={handleKeyPress}
-            placeholder="Search for datasets with keywords or text..."
+            placeholder="Elaborate your task query in detail, or enter phrases and keywords..."
             className="search-input"
           />
         </form>

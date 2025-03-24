@@ -287,28 +287,6 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
                 </div>
               ))
             : null}
-          {dataset.time_granu ? (
-            <div
-              className="section-item"
-              style={{
-                backgroundColor: "#a9c7ff3b",
-                border: "1px solid #cdd6ff",
-              }}
-            >
-              {dataset.time_granu}-Level Granularity{" "}
-            </div>
-          ) : null}
-          {dataset.geo_granu ? (
-            <div
-              className="section-item"
-              style={{
-                backgroundColor: "#a9c7ff3b",
-                border: "1px solid #cdd6ff",
-              }}
-            >
-              {dataset.geo_granu}-Level Granularity
-            </div>
-          ) : null}{" "}
         </div>
 
         <div className="preview-subtitle">Description</div>
