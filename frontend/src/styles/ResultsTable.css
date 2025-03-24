@@ -233,11 +233,11 @@
 
 .tippy-box[data-theme="custom-tippy-theme"] {
   font-size: 11px; /* Smaller font size */
-  background-color: #f0f0f0; /* Gray background */
+  background-color: #dadada; 
   color:#3d3d3d;
   border-radius: 4px; /* Optional: Add rounded corners */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Optional: Add shadow */
-  border: 1px solid #ccc; /* Smaller line width */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* Optional: Add shadow */
+  border: 1px solid #d5d5d5; 
 
 }
 

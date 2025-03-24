@@ -60,11 +60,11 @@
   background-color: #b2caff;
   border-radius: 16px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 
 }
 .col-rec-container {
-  margin-left: 16px;
+  margin-left: 4px;
 }
 .filter-tags {
   flex: 0.95;

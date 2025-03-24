@@ -672,6 +672,16 @@ def remove_metadata_update():
         search_value = filter["value"]
         selected_operand = filter["operand"]
 
+        if selected_filter == "time_granularity":
+            selected_filter = "time_granu"
+        elif selected_filter == "geo_granularity":
+            selected_filter = "geo_granu"
+        elif selected_filter == "total downloads":
+            selected_filter = "popularity"
+        elif selected_filter =="file_size_in_MB":
+            selected_filter == "file_size_in_byte"
+
+
         if selected_filter == "column_specification":
             final_results = hnsw_search(search_value, final_results)
 
@@ -731,6 +741,16 @@ def manual_metadata():
     search_input = request.get_json().get('value')
     results = request.get_json().get('results')
     logging.info(selected_filter)
+
+    if selected_filter == "time_granularity":
+        selected_filter = "time_granu"
+    elif selected_filter == "geo_granularity":
+        selected_filter = "geo_granu"
+    elif selected_filter == "total downloads":
+        selected_filter = "popularity"
+    elif selected_filter =="file_size_in_MB":
+        selected_filter == "file_size_in_byte"
+
 
     # HNSW search
     if selected_filter == 'column_specification':

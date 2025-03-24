@@ -167,16 +167,17 @@
 
 .tippy-box[data-theme="custom-tippy-theme"] {
   font-size: 11px;
-  background-color: #f0f0f0; 
-  color:#3d3d3d;
-  border: 1px solid #f0f0f0; 
+  font-weight: 500;
+  background-color: #4b4b4b;
+  color:white;
+  border: 1px solid #4b4b4b; 
   border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); 
 }
 
 /* Arrow customization (optional) */
 .tippy-box[data-theme="custom-tippy-theme"] .tippy-arrow {
-  color: #f0f0f0;
+  color: #4b4b4b;;
 }
 
 

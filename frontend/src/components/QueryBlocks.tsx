@@ -4,6 +4,8 @@ import { Icon } from "@iconify/react";
 import eyeIcon from "@iconify-icons/fluent/eye-20-regular";
 import eyeOffIcon from "@iconify-icons/fluent/eye-off-20-regular";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import CreateIcon from "@mui/icons-material/Create";
+import LabelImportantIcon from "@mui/icons-material/LabelImportant";
 import { X } from "lucide-react";
 import FilterPrompt from "./FilterPrompt";
 import axios from "axios";
@@ -66,6 +68,7 @@ const QueryBlocks = ({
 
   const [newTask, setNewTask] = useState(false);
   const [toggle, setToggle] = useState(false);
+  const [hnswColumn, setHnswColumn] = useState("");
 
   // toggles a filter, called when user clicks eye on filter
   const toggleIcon = (index: number) => {
@@ -116,7 +119,7 @@ const QueryBlocks = ({
   type toggleDatasetsProps = (
     activeColumns: string[],
     filters: MetadataFilter[]
-  ) =>  Promise<string[] | undefined>; // Use Promise<void> if the function doesn't return anything
+  ) => Promise<string[] | undefined>; // Use Promise<void> if the function doesn't return anything
 
   const toggleDatasets: toggleDatasetsProps = async (
     activeColumns,
@@ -693,6 +696,54 @@ const QueryBlocks = ({
     handleToggle(); // Call the async function
   }, [toggle]); // Dependency array includes toggle
 
+  const handleMetadata = async (hnswColumn: string) => {
+    if (!hnswColumn) return;
+
+    try {
+      const fetchResponse = await axios.post(
+        "http://127.0.0.1:5000/api/manual_metadata",
+        {
+          selectedFilter: "column_specification",
+          selectedOperation: "is",
+          value: hnswColumn,
+          results: results,
+        }
+      );
+      console.log(fetchResponse.data);
+      setResults(fetchResponse.data.results);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  const handleColumnSearch = (hnswColumn: string) => {
+    console.log("HANDLE COLUMN SEARCH", hnswColumn);
+    if (!hnswColumn) return;
+
+    // Check if filter already exists
+    setFilters((prev) => {
+      const filterString = `column_specification is ${hnswColumn}`;
+      console.log(filterString);
+      handleMetadata(hnswColumn);
+
+      return [
+        ...prev,
+        {
+          type: "normal",
+          filter: filterString,
+          value: hnswColumn,
+          operand: "is",
+          subject: "column_specification",
+          visible: true,
+          active: true,
+        },
+      ];
+    });
+
+    setIconVisibility((prev) => [...prev, true]);
+    setHnswColumn("");
+  };
+
   return (
     <div className="query-container">
       <div style={{ display: "flex", alignItems: "center" }}>
@@ -714,7 +765,15 @@ const QueryBlocks = ({
       </div>{" "}
       <div className="blocks-container">
         <div className="task-block-container">
-          <span>
+          <span style={{ display: "flex", alignItems: "center" }}>
+            <LabelImportantIcon
+              style={{
+                height: "16px",
+                width: "16px",
+                color: "red",
+                marginRight: "4px",
+              }}
+            />
             <b>Task Specifications</b>
           </span>
           <div className="task-block">
@@ -751,8 +810,8 @@ const QueryBlocks = ({
           <div></div>
           {taskRec?.length > 0 && (
             <div className="task-message-container" style={{ width: "100%" }}>
-              <div style={{ fontWeight: "600" }}>
-                Suggestions to refine your search query:
+              <div style={{ fontWeight: "600", fontSize: "15px" }}>
+                Suggestions to Refine your Search Query:
               </div>
 
               {taskRec.map(([key, value], index) => (
@@ -769,7 +828,15 @@ const QueryBlocks = ({
         </div>
 
         <div className="filter-block-container">
-          <span>
+          <span style={{ display: "flex", alignItems: "center" }}>
+            <LabelImportantIcon
+              style={{
+                height: "16px",
+                width: "16px",
+                color: "blue",
+                marginRight: "4px",
+              }}
+            />
             <b>Filters ({filters.filter((filter) => filter.visible).length})</b>
           </span>
           <div className="filter-block">
@@ -803,8 +870,28 @@ const QueryBlocks = ({
           </div>
 
           {colRec?.length > 0 && (
-            <div className="col-rec-container" style={{ marginTop: "12px" }}>
-              <div style={{ fontWeight: "600" }}>Filter by column topics:</div>
+            <div className="col-rec-container">
+              <div
+                style={{
+                  fontWeight: "600",
+                  display: "flex",
+                  alignItems: "center",
+                  marginBottom: "4px",
+                  fontSize: "15px",
+                }}
+              >
+                {" "}
+                <AutoAwesomeIcon
+                  style={{
+                    height: "16px",
+                    width: "16px",
+                    color: "orange",
+                    marginRight: "14px",
+                    marginLeft: "2px",
+                  }}
+                />
+                Smart Filter by Column Concept:
+              </div>
 
               {filteredColRecWithIndices.map(
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -815,7 +902,7 @@ const QueryBlocks = ({
                         display: "flex",
                         alignItems: "center",
                         gap: "8px",
-                        marginLeft: "8px",
+                        marginLeft: "30px",
                       }}
                     >
                       <input
@@ -830,7 +917,15 @@ const QueryBlocks = ({
                   </div>
                 )
               )}
-              <div style={{ fontWeight: "500", marginTop: "8px" }}>
+              <div
+                style={{
+                  fontWeight: "500",
+                  marginTop: "8px",
+                  marginLeft: "30px",
+                  fontSize: "12px",
+                  color: "darkblue",
+                }}
+              >
                 <i>Remaining datasets: {datasetCount}</i>
               </div>
 
@@ -840,11 +935,68 @@ const QueryBlocks = ({
                   updateFilteredDatasets();
                 }}
                 className="metadata-button"
+                style={{
+                  marginLeft: "24px",
+                }}
               >
                 apply filters
               </button>
             </div>
           )}
+
+          <div className="col-rec-container" style={{ marginBottom: "12px" }}>
+            {" "}
+            <div
+              style={{
+                fontWeight: "600",
+                display: "flex",
+                alignItems: "center",
+                marginBottom: "4px",
+                marginTop: "24px",
+              }}
+            >
+              <CreateIcon
+                style={{
+                  height: "16px",
+                  width: "16px",
+                  color: "black",
+                  marginRight: "12px",
+                  marginLeft: "2px",
+                }}
+              />
+              Want to filter using your own Column Concept?
+            </div>
+            <div
+              style={{
+                display: "flex",
+                gap: "8px",
+                marginTop: "8px",
+                alignItems: "center",
+                width: "100%",
+              }}
+            >
+              <input
+                type="text"
+                placeholder="Enter column name..."
+                value={hnswColumn}
+                onChange={(e) => setHnswColumn(e.target.value)}
+                style={{
+                  padding: "8px",
+                  height: "28px",
+                  borderRadius: "10px",
+                  border: "1px solid #2363eb",
+                  width: "90%",
+                }}
+              />
+              <button
+                onClick={() => handleColumnSearch(hnswColumn)}
+                className="metadata-button"
+                style={{ marginTop: "0px" }}
+              >
+                try
+              </button>
+            </div>
+          </div>
         </div>
         <FilterPrompt
           isOpen={isModalOpen}
