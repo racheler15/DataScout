@@ -490,6 +490,12 @@ def relevance_map():
 
     results_df = pd.DataFrame(results)
     relevance_results = []
+    
+    if index > len(results) or len(results)==0:
+        return jsonify({
+        "results": relevance_results,
+    })
+
     schema = results_df.loc[index, 'example_rows_md']
     description = results_df.loc[index, 'dataset_context']
     source = results_df.loc[index, 'dataset_collection_method']
