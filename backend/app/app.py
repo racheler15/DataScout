@@ -154,7 +154,7 @@ def initial_search():
 
     try:
         logging.info("Starting hyse")
-        initial_results, _, _ = hyse_search(initial_query, search_space=None, num_schema=1, k=50)  # Keep top 50 results in initial search
+        initial_results, _, _ = hyse_search(initial_query, search_space=None, num_schema=3, k=50)  # Keep top 50 results in initial search
         logging.info("finished hyse")
         # append_system_response(chat_history, thread_id, initial_results, refine_type="semantic")
 

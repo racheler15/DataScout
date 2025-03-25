@@ -107,7 +107,7 @@ def hyse_search(initial_query, search_space=None, num_schema=1, k=10, table_name
 
     # Sort aggregated results by cosine similarity and keep top k
     aggregated_results.sort(key=lambda x: x['cosine_similarity'], reverse=True)
-    top_k_results = aggregated_results[:k]
+    top_k_results = aggregated_results
 
     return top_k_results, single_hypo_schema_json, single_hypo_schema_embedding
 
