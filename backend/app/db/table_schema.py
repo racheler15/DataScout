@@ -27,9 +27,7 @@ table_schema_dict_frontend = {
     "popularity": "INT",
     "usability_rating": "DECIMAL",
     "tags": "TEXT[]",
-    "file_size_in_byte": "INT",
-    "keywords": "TEXT[]",
-    
+    "file_size_in_byte": "INT",    
 }
 
 metadata_filtering_operations = {
@@ -42,7 +40,6 @@ metadata_filtering_operations = {
     "usability_rating": [">", "<", ">=", "<=", "="],
     "tags": ["includes"],
     "file_size_in_byte": [">", "<", ">=", "<=", "="],
-    "keywords": ["includes"],
 }
 
 metadata_values = {
@@ -55,7 +52,6 @@ metadata_values = {
     "usability_rating": [],
     "tags": [],
     "file_size_in_byte": [],
-    "keywords": [],
     
 }
 
@@ -69,5 +65,4 @@ metadata_descriptions = {
     "usability_rating": "User rating of dataset usability, scale from 0% to 100%.",
     "tags": "Tags associated with the dataset.",
     "file_size_in_byte": "Size of the dataset in bytes.",
-    "keywords": "Keywords related to the dataset.",
 }

@@ -196,9 +196,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
 
     const columnDescriptionsMap = parsed.reduce(
       (acc: Record<string, string>, { col_name, type_and_description }) => {
-        console.log("Current col_name:", col_name);
-        console.log("Current type_and_description:", type_and_description);
-        console.log("Current accumulator:", acc);
+      
         acc[normalizeKey(col_name)] = type_and_description;
         return acc;
       },
