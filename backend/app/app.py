@@ -154,7 +154,7 @@ def initial_search():
 
     try:
         logging.info("Starting hyse")
-        initial_results, _, _ = hyse_search(initial_query, search_space=None, num_schema=1, k=50)  # Keep top 50 results in initial search
+        initial_results, _, _ = hyse_search(initial_query, search_space=None, num_schema=3, k=50)  # Keep top 50 results in initial search
         logging.info("finished hyse")
         # append_system_response(chat_history, thread_id, initial_results, refine_type="semantic")
 
@@ -329,17 +329,22 @@ def suggest_relevant_cols():
     column_names = []  
     dataset_names = []  
 
+    logging.info("SUGGEST_RELEVANT_COLS")
     # Iterate through each row in the results DataFrame and extract the example schema
     for _, row in results_df.iterrows():
         column_embedding_dict = ast.literal_eval(row['example_cols_embed'])
         dataset_name = row['table_name'] 
+        # for column_name, embedding in column_embedding_dict.items():
+        #     column_names.append(column_name)  
+        #     column_embeddings.append(embedding) 
+        #     dataset_names.append(dataset_name) 
         for column_name, embedding in column_embedding_dict.items():
-            column_names.append(column_name)  
-            column_embeddings.append(embedding) 
-            dataset_names.append(dataset_name) 
-
-    # Log the number of columns processed
-    logging.info(f"Processed {len(column_names)} columns.")
+            if isinstance(embedding, (list, np.ndarray)) and len(embedding) == 1536:
+                column_names.append(column_name)  
+                column_embeddings.append(embedding) 
+                dataset_names.append(dataset_name)
+            else:
+                logging.warning(f"❌ Skipping column '{column_name}' in dataset '{dataset_name}': Expected length 1536, got {len(embedding) if isinstance(embedding, (list, np.ndarray)) else 'Invalid type'}")
 
     # Convert the list of embeddings into a NumPy array (one embedding per row)
     embedding_matrix = np.array(column_embeddings)
@@ -729,6 +734,31 @@ def remove_metadata_update():
             logging.info(len(filtered_results))
             final_results = filtered_results.to_dict(orient="records")
         
+        # elif selected_filter in ["time_granu", "geo_granu"]:
+        #     clean_search_input = [search_value]
+        #     logging.info(clean_search_input)
+
+        #     temp_results = []
+        #     for row in final_results:
+        #         matches_all_inputs = True  
+
+        #         if isinstance(value, list):  
+        #             # Check if any item in the list matches exactly
+        #             if input_value not in map(str, value):
+        #                 matches_all_inputs = False
+        #                 break  
+        #         elif isinstance(value, str):  
+        #             words_in_value = value.split()
+        #             # Check if any word in the string matches exactly
+        #             if input_value not in words_in_value:
+        #                 matches_all_inputs = False
+        #                 break  
+
+        #         if matches_all_inputs:
+        #             temp_results.append(row)
+
+        #     final_results = temp_results  # Update after filtering
+
         
 
     results_df = pd.DataFrame(final_results)
