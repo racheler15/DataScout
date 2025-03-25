@@ -36,3 +36,20 @@ class DatabaseConnection:
         self.cursor.close()
         self.conn.close()
 
+    def reset_connection(self):
+        """Reset the connection and cursor."""
+        try:
+            # Close current connection and cursor
+            if self.cursor:
+                self.cursor.close()
+            if self.conn:
+                self.conn.close()
+
+            # Re-establish connection and cursor
+            self.conn = get_db_connection()
+            self.cursor = self.conn.cursor()
+
+            print("Database connection and cursor have been reset.")
+        except Exception as error:
+            print(f"Error resetting connection: {error}")
+            raise error

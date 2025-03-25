@@ -20,14 +20,14 @@ Only generate one table schema, excluding any introductory phrases and focusing 
 Generate a JSON with keys as table names and values as column names, data types, and example rows. For example:
 
 Task:
-What data is needed to train a machine learning model to forecast demand for medicines across suppliers?
+What data is needed to train a machine learning model to predict housing prices?
 
 Output: 
 {{
-    "table_name": "Sales",
-    "column_names": ["sale_id", "medicine_id", "supplier_id", "quantity_sold", "sale_date", "price", "region"],
-    "data_types": ["INT", "INT", "INT", "INT", "DATE", "DECIMAL", "VARCHAR"],
-    "example_row": [1, 101, 201, 50, "2024-06-01", 19.99, "North America"]
+    "table_name": "Open Domain QA",
+    "column_names": ["id", "question", "context", "answer", "source"],
+    "data_types": ["INT", "TEXT", "TEXT", "TEXT", "TEXT"],
+    "example_row": [1, "What is the capital of France?", "France is a country in Europe. Its capital is Paris.", "Paris", "Wikipedia"]
 }}
 """
 
@@ -36,22 +36,23 @@ Given the task of {query}, generate a database schema of at least 1, and at most
 Generate a list in which each element is a JSON with keys as table names and values as column names, data types, and example rows. For example:
 
 Task:
-What data is needed to train a machine learning model to forecast demand for medicines across suppliers?
+What data is needed to train a machine learning model to predict housing prices?
 
 Output: 
 [
   {{
-    "table_name": "Sales",
-    "column_names": ["sale_id", "medicine_id", "supplier_id", "quantity_sold", "sale_date", "price", "region"],
-    "data_types": ["INT", "INT", "INT", "INT", "DATE", "DECIMAL", "VARCHAR"],
-    "example_row": [1, 101, 201, 50, "2024-06-01", 19.99, "North America"]
+    "table_name": "Open Domain QA",
+    "column_names": ["id", "question", "context", "answer", "source"],
+    "data_types": ["INT", "TEXT", "TEXT", "TEXT", "TEXT"],
+    "example_row": [1, "What is the capital of France?", "France is a country in Europe. Its capital is Paris.", "Paris", "Wikipedia"]
   }},
   {{
-    "table_name": "Medicine",
-    "column_names": ["medicine_id", "name", "type", "dosage", "packaging", "shelf_life", "supplier_id"],
-    "data_types": ["INT", "VARCHAR", "VARCHAR", "VARCHAR", "VARCHAR", "INT", "INT"],
-    "example_row": [101, "Aspirin", "Pain Reliever", "500mg", "Bottle", 24, 201]
-  }}
+    "table_name": "Multilingual Multichoice QA",
+    "column_names": ["id", "language", "question", "option_a", "option_b", "option_c", "option_d", "correct_answer", "translation_en"],
+    "data_types": ["INT", "TEXT", "TEXT", "TEXT", "TEXT", "TEXT", "TEXT", "CHAR(1)", "TEXT"],
+    "example_row": [101, "es", "¿Cuál es la capital de Alemania?", "Berlín", "Madrid", "París", "Roma", "A", "What is the capital of Germany?"]
+  }},
+  ...
 ]
 """
 
@@ -63,7 +64,7 @@ class TableSchema(BaseModel):
     data_types: List[str]
     example_row: List[Any]
 
-def hyse_search(initial_query, search_space=None, num_schema=1, k=10, table_name="eval_final_all_with_descriptions", column_name="example_rows_embed"):
+def hyse_search(initial_query, search_space=None, num_schema=3, k=10, table_name="eval_final_all_user_study", column_name="example_rows_embed"):
     # Step 0: Initialize the results list and num_left
     results = []
     num_left = num_schema
@@ -107,7 +108,9 @@ def hyse_search(initial_query, search_space=None, num_schema=1, k=10, table_name
 
     # Sort aggregated results by cosine similarity and keep top k
     aggregated_results.sort(key=lambda x: x['cosine_similarity'], reverse=True)
-    top_k_results = aggregated_results
+
+
+    top_k_results = aggregated_results[:k]
 
     return top_k_results, single_hypo_schema_json, single_hypo_schema_embedding
 
@@ -137,7 +140,7 @@ def infer_multiple_hypothetical_schema(initial_query, num_left):
     m = len(response)
     return response, m
 
-def hnsw_search(column, search_space, table_name="eval_final_all_column_embeddings", column_name="embedding"):
+def hnsw_search(column, search_space, table_name="eval_final_all_user_study_column_embeddings", column_name="embedding"):
     logging.info(column)
     given_column_embedding = openai_client.generate_embeddings(column) 
     table_names = [item['table_name'] for item in search_space]
@@ -181,7 +184,7 @@ def hnsw_search(column, search_space, table_name="eval_final_all_column_embeddin
         logging.info(filtered_datasets)
         return filtered_datasets
 
-def cos_sim_search(input_embedding, search_space, table_name="eval_final_all_with_descriptions", column_name="example_rows_embed"):  
+def cos_sim_search(input_embedding, search_space, table_name="eval_final_all_user_study", column_name="example_rows_embed"):  
     # Ensure input_embedding is a list before passing to execute
     if isinstance(input_embedding, np.ndarray):
         input_embedding = input_embedding.tolist()
@@ -191,18 +194,26 @@ def cos_sim_search(input_embedding, search_space, table_name="eval_final_all_wit
         input_embedding = list(input_embedding)
     
     with DatabaseConnection() as db:
+        db.reset_connection()
+
         if search_space:
             # Filter by specific table names
             query = f"""
                 SELECT *, 1 - ({column_name} <=> %s::VECTOR(1536)) AS cosine_similarity
                 FROM {table_name}
                 WHERE table_name = ANY(%s)
-                ORDER BY cosine_similarity DESC
-                LIMIT 50;
+                ORDER BY cosine_similarity DESC;
             """
             db.cursor.execute(query, (input_embedding, search_space))
         else:
             # No specific search space, search through all table names
+            logging.info("COLLECTING COUNT")
+            print(f"Executing query: SELECT COUNT(*) FROM {table_name};")
+            query = "SELECT COUNT(*) FROM eval_final_all_user_study;"
+            db.cursor.execute(query)
+            row_count = db.cursor.fetchone()['count']  # Fetch the count result as a dictionary
+            print(f"Total rows in eval_final_all_user_study: {row_count}")
+
             query = f"""
                 SELECT *, 1 - ({column_name} <=> %s::VECTOR(1536)) AS cosine_similarity
                 FROM {table_name}
@@ -224,7 +235,15 @@ def aggregate_hyse_search_results(results):
     logging.info("AGGREGATE_HYSE")
     # Aggregate by table name and calculate mean cosine similarity
     aggregated_results = {}
+    logging.info("TRYING RESULTS")
     for result in flat_results:
+        db_name = result['database_name'].lower()
+        logging.info(db_name)
+
+        if "building data genome" in db_name or "georgia voter lists" in db_name:
+            logging.info("SKIPPING")
+            continue
+        
         table_name = result['table_name']
         database_name = result['database_name']
         cosine_similarity = result['cosine_similarity']
@@ -309,7 +328,7 @@ def most_popular_datasets():
         # No specific search space, search through all table names
         query = f"""
             SELECT *
-            FROM eval_final_all_with_descriptions
+            FROM eval_final_all
             ORDER BY usability_rating DESC
             LIMIT 10
         """
@@ -322,7 +341,7 @@ def get_datasets():
         # No specific search space, search through all table names
         query = f"""
             SELECT *
-            FROM eval_final_all_with_descriptions
+            FROM eval_final_all
         """
         db.cursor.execute(query)    
         results = db.cursor.fetchall()
