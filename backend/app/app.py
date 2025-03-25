@@ -707,12 +707,12 @@ def remove_metadata_update():
                 for input_value in clean_search_input:
                     value = row.get(selected_filter)
                     if isinstance(value, list):  
-                        if not any(fuzzy_match(input_value, str(item), 70) for item in value):
+                        if not any(fuzzy_match(input_value, str(item), 80) for item in value):
                             matches_all_inputs = False
                             break  
                     elif isinstance(value, str):  
                         words_in_value = value.split()
-                        if not any(fuzzy_match(input_value, word, 70) for word in words_in_value):
+                        if not any(fuzzy_match(input_value, word, 80) for word in words_in_value):
                             matches_all_inputs = False
                             break  
 
@@ -810,14 +810,14 @@ def manual_metadata():
                 value = row.get(selected_filter)
                 if isinstance(value, list):  # Handle lists (e.g., tags, keywords)
                     # Check if any item in the list matches the current search input
-                    if not any(fuzzy_match(input, str(item), 70) for item in value):
+                    if not any(fuzzy_match(input, str(item), 80) for item in value):
                         matches_all_inputs = False
                         break  # No need to check further if one input doesn't match
 
                 elif isinstance(value, str):  # Handle single string fields
                     words_in_value = value.split()  # Split the string into individual words
                     # Check if any word in the value matches the current search input
-                    if not any(fuzzy_match(input, word, 70) for word in words_in_value):
+                    if not any(fuzzy_match(input, word, 80) for word in words_in_value):
                         matches_all_inputs = False
                         break  # No need to check further if one input doesn't match
 
