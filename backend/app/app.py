@@ -728,6 +728,8 @@ def remove_metadata_update():
             filtered_results = df.query(query).copy()
             logging.info(len(filtered_results))
             final_results = filtered_results.to_dict(orient="records")
+        
+        
 
     results_df = pd.DataFrame(final_results)
     filtered_results_df = results_df[results_df["table_name"].isin(unique_datasets)].copy()
