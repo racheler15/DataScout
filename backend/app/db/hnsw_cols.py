@@ -44,8 +44,8 @@ def insert_column_embeddings():
         db.conn.commit()
         print("✅ pgvector extension enabled successfully.")
 
-        table_name = 'eval_final_all_with_descriptions'
-        csv_file_path = "/Users/raelin/HITS/scripts/final_eval_data_with_descriptions.csv"
+        table_name = 'eval_final_all'
+        csv_file_path = "/Users/raelin/HITS/scripts/combined_1.csv"
         if not os.path.exists(csv_file_path):
             print(f"CSV file {csv_file_path} does not exist.")
             return

@@ -63,7 +63,7 @@ class TableSchema(BaseModel):
     data_types: List[str]
     example_row: List[Any]
 
-def hyse_search(initial_query, search_space=None, num_schema=1, k=10, table_name="eval_final_all_with_descriptions", column_name="example_rows_embed"):
+def hyse_search(initial_query, search_space=None, num_schema=1, k=10, table_name="eval_final_all", column_name="example_rows_embed"):
     # Step 0: Initialize the results list and num_left
     results = []
     num_left = num_schema
@@ -181,7 +181,7 @@ def hnsw_search(column, search_space, table_name="eval_final_all_column_embeddin
         logging.info(filtered_datasets)
         return filtered_datasets
 
-def cos_sim_search(input_embedding, search_space, table_name="eval_final_all_with_descriptions", column_name="example_rows_embed"):  
+def cos_sim_search(input_embedding, search_space, table_name="eval_final_all", column_name="example_rows_embed"):  
     # Ensure input_embedding is a list before passing to execute
     if isinstance(input_embedding, np.ndarray):
         input_embedding = input_embedding.tolist()
@@ -191,21 +191,29 @@ def cos_sim_search(input_embedding, search_space, table_name="eval_final_all_wit
         input_embedding = list(input_embedding)
     
     with DatabaseConnection() as db:
+        db.reset_connection()
+
         if search_space:
             # Filter by specific table names
             query = f"""
                 SELECT *, 1 - ({column_name} <=> %s::VECTOR(1536)) AS cosine_similarity
                 FROM {table_name}
                 WHERE table_name = ANY(%s)
-                ORDER BY cosine_similarity DESC
-                LIMIT 50;
+                ORDER BY cosine_similarity DESC;
             """
             db.cursor.execute(query, (input_embedding, search_space))
         else:
             # No specific search space, search through all table names
+            logging.info("COLLECTING COUNT")
+            print(f"Executing query: SELECT COUNT(*) FROM {table_name};")
+            query = "SELECT COUNT(*) FROM eval_final_all;"
+            db.cursor.execute(query)
+            row_count = db.cursor.fetchone()['count']  # Fetch the count result as a dictionary
+            print(f"Total rows in eval_final_all: {row_count}")
+
             query = f"""
                 SELECT *, 1 - ({column_name} <=> %s::VECTOR(1536)) AS cosine_similarity
-                FROM {table_name}
+                FROM eval_final_all
                 ORDER BY cosine_similarity DESC
                 LIMIT 50;
             """
@@ -309,7 +317,7 @@ def most_popular_datasets():
         # No specific search space, search through all table names
         query = f"""
             SELECT *
-            FROM eval_final_all_with_descriptions
+            FROM eval_final_all
             ORDER BY usability_rating DESC
             LIMIT 10
         """
@@ -322,7 +330,7 @@ def get_datasets():
         # No specific search space, search through all table names
         query = f"""
             SELECT *
-            FROM eval_final_all_with_descriptions
+            FROM eval_final_all
         """
         db.cursor.execute(query)    
         results = db.cursor.fetchall()

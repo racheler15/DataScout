@@ -15,7 +15,7 @@ table_schema_dict = {
     "task_queries": "TEXT[]",
     "metadata_queries": "JSONB",
     "example_rows_embed": "VECTOR(1536)",
-    "example_cows_embed": "TEXT"
+    "example_cols_embed": "TEXT"
 }
 
 table_schema_dict_frontend = {
@@ -32,8 +32,6 @@ table_schema_dict_frontend = {
     "tags": "TEXT[]",
     "file_size_in_MB": "INT",
     "keywords": "TEXT[]",
-
-    
 }
 
 metadata_filtering_operations = {

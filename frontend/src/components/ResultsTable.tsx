@@ -78,7 +78,6 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
     }
   }, [selectedIndex]);
 
-
   const ResultItem: React.FC<ResultItemProps> = ({
     dataset,
     index,
@@ -146,23 +145,59 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
     // Parse columnDescriptions with selective replacement of single quotes
     let parsed: ColumnDescription[] = [];
     try {
-      // Replace only single quotes used as delimiters (around keys and values)
-      const fixedColumnDescriptions = columnDescriptions
-        .replace(/'(\w+)':/g, '"$1":') // Replace keys
-        .replace(/: '(.*?)'/g, ': "$1"'); // Replace values
-
-      // Parse the JSON string
-      parsed = JSON.parse(fixedColumnDescriptions);
+      // Log the input for better debugging
+      console.log("COLUMNS", columnDescriptions);
+      console.log("DATA", data);
+        
+      if (typeof columnDescriptions === 'string') {
+        const trimmed = columnDescriptions.trim();
+        
+        // Check for dictionary format (starts with [{ and ends with }])
+        if (trimmed.startsWith('[{') && trimmed.endsWith('}]')) {
+          // Your existing dictionary parsing logic
+          const fixedColumnDescriptions = trimmed
+            .replace(/'(\w+)':/g, '"$1":')
+            .replace(/: '(.*?)'/g, ': "$1"');
+          
+          parsed = JSON.parse(fixedColumnDescriptions);
+        } 
+        // Otherwise treat as string array format
+        else {
+          const entries = trimmed
+            .replace(/^\[|\]$/g, '')
+            .replace(/"/g, '')
+            .split(',')
+            .map(s => s.trim())
+            .filter(s => s.length > 0);
+    
+          parsed = entries.map(entry => {
+            const colonIndex = entry.indexOf(':');
+            return {
+              col_name: colonIndex === -1 ? entry : entry.substring(0, colonIndex).trim(),
+              type_and_description: colonIndex === -1 ? '' : entry.substring(colonIndex + 1).trim()
+            };
+          });
+        }
+      }
+      // If already an array (either format), use as-is
+      else if (Array.isArray(columnDescriptions)) {
+        parsed = columnDescriptions;
+      }
+    
     } catch (error) {
       console.error("Error parsing columnDescriptions:", error);
-      parsed = [];
+      parsed = []; // Set empty array in case of error
     }
+    console.log("PARSED", parsed);
 
     // Normalize keys in columnDescriptionsMap
     const normalizeKey = (key: string) => key.trim().toLowerCase();
 
     const columnDescriptionsMap = parsed.reduce(
       (acc: Record<string, string>, { col_name, type_and_description }) => {
+        console.log("Current col_name:", col_name);
+        console.log("Current type_and_description:", type_and_description);
+        console.log("Current accumulator:", acc);
         acc[normalizeKey(col_name)] = type_and_description;
         return acc;
       },
@@ -172,6 +207,8 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
     // Extract CSV headers and rows
     const rows = data.split("\n");
     const headers = rows[0].split(csvDelimiter);
+    console.log(rows);
+    console.log(headers);
 
     // Filter out empty columns from headers and rows
     const filteredHeaders = headers.filter((header) => header.trim() !== "");
