@@ -45,8 +45,9 @@ const Settings = ({
     "LLM pretraining",
     "LLM finetuning",
     "Question-Answering",
+    "Analyze",
     "Not sure yet",
-    "+ Add option",
+    // "+ Add option",
   ]);
   const [showInput, setShowInput] = useState(false);
   const [newGoal, setNewGoal] = useState("");
