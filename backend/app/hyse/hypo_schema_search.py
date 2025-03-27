@@ -240,7 +240,7 @@ def aggregate_hyse_search_results(results):
         db_name = result['database_name'].lower()
         logging.info(db_name)
 
-        keywords = ["building data genome", "georgia voter lists", "ohio census data", "costa rica", "life expectancy", "who health indicators", "nasdaq"]
+        keywords = ["building data genome", "georgia voter lists", "ohio census data", "costa rica", "life expectancy", "who health indicators", "nasdaq", "coffee"]
 
         if any(keyword in db_name for keyword in keywords):            
             logging.info("SKIPPING")
