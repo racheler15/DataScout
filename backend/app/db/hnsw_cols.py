@@ -18,9 +18,9 @@ openai_client = OpenAIClient()
 def create_column_embeddings_table():
     with DatabaseConnection() as db:
         query = """
-        CREATE TABLE IF NOT EXISTS matthew_column_embeddings (
+        CREATE TABLE IF NOT EXISTS richard_lillian_combined_column_embeddings (
             eval_row_id SERIAL PRIMARY KEY,  -- Unique row in new table
-            table_name TEXT NOT NULL,  -- Reference to the table_name in matthew
+            table_name TEXT NOT NULL,  -- Reference to the table_name in richard_lillian_combined
             column_name TEXT NOT NULL,  -- Column name within the dataset
             embedding VECTOR(1536)  -- Store the embedding vector
         );
@@ -30,12 +30,12 @@ def create_column_embeddings_table():
 
         # Create index using HNSW for efficient nearest neighbor search
         index_query = """
-        CREATE INDEX IF NOT EXISTS matthew_column_embeddings_idx
-        ON matthew_column_embeddings USING hnsw (embedding vector_cosine_ops) WITH (m = 16, ef_construction = 64);
+        CREATE INDEX IF NOT EXISTS richard_lillian_combined_column_embeddings_idx
+        ON richard_lillian_combined_column_embeddings USING hnsw (embedding vector_cosine_ops) WITH (m = 16, ef_construction = 64);
         """
         db.cursor.execute(index_query)
         db.conn.commit()
-        print("✅ Index matthew_column_embeddings_idx created successfully.")
+        print("✅ Index richard_lillian_combined_column_embeddings_idx created successfully.")
 
 
 def insert_column_embeddings():
@@ -44,8 +44,8 @@ def insert_column_embeddings():
         db.conn.commit()
         print("✅ pgvector extension enabled successfully.")
 
-        table_name = 'matthew'
-        csv_file_path = "/Users/raelin/HITS/scripts/matthew.csv"
+        table_name = 'richard_lillian_combined'
+        csv_file_path = "/Users/raelin/HITS/scripts/richard_lillian_combined.csv"
         if not os.path.exists(csv_file_path):
             print(f"CSV file {csv_file_path} does not exist.")
             return
@@ -59,13 +59,13 @@ def insert_column_embeddings():
         df = pd.read_csv(csv_file_path)
 
         # Query to fetch the rows from eval_cols_test
-        query = "SELECT table_name, example_cols_embed FROM matthew"
+        query = "SELECT table_name, example_cols_embed FROM richard_lillian_combined"
         db.cursor.execute(query)
         rows = db.cursor.fetchall()
         print(rows[0:5])
 
         insert_query = """
-        INSERT INTO matthew_column_embeddings (table_name, column_name, embedding)
+        INSERT INTO richard_lillian_combined_column_embeddings (table_name, column_name, embedding)
         VALUES (%s, %s, %s)
         """
 
