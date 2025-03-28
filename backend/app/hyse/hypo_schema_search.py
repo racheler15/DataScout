@@ -64,7 +64,7 @@ class TableSchema(BaseModel):
     data_types: List[str]
     example_row: List[Any]
 
-def hyse_search(initial_query, search_space=None, num_schema=3, k=10, table_name="richard_lillian_combined", column_name="example_rows_embed"):
+def hyse_search(initial_query, search_space=None, num_schema=3, k=10, table_name="eval_final_all", column_name="example_rows_embed"):
     # Step 0: Initialize the results list and num_left
     results = []
     num_left = num_schema
@@ -140,7 +140,7 @@ def infer_multiple_hypothetical_schema(initial_query, num_left):
     m = len(response)
     return response, m
 
-def hnsw_search(column, search_space, table_name="richard_lillian_combined_column_embeddings", column_name="embedding"):
+def hnsw_search(column, search_space, table_name="eval_final_all_column_embeddings", column_name="embedding"):
     logging.info(column)
     given_column_embedding = openai_client.generate_embeddings(column) 
     table_names = [item['table_name'] for item in search_space]
@@ -184,7 +184,7 @@ def hnsw_search(column, search_space, table_name="richard_lillian_combined_colum
         logging.info(filtered_datasets)
         return filtered_datasets
 
-def cos_sim_search(input_embedding, search_space, table_name="richard_lillian_combined", column_name="example_rows_embed"):  
+def cos_sim_search(input_embedding, search_space, table_name="eval_final_all", column_name="example_rows_embed"):  
     # Ensure input_embedding is a list before passing to execute
     if isinstance(input_embedding, np.ndarray):
         input_embedding = input_embedding.tolist()
@@ -209,7 +209,7 @@ def cos_sim_search(input_embedding, search_space, table_name="richard_lillian_co
             # No specific search space, search through all table names
             logging.info("COLLECTING COUNT")
             print(f"Executing query: SELECT COUNT(*) FROM {table_name};")
-            query = "SELECT COUNT(*) FROM richard_lillian_combined;"
+            query = "SELECT COUNT(*) FROM eval_final_all;"
             db.cursor.execute(query)
             row_count = db.cursor.fetchone()['count']  # Fetch the count result as a dictionary
             print(f"Total rows in db: {row_count}")
