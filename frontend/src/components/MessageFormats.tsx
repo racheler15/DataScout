@@ -30,7 +30,6 @@ const Settings = ({
   settingsGenerate,
   setSettingsGenerate,
   onStart,
-  taskRec,
   setTaskRec,
   setResults,
   setTask,

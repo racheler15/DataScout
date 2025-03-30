@@ -320,7 +320,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
                     border: "1px solid #fdd4fd",
                   }}
                 >
-                  {query}
+                  {query.replace(/^'|'$/g, '')}
                 </div>
               ))
             : null}
