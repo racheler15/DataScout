@@ -44,7 +44,7 @@ const Settings = ({
     "LLM pretraining",
     "LLM finetuning",
     "Question-Answering",
-    "Analyze",
+    // "Analyze",
     "Not sure yet",
     // "+ Add option",
   ]);
