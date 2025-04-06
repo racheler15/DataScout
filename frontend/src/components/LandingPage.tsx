@@ -3,6 +3,8 @@ import "../styles/LandingPage.css";
 import Settings from "./MessageFormats";
 import { ResultProp } from "./ResultsTable";
 import axios from "axios";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
 
 interface LandingPageProps {
   onStart: () => void;
@@ -18,9 +20,8 @@ interface LandingPageProps {
   setSettingsGenerate: React.Dispatch<React.SetStateAction<boolean>>;
   results: ResultProp[];
   setResults: (a: ResultProp[]) => unknown;
-  setTaskRec: React.Dispatch<React.SetStateAction<[string, string][]>>;
-  taskRec: [string, string][];
-
+  setTaskRec: React.Dispatch<React.SetStateAction<[string, string, string[]][]>>;
+  taskRec: [string, string, string[]][];
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({
@@ -36,9 +37,11 @@ const LandingPage: React.FC<LandingPageProps> = ({
   setSettingsGenerate,
   setResults,
   setTaskRec,
-  taskRec
+  taskRec,
 }) => {
-  // Handle search input change
+  const [tempTask, setTempTask] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTempTask(e.target.value);
   };
@@ -61,7 +64,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
-      e.preventDefault(); // Prevents form from reloading the page
+      e.preventDefault();
       setTask(tempTask);
       fetchData();
       onStart();
@@ -69,11 +72,13 @@ const LandingPage: React.FC<LandingPageProps> = ({
     }
   };
 
-  const [tempTask, setTempTask] = useState("");
+  const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
+
   return (
     <div className="landing-container">
       <div className="search-path">
-        {" "}
         <h1 style={{ fontSize: "50px" }}>DataScout</h1>
         <p>Finding datasets dynamically with ease.</p>
         <form className="search-form">
@@ -89,28 +94,46 @@ const LandingPage: React.FC<LandingPageProps> = ({
       </div>
 
       <div className="system-path">
-        <h2>Getting started?</h2>
-        <p>
-          Answer a few questions to help you get started and brainstorm ideas
-          for your task.
-        </p>
-        <div className="settings-block">
-          <Settings
-            settingsSpecificity={settingsSpecificity}
-            setSettingsSpecificity={setSettingsSpecificity}
-            settingsGoal={settingsGoal}
-            setSettingsGoal={setSettingsGoal}
-            settingsDomain={settingsDomain}
-            setSettingsDomain={setSettingsDomain}
-            settingsGenerate={settingsGenerate}
-            setSettingsGenerate={setSettingsGenerate}
-            onStart={onStart}
-            taskRec={taskRec}
-            setTaskRec={setTaskRec}
-            setTask = {setTask}
-            setResults={setResults}
-          />
+        <div
+          className="dropdown-header"
+          onClick={toggleDropdown}
+          style={{ cursor: "pointer", display: "flex", alignItems: "center" }}
+        >
+          <h2>Getting started?</h2>
+          <span style={{ marginLeft: "10px" }}>
+            {isDropdownOpen ? (
+              <ArrowDropUpIcon style={{ height: "40px", width: "40px" }} />
+            ) : (
+              <ArrowDropDownIcon style={{ height: "40px", width: "40px" }} />
+            )}
+          </span>
         </div>
+
+        {isDropdownOpen && (
+          <>
+            <p>
+              Answer a few questions to help you get started and brainstorm
+              ideas for your task.
+            </p>
+            <div className="settings-block">
+              <Settings
+                settingsSpecificity={settingsSpecificity}
+                setSettingsSpecificity={setSettingsSpecificity}
+                settingsGoal={settingsGoal}
+                setSettingsGoal={setSettingsGoal}
+                settingsDomain={settingsDomain}
+                setSettingsDomain={setSettingsDomain}
+                settingsGenerate={settingsGenerate}
+                setSettingsGenerate={setSettingsGenerate}
+                onStart={onStart}
+                taskRec={taskRec}
+                setTaskRec={setTaskRec}
+                setTask={setTask}
+                setResults={setResults}
+              />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

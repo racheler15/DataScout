@@ -26,7 +26,9 @@
 .list {
   flex: 1;
   max-width: 400px;
-  overflow-y: auto;
+  overflow: hidden;
+  height: 100%;
+  padding-bottom: 100px;
 }
 
 .sticky-header {
@@ -50,10 +52,36 @@
 .selected {
   background-color: #a9c7ff3b;
 }
-.scrollable-dataset-results {
+/* .scrollable-dataset-results {
   flex-grow: 1;
   overflow-y: auto;
   margin-right: 12px;
+} */
+.scrollable-dataset-results {
+  flex-grow: 1;
+  height: 100%;  /* or a fixed height like 300px */
+  overflow-y: scroll;  /* This will always show the scrollbar */
+  margin-right: 12px;
+  padding-right: 8px;
+}
+
+/* Optional: Style the scrollbar for better visibility in Chrome */
+.scrollable-dataset-results::-webkit-scrollbar {
+
+  width: 10px;  /* Set the width of the scrollbar */
+}
+
+.scrollable-dataset-results::-webkit-scrollbar-track {
+  background: #f1f1f1;  /* Track color */
+}
+
+.scrollable-dataset-results::-webkit-scrollbar-thumb {
+  background: #888;  /* Scrollbar thumb color */
+  border-radius: 10px;  /* Rounded edges */
+}
+
+.scrollable-dataset-results::-webkit-scrollbar-thumb:hover {
+  background: #555;  /* Hover color */
 }
 
 
@@ -187,11 +215,11 @@
 }
 
 .table-view {
-  width: 100%; /* Take full width of the container */
-  overflow-x: auto; /* Enable horizontal scrolling */
-  overflow-y: auto; /* Enable vertical scrolling if needed */
-  max-height: 50vh; /* Limit height to prevent excessive vertical expansion */
-  border: 1px solid #ddd; /* Optional: Add a border for clarity */
+  width: 100%;
+  overflow-x: scroll;  /* Always show horizontal scrollbar */
+  overflow-y: hidden;  /* Hide vertical scrollbar */
+  max-height: 50vh; 
+  border: 1px solid #ddd; 
 }
 
 .table-view table {
@@ -205,6 +233,25 @@
   padding: 8px; /* Add padding for better readability */
   border: 1px solid #ddd; /* Optional: Add borders to cells */
 }
+
+/* Optional: Style the scrollbar for better visibility in Chrome */
+.table-view::-webkit-scrollbar {
+  height: 12px;  /* Horizontal scrollbar height */
+}
+
+.table-view::-webkit-scrollbar-track {
+  background: #f1f1f1;  /* Track color */
+}
+
+.table-view::-webkit-scrollbar-thumb {
+  background: #888;  /* Scrollbar thumb color */
+  border-radius: 10px;  /* Rounded edges */
+}
+
+.table-view::-webkit-scrollbar-thumb:hover {
+  background: #555;  /* Hover color */
+}
+
 .preview-title {
   display: flex;
   align-items: center;
@@ -219,8 +266,8 @@
 }
 .table-scroll-container {
   width: 100%;
-  overflow-x: auto; /* Enable horizontal scrolling */
-  border: 1px solid #ddd; /* Optional: Add a border for clarity */
+  overflow-x: auto; 
+  border: 1px solid #ddd;
 }
 
 .markdown-content {

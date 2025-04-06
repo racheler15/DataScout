@@ -64,7 +64,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
   filters,
 }: ResultsTableProps) => {
   const [selectedIndex, handleSelectedIndex] = useState(0);
-  const pageSize = 50;
+  const pageSize = 200;
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
 
@@ -146,8 +146,8 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
     let parsed: ColumnDescription[] = [];
     try {
       // Log the input for better debugging
-      console.log("COLUMNS", columnDescriptions);
-      console.log("DATA", data);
+      // console.log("COLUMNS", columnDescriptions);
+      // console.log("DATA", data);
         
       if (typeof columnDescriptions === 'string') {
         const trimmed = columnDescriptions.trim();
@@ -188,16 +188,16 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
       console.error("Error parsing columnDescriptions:", error);
       parsed = []; // Set empty array in case of error
     }
-    console.log("PARSED", parsed);
+    // console.log("PARSED", parsed);
 
     // Normalize keys in columnDescriptionsMap
     const normalizeKey = (key: string) => key.trim().toLowerCase();
 
     const columnDescriptionsMap = parsed.reduce(
       (acc: Record<string, string>, { col_name, type_and_description }) => {
-        console.log("Current col_name:", col_name);
-        console.log("Current type_and_description:", type_and_description);
-        console.log("Current accumulator:", acc);
+        // console.log("Current col_name:", col_name);
+        // console.log("Current type_and_description:", type_and_description);
+        // console.log("Current accumulator:", acc);
         acc[normalizeKey(col_name)] = type_and_description;
         return acc;
       },
@@ -207,8 +207,8 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
     // Extract CSV headers and rows
     const rows = data.split("\n");
     const headers = rows[0].split(csvDelimiter);
-    console.log(rows);
-    console.log(headers);
+    // console.log(rows);
+    // console.log(headers);
 
     // Filter out empty columns from headers and rows
     const filteredHeaders = headers.filter((header) => header.trim() !== "");

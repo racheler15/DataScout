@@ -24,7 +24,7 @@ function App() {
   const [settingsGoal, setSettingsGoal] = useState<string>("");
   const [settingsDomain, setSettingsDomain] = useState<string>("");
   const [settingsGenerate, setSettingsGenerate] = useState(false);
-  const [taskRec, setTaskRec] = useState<[string, string][]>([]);
+  const [taskRec, setTaskRec] = useState<[string, string, string[]][]>([]);
   const [filters, setFilters] = useState<MetadataFilter[]>([]);
   // prevent back refresh
 

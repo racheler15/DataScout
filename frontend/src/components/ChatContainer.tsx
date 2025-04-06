@@ -21,8 +21,8 @@ interface ChatContainerProps {
   setSettingsDomain: React.Dispatch<React.SetStateAction<string>>;
   settingsGenerate: boolean;
   setSettingsGenerate: React.Dispatch<React.SetStateAction<boolean>>;
-  setTaskRec: React.Dispatch<React.SetStateAction<[string, string][]>>;
-  taskRec: [string, string][];
+  setTaskRec: React.Dispatch<React.SetStateAction<[string, string, string[]][]>>;
+  taskRec: [string, string, string[]][];
   filters: MetadataFilter[];
   setFilters: React.Dispatch<React.SetStateAction<MetadataFilter[]>>;
 }

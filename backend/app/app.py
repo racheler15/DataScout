@@ -3,7 +3,7 @@ from flask_cors import CORS
 from uuid import uuid4
 import logging
 from backend.app.table_representation.openai_client import OpenAIClient
-from backend.app.hyse.hypo_schema_search import hyse_search, most_popular_datasets, get_datasets, hnsw_search
+from backend.app.hyse.hypo_schema_search import hyse_search, most_popular_datasets, get_datasets, hnsw_search, hnsw_semantics_search
 from backend.app.actions.infer_action import infer_action, infer_mentioned_metadata_fields, prune_query, TaskReasonListResponse
 from backend.app.actions.handle_action import handle_semantic_fields, handle_raw_fields, handle_raw_filters
 from backend.app.chat.handle_chat_history import append_user_query, append_system_response, get_user_queries, get_last_results, get_mentioned_fields
@@ -154,7 +154,7 @@ def initial_search():
 
     try:
         logging.info("Starting hyse")
-        initial_results, _, _ = hyse_search(initial_query, search_space=None, num_schema=3, k=50)  # Keep top 50 results in initial search
+        initial_results, _, _ = hyse_search(initial_query, search_space=None, num_schema=3, k=100)  # Keep top 50 results in initial search
         logging.info("finished hyse")
         # append_system_response(chat_history, thread_id, initial_results, refine_type="semantic")
 
@@ -163,7 +163,7 @@ def initial_search():
 
         response_data = {
             "top_results": initial_results[:10],
-            "complete_results": initial_results[:50],
+            "complete_results": initial_results[:100],
         }
 
         logging.info(f"✅Search successful for query: {initial_query}")
@@ -334,10 +334,6 @@ def suggest_relevant_cols():
     for _, row in results_df.iterrows():
         column_embedding_dict = ast.literal_eval(row['example_cols_embed'])
         dataset_name = row['table_name'] 
-        # for column_name, embedding in column_embedding_dict.items():
-        #     column_names.append(column_name)  
-        #     column_embeddings.append(embedding) 
-        #     dataset_names.append(dataset_name) 
         for column_name, embedding in column_embedding_dict.items():
             if isinstance(embedding, (list, np.ndarray)) and len(embedding) == 1536:
                 column_names.append(column_name)  
@@ -695,6 +691,15 @@ def remove_metadata_update():
 
         if selected_filter == "column_specification":
             final_results = hnsw_search(search_value, final_results)
+        
+        elif selected_filter in ["time_granu", "geo_granu"]:  
+            temp_results = []
+            logging.info(search_value)
+            for row in final_results:
+                value = row.get(selected_filter)
+                if value and value.lower() == search_value.lower():
+                    temp_results.append(row)
+            final_results = temp_results
 
         elif selected_filter in ["table_name", "database_name", "db_description", "tags", "keywords", "metadata_queries", "time_granu", "geo_granu"]:
             clean_search_input = clean_input_value(search_value)
@@ -733,36 +738,13 @@ def remove_metadata_update():
             filtered_results = df.query(query).copy()
             logging.info(len(filtered_results))
             final_results = filtered_results.to_dict(orient="records")
-        
-        # elif selected_filter in ["time_granu", "geo_granu"]:
-        #     clean_search_input = [search_value]
-        #     logging.info(clean_search_input)
 
-        #     temp_results = []
-        #     for row in final_results:
-        #         matches_all_inputs = True  
-
-        #         if isinstance(value, list):  
-        #             # Check if any item in the list matches exactly
-        #             if input_value not in map(str, value):
-        #                 matches_all_inputs = False
-        #                 break  
-        #         elif isinstance(value, str):  
-        #             words_in_value = value.split()
-        #             # Check if any word in the string matches exactly
-        #             if input_value not in words_in_value:
-        #                 matches_all_inputs = False
-        #                 break  
-
-        #         if matches_all_inputs:
-        #             temp_results.append(row)
-
-        #     final_results = temp_results  # Update after filtering
-
-        
 
     results_df = pd.DataFrame(final_results)
-    filtered_results_df = results_df[results_df["table_name"].isin(unique_datasets)].copy()
+    if unique_datasets:
+        filtered_results_df = results_df[results_df["table_name"].isin(unique_datasets)].copy()
+    else:
+        filtered_results_df = results_df
 
     return jsonify({"filtered_results": filtered_results_df.to_dict(orient="records")})
 
@@ -793,10 +775,19 @@ def manual_metadata():
     # HNSW search
     if selected_filter == 'column_specification':
         logging.info("COLUMN")
-        final_results = hnsw_search(search_input, results)    
+        final_results = hnsw_search(search_input, results) 
+
+    # Exact search based on search input
+    elif selected_filter in ["time_granu", "geo_granu"]:  
+        final_results = []
+        logging.info(search_input)
+        for row in results:
+            value = row.get(selected_filter)
+            if value and value.lower() == search_input.lower():
+                final_results.append(row)
 
     # Fuzzy search based on search input
-    elif selected_filter in ["table_name", "database_name", "db_description", "tags", "keywords", "metadata_queries", "time_granu", "geo_granu"]:
+    elif selected_filter in ["table_name", "database_name", "db_description", "tags", "keywords", "metadata_queries"]:
         clean_search_input = clean_input_value(search_input)
         logging.info(clean_search_input)
         final_results = []
@@ -837,9 +828,6 @@ def manual_metadata():
         filtered_results = df.query(query)
         logging.info(len(filtered_results))
         final_results = filtered_results.to_dict(orient="records")
-
-    
-       
 
     return jsonify({"results": final_results})
 
@@ -959,6 +947,193 @@ def task_suggestions():
     except Exception as e:
         logging.error(f"Starting autogen refinement failed, Error: {e}")
         return jsonify({"error": "Search failed due to an internal error"}), 500  
+    
+
+# Route to suggest relevant columns based on a task and provided results
+@app.route('/api/task_semantic_suggestion', methods=['POST'])
+def task_semantic_suggestion():
+    logging.info("SEMANTIC SEARCH")
+    task_description = request.json.get('task')  
+    results_data = request.json.get('results')  
+
+    semantic_results = hnsw_semantics_search(task_description, results_data)
+    df = pd.DataFrame(semantic_results)
+    
+    # Initialize lists to store embeddings and dataset names
+    semantics_embeddings = []  
+    dataset_names = []  
+
+    # Iterate through each row in the results DataFrame
+    for _, row in df.iterrows():
+        dataset_names.append(row['database_name'])
+        embed_str = row['result_semantics_embed']
+        if isinstance(embed_str, str):
+            try:
+                embedding = np.array(ast.literal_eval(embed_str), dtype=np.float32)
+                semantics_embeddings.append(embedding)
+            except (ValueError, SyntaxError) as e:
+                logging.warning(f"Could not parse embedding: {embed_str}")
+                continue
+        elif isinstance(embed_str, (list, np.ndarray)):
+            semantics_embeddings.append(np.array(embed_str, dtype=np.float32))
+        else:
+            logging.warning(f"Unexpected embedding format: {type(embed_str)}")
+            continue
+
+    if not semantics_embeddings:
+        return jsonify({"error": "No valid embeddings found"}), 400
+
+    # Convert the list of embeddings into a NumPy array
+    embedding_matrix = np.array(semantics_embeddings)
+    logging.info(f"Embedding matrix shape: {embedding_matrix.shape}")
+    # Perform K-Means clustering on the embeddings
+    num_clusters = min(10, len(dataset_names))  # Adjust clusters based on available data
+    kmeans = KMeans(n_clusters=num_clusters, random_state=42)
+    kmeans.fit(embedding_matrix)
+
+    # Initialize dictionary to store datasets by cluster
+    datasets_by_cluster = {}  
+
+    # Assign datasets to their respective clusters
+    for idx, dataset_name in enumerate(dataset_names):
+        cluster_id = kmeans.labels_[idx]  
+
+        # Initialize list for the cluster if it doesn't exist
+        if cluster_id not in datasets_by_cluster:
+            datasets_by_cluster[cluster_id] = []
+
+        datasets_by_cluster[cluster_id].append(dataset_name)
+
+    # Log the datasets in each cluster
+    for cluster_id, datasets in sorted(datasets_by_cluster.items()):
+        logging.info(f"Cluster {cluster_id} datasets: {datasets}")
+
+    # Calculate the average embedding for each cluster
+    average_embeddings_by_cluster = {}
+    for idx, cluster_id in enumerate(kmeans.labels_):
+        if cluster_id not in average_embeddings_by_cluster:
+            average_embeddings_by_cluster[cluster_id] = []
+        average_embeddings_by_cluster[cluster_id].append(embedding_matrix[idx])
+
+    # Compute the mean embedding for each cluster
+    mean_embeddings_by_cluster = {}
+    for cluster_id, embeddings in average_embeddings_by_cluster.items():
+        mean_embeddings_by_cluster[cluster_id] = np.mean(np.array(embeddings), axis=0)
+
+    # Calculate similarity between task embedding and cluster means
+    task_embedding = openai_client.generate_embeddings(task_description)
+    similarity_by_cluster = {}
+
+    for cluster_id, mean_embedding in mean_embeddings_by_cluster.items():
+        mean_embedding = np.array(mean_embedding).reshape(1, -1) 
+        task_embedding = np.array(task_embedding).reshape(1, -1) 
+        similarity = cosine_similarity(mean_embedding, task_embedding)[0][0]
+        similarity_by_cluster[cluster_id] = similarity
+
+    # Sort clusters by similarity
+    sorted_clusters_by_similarity = sorted(
+        similarity_by_cluster.items(), key=lambda x: x[1], reverse=True
+    )
+    
+    # Format the top clusters for response
+    top_clusters = [
+        {"cluster": int(cluster_id), "similarity": float(similarity)}
+        for cluster_id, similarity in sorted_clusters_by_similarity
+    ]
+
+    # Extract dataset information for top clusters (unique datasets per cluster)
+    top_datasets_by_cluster = {
+        int(item["cluster"]): list(set(datasets_by_cluster[int(item["cluster"])]))
+        for item in top_clusters
+    }
+
+    # Prepare consolidated results (modify consolidate function accordingly)
+    consolidated_results = consolidate_semantics(top_datasets_by_cluster.values(), task_description)
+    logging.info(consolidated_results)
+
+    response_data = {
+        "top_clusters": top_clusters,
+        "datasets_in_clusters": [datasets for datasets in top_datasets_by_cluster.values()],
+        "consolidated_results": consolidated_results
+    }
+    
+    return jsonify(response_data)
+
+def consolidate_semantics(clusters, task):
+    logging.info("CONSOLIDATION")
+    logging.info(clusters)
+    clusters_serializable = [list(cluster) for cluster in clusters]
+    logging.info(f"Consolidate clusters: {type(clusters_serializable)}")
+
+    consolidated_results = {}
+    
+    # Process each cluster individually
+    for i, cluster in enumerate(clusters_serializable):
+        try:
+            messages = [
+                {
+                    "role": "system",
+                    "content": f"""
+                    You are a helpful assistant that generates a vague search query based on a collection of database names.
+                    For the given cluster of related database names, generate ONE VAGUE search query that:
+                    1. Incorporates the common theme of these database names: {cluster}
+                    2. Relates to the original task: {task}
+                    3. Is specific enough to include both a topic and clear objective
+                    
+                    Also provide a brief reason (under 10 words) why this query improves upon the original.
+                    
+                    Return your response as a dictionary with exactly one key-value pair:
+                    - Key: The refined query (should not contain anything about a specific location)
+                    - Value: The improvement reason
+                    
+                    Example output format:
+                    {{
+                        "Analyze voter demographics in presidential elections": "adds demographic focus"
+                    }}
+                    """
+                },
+                {
+                    "role": "user",
+                    "content": f"""
+                    Database cluster to analyze:
+                    {cluster}
+                    
+                    Original task: {task}
+                    
+                    Please generate one vague search query and reason for this database cluster.
+                    """
+                }
+            ]
+            
+            # Make individual API call for this cluster
+            result = openai_client.infer_metadata_wo_instructor(messages)
+            logging.info(f"Cluster {i} result: {result}")
+            
+            # Process the result
+            if isinstance(result, str):
+                try:
+                    cluster_result = json.loads(result)
+                    if isinstance(cluster_result, dict):
+                        consolidated_results.update(cluster_result)
+                except json.JSONDecodeError:
+                    try:
+                        cluster_result = ast.literal_eval(result)
+                        if isinstance(cluster_result, dict):
+                            consolidated_results.update(cluster_result)
+                    except (ValueError, SyntaxError):
+                        logging.warning(f"Could not parse result for cluster {i}: {result}")
+                        consolidated_results[f"Cluster {i}"] = "Unable to generate query"
+            elif isinstance(result, dict):
+                consolidated_results.update(result)
+                
+        except Exception as e:
+            logging.error(f"Error processing cluster {i}: {str(e)}")
+            consolidated_results[f"Cluster {i} Error"] = str(e)
+            continue
+            
+    logging.info(f"Final consolidated results: {consolidated_results}")
+    return consolidated_results
+
     
 #########
 # This function is for the initial task suggestions based off settings generate.

@@ -4,8 +4,9 @@ import { Icon } from "@iconify/react";
 import eyeIcon from "@iconify-icons/fluent/eye-20-regular";
 import eyeOffIcon from "@iconify-icons/fluent/eye-off-20-regular";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
-import CreateIcon from "@mui/icons-material/Create";
+import SearchIcon from "@mui/icons-material/Search";
 import LabelImportantIcon from "@mui/icons-material/LabelImportant";
+import TuneIcon from "@mui/icons-material/Tune";
 import { X } from "lucide-react";
 import FilterPrompt from "./FilterPrompt";
 import axios from "axios";
@@ -30,8 +31,10 @@ interface QueryBlocksProps {
   setResults: (a: ResultProp[]) => unknown;
   settingsGenerate: boolean;
   setSettingsGenerate: React.Dispatch<React.SetStateAction<boolean>>;
-  setTaskRec: React.Dispatch<React.SetStateAction<[string, string][]>>;
-  taskRec: [string, string][];
+  setTaskRec: React.Dispatch<
+    React.SetStateAction<[string, string, string[]][]>
+  >;
+  taskRec: [string, string, string[]][];
 }
 
 const QueryBlocks = ({
@@ -67,6 +70,7 @@ const QueryBlocks = ({
   const [colsToAdd, setColsToAdd] = useState<MetadataFilter[]>([]);
 
   const [newTask, setNewTask] = useState(false);
+  const [newSearch, setNewSearch] = useState(false);
   const [toggle, setToggle] = useState(false);
   const [hnswColumn, setHnswColumn] = useState("");
 
@@ -99,7 +103,8 @@ const QueryBlocks = ({
     );
 
     console.log("NORMAL FILTERS", normalFilters);
-
+    console.log(initialResults);
+    console.log(filteredSavedDatasets);
     const colFilteredURL = "http://127.0.0.1:5000/api/remove_metadata_update";
     try {
       const searchResponse = await axios.post(colFilteredURL, {
@@ -116,6 +121,7 @@ const QueryBlocks = ({
       console.error("Error fetching filtered datasets:", error);
     }
   };
+
   type toggleDatasetsProps = (
     activeColumns: string[],
     filters: MetadataFilter[]
@@ -357,19 +363,34 @@ const QueryBlocks = ({
 
   const generateTaskRec = async (task: string) => {
     try {
-      const taskSuggestionsURL = "http://127.0.0.1:5000/api/task_suggestions";
+      const taskSuggestionsURL =
+        "http://127.0.0.1:5000/api/task_semantic_suggestion";
+      console.log("GENERATE TASK REC");
+      console.log("TASK", task);
+      console.log("RESULTS", results);
       const searchResponse = await axios.post(taskSuggestionsURL, {
         task: task,
-        filters: filters,
+        results: results,
+        // filters: filters,
       });
       console.log("TASK REC", searchResponse.data);
-      const querySuggestions = searchResponse.data.query_suggestions;
+      console.log(searchResponse.data.consolidated_results);
+      const querySuggestions = searchResponse.data.consolidated_results;
+      const clusters = searchResponse.data.datasets_in_clusters;
       const queryObject =
         typeof querySuggestions === "string"
           ? JSON.parse(querySuggestions)
           : querySuggestions;
       const queryArray = Object.entries(queryObject);
-      setTaskRec(queryArray.map(([key, value]) => [key, String(value)]));
+      setTaskRec(
+        queryArray
+          .slice(0, 3)
+          .map(([key, value], index) => [
+            `${key}`,
+            `${value} (${clusters[index]?.length || 0})`,
+            clusters[index],
+          ])
+      );
     } catch (error) {
       if (error instanceof Error) {
         console.error("Error updating task rec:", error.message);
@@ -569,11 +590,11 @@ const QueryBlocks = ({
     }
   };
   useEffect(() => {
-    if (newTask) {
+    if (newSearch) {
       console.log("Task bar updated:", task);
       fetchData();
     }
-  }, [newTask, task]); // Dependency array includes only taskBar
+  }, [newSearch, task]); // Dependency array includes only taskBar
 
   useEffect(() => {
     console.log("USE EFFECT UPDATED FILTERS", filters);
@@ -635,9 +656,9 @@ const QueryBlocks = ({
 
   // generate task recommendations for helper block start
   useEffect(() => {
-    if (!settingsGenerate) {
-      generateTaskRec(task);
-    }
+    // if (!settingsGenerate) {
+    //   generateTaskRec(task);
+    // }
     setInput(task);
     setSettingsGenerate(true);
   }, [task, settingsGenerate]);
@@ -656,15 +677,16 @@ const QueryBlocks = ({
         hasInitialized.current = true; // Mark as executed
         setInitialResults(results); // keep copy of original results
         console.log("NEW COL REC");
+        await generateTaskRec(task);
         await generateColRec(task); // Wait for generateColRec to complete
       }
 
       if (newTask) {
         console.log("NEW TASK invalidate nonexisting knn");
-        await generateTaskRec(task); // Wait for generateTaskRec to complete
-        await generateColRec(task); // Wait for generateColRec to complete
         console.log("RESET INITAL RESULTS");
         setInitialResults(results);
+        await generateTaskRec(task); // Wait for generateTaskRec to complete
+        await generateColRec(task); // Wait for generateColRec to complete
 
         setToggle(true);
         console.log("SET NEW TASK FALSE");
@@ -795,7 +817,7 @@ const QueryBlocks = ({
                     e.preventDefault(); // Prevent new line on Enter
                     console.log("ENTER");
                     setTask(input);
-                    setNewTask(true);
+                    setNewSearch(true);
                   }
                 }}
                 placeholder="Enter your task here..."
@@ -814,13 +836,16 @@ const QueryBlocks = ({
                 Suggestions to Refine your Search Query:
               </div>
 
-              {taskRec.map(([key, value], index) => (
+              {taskRec.map(([key, value, cluster], index) => (
                 <TaskSuggestionBlock
                   key={`${key}-${index}`}
                   recommendation={key}
                   reason={String(value)}
+                  cluster={cluster}
                   setTask={setTask}
                   setNewTask={setNewTask}
+                  setResults={setResults}
+                  results={results}
                 />
               ))}
             </div>
@@ -868,135 +893,165 @@ const QueryBlocks = ({
               )}
             </div>
           </div>
-
-          {colRec?.length > 0 && (
+          <div
+            style={{
+              // border: "1px solid #ddd",
+              padding: "0.2rem",
+              borderRadius: "6px",
+              // boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+            }}
+          >
             <div className="col-rec-container">
+              {" "}
               <div
                 style={{
                   fontWeight: "600",
                   display: "flex",
                   alignItems: "center",
-                  marginBottom: "4px",
                   fontSize: "15px",
                 }}
               >
-                {" "}
-                <AutoAwesomeIcon
+                <SearchIcon
                   style={{
-                    height: "16px",
-                    width: "16px",
-                    color: "orange",
-                    marginRight: "14px",
+                    height: "20px",
+                    width: "20px",
+                    color: "black",
+                    marginRight: "8px",
                     marginLeft: "2px",
                   }}
                 />
-                Smart Filter by Column Concept:
+                Search using your own Column Concept
               </div>
-
-              {filteredColRecWithIndices.map(
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                ({ key, value, originalIndex }, filteredIndex) => (
-                  <div key={key}>
-                    <label
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        marginLeft: "30px",
-                      }}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedColumns[filteredIndex] || false} // set false if undefined
-                        onChange={(e) =>
-                          updateSelectedColumns(filteredIndex, e.target.checked)
-                        }
-                      />
-                      {value}
-                    </label>
-                  </div>
-                )
-              )}
               <div
                 style={{
-                  fontWeight: "500",
-                  marginTop: "8px",
-                  marginLeft: "30px",
-                  fontSize: "12px",
-                  color: "darkblue",
+                  display: "flex",
+                  gap: "8px",
+                  marginTop: "6px",
+                  alignItems: "center",
+                  width: "100%",
+                  marginLeft: "8px",
                 }}
               >
-                <i>Remaining datasets: {datasetCount}</i>
+                <input
+                  type="text"
+                  placeholder="Enter column name..."
+                  value={hnswColumn}
+                  onChange={(e) => setHnswColumn(e.target.value)}
+                  style={{
+                    padding: "8px",
+                    height: "28px",
+                    borderRadius: "10px",
+                    border: "1px solid #2363eb",
+                    width: "90%",
+                  }}
+                />
+                <button
+                  onClick={() => handleColumnSearch(hnswColumn)}
+                  className="metadata-button"
+                  style={{ marginTop: "0px" }}
+                >
+                  try
+                </button>
               </div>
-
-              <button
-                onClick={() => {
-                  console.log("Selected Columns:", selectedColumns);
-                  updateFilteredDatasets();
-                }}
-                className="metadata-button"
-                style={{
-                  marginLeft: "24px",
-                }}
-              >
-                apply filters
-              </button>
             </div>
-          )}
-
-          <div className="col-rec-container" style={{ marginBottom: "12px" }}>
-            {" "}
+          </div>
+          <div
+            style={{
+              // border: "1px solid #ddd",
+              padding: "0.2rem",
+              borderRadius: "6px",
+              marginTop: "2px",
+              // boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+            }}
+          >
             <div
               style={{
                 fontWeight: "600",
                 display: "flex",
                 alignItems: "center",
                 marginBottom: "4px",
-                marginTop: "24px",
+                fontSize: "15px",
               }}
             >
-              <CreateIcon
+              {" "}
+              <AutoAwesomeIcon
                 style={{
                   height: "16px",
                   width: "16px",
-                  color: "black",
-                  marginRight: "12px",
+                  color: "orange",
+                  marginRight: "14px",
                   marginLeft: "2px",
                 }}
               />
-              Want to filter using your own Column Concept?
+              Smart Filter by Column Concept:
             </div>
-            <div
-              style={{
-                display: "flex",
-                gap: "8px",
-                marginTop: "8px",
-                alignItems: "center",
-                width: "100%",
-              }}
-            >
-              <input
-                type="text"
-                placeholder="Enter column name..."
-                value={hnswColumn}
-                onChange={(e) => setHnswColumn(e.target.value)}
-                style={{
-                  padding: "8px",
-                  height: "28px",
-                  borderRadius: "10px",
-                  border: "1px solid #2363eb",
-                  width: "90%",
-                }}
-              />
-              <button
-                onClick={() => handleColumnSearch(hnswColumn)}
-                className="metadata-button"
-                style={{ marginTop: "0px" }}
-              >
-                try
-              </button>
-            </div>
+
+            {colRec?.length > 0 && (
+              <div className="col-rec-container">
+                {filteredColRecWithIndices.map(
+                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                  ({ key, value, originalIndex }, filteredIndex) => (
+                    <div key={key}>
+                      <label
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          marginLeft: "30px",
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedColumns[filteredIndex] || false} // set false if undefined
+                          onChange={(e) =>
+                            updateSelectedColumns(
+                              filteredIndex,
+                              e.target.checked
+                            )
+                          }
+                        />
+                        {value}
+                      </label>
+                    </div>
+                  )
+                )}
+                <div
+                  style={{
+                    fontWeight: "500",
+                    marginTop: "4px",
+                    marginLeft: "30px",
+                    fontSize: "12px",
+                    color: "darkblue",
+                  }}
+                >
+                  <i>Remaining datasets: {datasetCount}</i>
+                </div>
+
+                <button
+                  onClick={() => {
+                    console.log("Selected Columns:", selectedColumns);
+                    updateFilteredDatasets();
+                  }}
+                  className="metadata-button"
+                  style={{
+                    marginLeft: "24px",
+                    // marginLeft: "auto",
+                    // display: "block",
+                  }}
+                >
+                  apply filters
+                </button>
+              </div>
+            )}
           </div>
+
+          <GranularityFilter
+            results={results}
+            setFilters={setFilters}
+            setIconVisibility={setIconVisibility}
+            filters={filters}
+            setResults={setResults}
+          />
         </div>
         <FilterPrompt
           isOpen={isModalOpen}
@@ -1020,6 +1075,9 @@ interface TaskSuggestionBlockProps {
   reason: string;
   setTask: (task: string) => void;
   setNewTask: React.Dispatch<React.SetStateAction<boolean>>;
+  setResults: (a: ResultProp[]) => unknown;
+  cluster: string[];
+  results: ResultProp[];
 }
 
 const TaskSuggestionBlock = ({
@@ -1027,6 +1085,9 @@ const TaskSuggestionBlock = ({
   reason,
   setTask,
   setNewTask,
+  setResults,
+  cluster,
+  results,
 }: TaskSuggestionBlockProps) => {
   return (
     <div className="task-suggestion-block-container">
@@ -1066,7 +1127,13 @@ const TaskSuggestionBlock = ({
       <button
         onClick={() => {
           setNewTask(true);
+          console.log("CLICKED ON TASK TRY");
           setTask(recommendation);
+          const filteredResults: ResultProp[] = results.filter((result) =>
+            cluster.includes(result.database_name)
+          );
+          console.log(filteredResults);
+          setResults(filteredResults);
         }}
         className="task-suggestion-button"
       >
@@ -1102,6 +1169,220 @@ const FilterItem: React.FC<FilterItemProps> = ({
         onClick={onToggle}
       />
       <X size={24} style={{ cursor: "pointer" }} onClick={onRemove} />
+    </div>
+  );
+};
+
+type GranularityItem = {
+  type: "time" | "geo";
+  value: string;
+  count: number;
+};
+
+type SelectedGranularities = {
+  time: string[];
+  geo: string[];
+};
+
+interface GranularityFilterProps {
+  results: ResultProp[];
+  setFilters: React.Dispatch<React.SetStateAction<MetadataFilter[]>>;
+  setIconVisibility: React.Dispatch<React.SetStateAction<boolean[]>>;
+  filters: MetadataFilter[];
+  setResults: (a: ResultProp[]) => unknown;
+}
+
+const GranularityFilter = ({
+  results,
+  setFilters,
+  setIconVisibility,
+  filters,
+  setResults,
+}: GranularityFilterProps) => {
+  const [topGranularities, setTopGranularities] = useState<GranularityItem[]>(
+    []
+  );
+  const [selected, setSelected] = useState<SelectedGranularities>({
+    time: [],
+    geo: [],
+  });
+
+  useEffect(() => {
+    const counts = {
+      time: {} as Record<string, number>,
+      geo: {} as Record<string, number>,
+    };
+
+    results.forEach((result) => {
+      if (result.time_granu)
+        counts.time[result.time_granu] =
+          (counts.time[result.time_granu] || 0) + 1;
+      if (result.geo_granu)
+        counts.geo[result.geo_granu] = (counts.geo[result.geo_granu] || 0) + 1;
+    });
+
+    const all = [
+      ...Object.entries(counts.time).map(
+        ([value, count]) => ({ type: "time", value, count } as const)
+      ),
+      ...Object.entries(counts.geo).map(
+        ([value, count]) => ({ type: "geo", value, count } as const)
+      ),
+    ].sort((a, b) => b.count - a.count);
+
+    // Filter out granularities that are already in filters
+    const filteredGranularities = all.filter((granularity) => {
+      const filterExists = filters.some((filter) => {
+        // Check if a filter with this granularity already exists
+        return (
+          filter.subject === `${granularity.type}_granu` &&
+          filter.value === granularity.value
+        );
+      });
+      return !filterExists;
+    });
+
+    setTopGranularities(filteredGranularities.slice(0, 3));
+  }, [results, filters]);
+
+  const toggleSelection = (type: "time" | "geo", value: string) => {
+    setSelected((prev) => ({
+      ...prev,
+      [type]: prev[type].includes(value)
+        ? prev[type].filter((v) => v !== value)
+        : [...prev[type], value],
+    }));
+  };
+
+  const toggleGranu = async (filters: MetadataFilter[]) => {
+    console.log("TOGGLE", filters);
+    const normalFilters = filters.filter(
+      (filter) => filter.type === "normal" && filter.visible && filter.active
+    );
+
+    console.log("NORMAL FILTERS", normalFilters);
+
+    const colFilteredURL = "http://127.0.0.1:5000/api/remove_metadata_update";
+    try {
+      const searchResponse = await axios.post(colFilteredURL, {
+        filters: normalFilters,
+        results: results,
+        uniqueDatasets: [],
+      });
+      console.log("ADD SEARCH DATSETS", searchResponse.data);
+
+      setResults(searchResponse.data.filtered_results);
+    } catch (error) {
+      console.error("Error fetching filtered datasets:", error);
+    }
+  };
+
+  const handleTry = () => {
+    console.log("HANDEL TRY FOR GRANU");
+    // Create new filters with explicit type casting
+    const newFilters = [
+      ...selected.time.map(
+        (value) =>
+          ({
+            type: "normal" as const,
+            filter: `time_granularity is ${value.toLowerCase()}`,
+            value: value,
+            operand: "is" as const,
+            subject: "time_granu",
+            visible: true,
+            active: true,
+          } satisfies MetadataFilter)
+      ),
+      ...selected.geo.map(
+        (value) =>
+          ({
+            type: "normal" as const,
+            filter: `geo_granularity is ${value.toLowerCase()}`,
+            value: value,
+            operand: "is" as const,
+            subject: "geo_granu",
+            visible: true,
+            active: true,
+          } satisfies MetadataFilter)
+      ),
+    ];
+    console.log(newFilters);
+
+    if (newFilters.length > 0) {
+      setFilters((prev) => {
+        const updatedFilters = [...prev, ...newFilters];
+        toggleGranu(updatedFilters);
+        return updatedFilters;
+      });
+      setIconVisibility((prev) => [
+        ...prev,
+        ...new Array(newFilters.length).fill(true),
+      ]);
+      setSelected({ time: [], geo: [] });
+    }
+  };
+
+  return (
+    <div
+      style={{
+        // border: "1px solid #ddd",
+        padding: "0.2rem",
+        borderRadius: "6px",
+        marginTop: "6px",
+        marginBottom: "6px",
+
+        // boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+      }}
+    >
+      <div
+        style={{
+          fontWeight: "600",
+          display: "flex",
+          alignItems: "center",
+          marginBottom: "4px",
+          fontSize: "15px",
+        }}
+      >
+        <TuneIcon
+          style={{
+            height: "18px",
+            width: "18px",
+            color: "black",
+            marginRight: "8px",
+            marginLeft: "2px",
+          }}
+        />
+        Top Granularity Filters
+      </div>
+      <div style={{ margin: "4px 0" }}>
+        {topGranularities.map(({ type, value, count }) => (
+          <div key={`${type}-${value}`} style={{ margin: "0.15rem 0" }}>
+            <label
+              style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+            >
+              <input
+                type="checkbox"
+                style={{ marginLeft: "32px" }}
+                checked={selected[type].includes(value)}
+                onChange={() => toggleSelection(type, value)}
+              />
+              <span>
+                {type === "time" ? "⏱" : "🌍"} {value} ({count})
+              </span>
+            </label>
+          </div>
+        ))}
+        <button
+          onClick={handleTry}
+          disabled={selected.time.length === 0 && selected.geo.length === 0}
+          className="metadata-button"
+          style={{
+            marginLeft: "24px",
+          }}
+        >
+          apply filters
+        </button>
+      </div>
     </div>
   );
 };

@@ -14,10 +14,10 @@ interface SettingsProps {
   settingsGenerate: boolean;
   setSettingsGenerate: React.Dispatch<React.SetStateAction<boolean>>;
   onStart: () => void;
-  setTaskRec: React.Dispatch<React.SetStateAction<[string, string][]>>;
+  setTaskRec: React.Dispatch<React.SetStateAction<[string, string,string[]][]>>;
   setResults: (a: ResultProp[]) => unknown;
   setTask: React.Dispatch<React.SetStateAction<string>>;
-  taskRec: [string, string][];
+  taskRec: [string, string,string[]][];
 }
 
 const Settings = ({
@@ -103,7 +103,7 @@ const Settings = ({
         : querySuggestions;
     const queryArray = Object.entries(queryObject);
     console.log("QUERY ARRAY", queryArray);
-    setTaskRec(queryArray.map(([key, value]) => [key, String(value)]));
+    setTaskRec(queryArray.map(([key, value]) => [key, String(value), []])); // FIX: TODO 
   };
 
   const handleGenerateChange = () => {

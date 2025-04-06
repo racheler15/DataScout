@@ -9,12 +9,11 @@
 }
 .search-path {
   text-align: center;
-
   display: flex;
   flex-direction: column;
   background-color: #b2caff;
-  padding-top: 6%;
-  padding-bottom: 6%;
+  padding-top: 8%;
+  padding-bottom: 8%;
 }
 .search-form {
   display: flex;

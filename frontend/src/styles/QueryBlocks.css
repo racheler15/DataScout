@@ -48,7 +48,7 @@
 }
 
 .filter-block-container {
-  margin-top: 16px;
+  margin-top: 12px;
 
 }
 .filter-block {
@@ -60,7 +60,7 @@
   background-color: #b2caff;
   border-radius: 16px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  margin-bottom: 12px;
+  margin-bottom: 6px;
 
 }
 .col-rec-container {
