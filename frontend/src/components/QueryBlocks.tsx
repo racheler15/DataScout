@@ -371,7 +371,7 @@ const QueryBlocks = ({
       const searchResponse = await axios.post(taskSuggestionsURL, {
         task: task,
         results: results,
-        // filters: filters,
+        goal: ""
       });
       console.log("TASK REC", searchResponse.data);
       console.log(searchResponse.data.consolidated_results);
@@ -777,7 +777,7 @@ const QueryBlocks = ({
             marginBottom: "12px",
           }}
         >
-          Query Decomposition
+          Dataset Search Query
         </span>
         <img
           src="/lego-block.png"
@@ -908,7 +908,7 @@ const QueryBlocks = ({
                   fontWeight: "600",
                   display: "flex",
                   alignItems: "center",
-                  fontSize: "15px",
+                  fontSize: "20px",
                 }}
               >
                 <SearchIcon
@@ -970,7 +970,7 @@ const QueryBlocks = ({
                 display: "flex",
                 alignItems: "center",
                 marginBottom: "4px",
-                fontSize: "15px",
+                fontSize: "20px",
               }}
             >
               {" "}
@@ -1020,7 +1020,7 @@ const QueryBlocks = ({
                     fontWeight: "500",
                     marginTop: "4px",
                     marginLeft: "30px",
-                    fontSize: "12px",
+                    fontSize: "16px",
                     color: "darkblue",
                   }}
                 >
@@ -1340,7 +1340,7 @@ const GranularityFilter = ({
           display: "flex",
           alignItems: "center",
           marginBottom: "4px",
-          fontSize: "15px",
+          fontSize: "20px",
         }}
       >
         <TuneIcon

@@ -14,10 +14,12 @@ interface SettingsProps {
   settingsGenerate: boolean;
   setSettingsGenerate: React.Dispatch<React.SetStateAction<boolean>>;
   onStart: () => void;
-  setTaskRec: React.Dispatch<React.SetStateAction<[string, string,string[]][]>>;
+  setTaskRec: React.Dispatch<
+    React.SetStateAction<[string, string, string[]][]>
+  >;
   setResults: (a: ResultProp[]) => unknown;
   setTask: React.Dispatch<React.SetStateAction<string>>;
-  taskRec: [string, string,string[]][];
+  taskRec: [string, string, string[]][];
 }
 
 const Settings = ({
@@ -44,7 +46,6 @@ const Settings = ({
     "LLM pretraining",
     "LLM finetuning",
     "Question-Answering",
-    // "Analyze",
     "Not sure yet",
     // "+ Add option",
   ]);
@@ -83,33 +84,42 @@ const Settings = ({
     setSettingsDomain(e.target.value);
   };
 
-  const fetchTaskSuggestions = async () => {
+  const fetchTaskSuggestions = async (results: ResultProp[]) => {
     console.log("FETCH TASK SUGGESTIONS");
     const taskSuggestionsURL =
-      "http://127.0.0.1:5000/api/initial_task_suggestions";
+      "http://127.0.0.1:5000/api/task_semantic_suggestion";
     console.log(settingsSpecificity);
     console.log(settingsGoal);
     console.log(settingsDomain);
     const searchResponse = await axios.post(taskSuggestionsURL, {
-      specificity: settingsSpecificity,
+      results: results,
       goal: settingsGoal,
-      domain: settingsDomain,
+      task: settingsDomain,
     });
-    console.log(searchResponse.data);
-    const querySuggestions = searchResponse.data.query_suggestions;
+    console.log("TASK REC", searchResponse.data);
+    console.log(searchResponse.data.consolidated_results);
+    const querySuggestions = searchResponse.data.consolidated_results;
+    const clusters = searchResponse.data.datasets_in_clusters;
     const queryObject =
       typeof querySuggestions === "string"
         ? JSON.parse(querySuggestions)
         : querySuggestions;
     const queryArray = Object.entries(queryObject);
-    console.log("QUERY ARRAY", queryArray);
-    setTaskRec(queryArray.map(([key, value]) => [key, String(value), []])); // FIX: TODO 
+    setTaskRec(
+      queryArray
+        .slice(0, 3)
+        .map(([key, value], index) => [
+          `${key}`,
+          `${value} (${clusters[index]?.length || 0})`,
+          clusters[index],
+        ])
+    );
   };
 
   const handleGenerateChange = () => {
     console.log("HANDLEGENERATECHANGE");
     setSettingsGenerate(true);
-    fetchTaskSuggestions();
+    // fetchTaskSuggestions();
     setTask(settingsDomain);
     fetchData();
     onStart();
@@ -131,6 +141,7 @@ const Settings = ({
       console.log("FETCHED DATA FROM HYSE:", searchResponse);
       console.log("SETTING RESULTS");
       setResults(searchResponse.data.complete_results);
+      fetchTaskSuggestions(searchResponse.data.complete_results);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -171,7 +182,8 @@ const Settings = ({
                 key={goal}
                 onClick={() => handleGoalSelection(goal)}
                 style={{
-                  backgroundColor: settingsGoal === goal ? "#007bff" : "#f9f9f9",
+                  backgroundColor:
+                    settingsGoal === goal ? "#007bff" : "#f9f9f9",
                   color: settingsGoal === goal ? "white" : "black",
                 }}
               >
@@ -213,7 +225,10 @@ const Settings = ({
         </>
       )}
 
-      <h4>2. What do you specifically want to do? Provide keywords or a sentence on the task you're interested in. </h4>
+      <h4>
+        2. What do you specifically want to do? Provide keywords or a sentence
+        on the task you're interested in.{" "}
+      </h4>
       <div className="settings-interest">
         <textarea
           id="keywords"

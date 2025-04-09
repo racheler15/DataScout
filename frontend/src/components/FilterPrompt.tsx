@@ -129,7 +129,7 @@ const FilterPrompt: React.FC<FilterPromptProps> = ({
           Available metadata filters:
           <div
             style={{
-              fontSize: "12px",
+              fontSize: "14px",
               marginBottom: "4px",
               marginTop: "4px",
               fontWeight: "normal",

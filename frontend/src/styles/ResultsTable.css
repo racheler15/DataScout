@@ -107,6 +107,7 @@
   line-clamp: 2; /* Standard property for modern browsers */
   overflow: hidden;
   text-overflow: ellipsis;
+  font-size: 16px;
 }
 
 .dataset-stats {
@@ -179,7 +180,7 @@
   padding: 4px 10px;
   border-radius: 8px;
   background-color: #f7f7f7;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .section-item svg {
@@ -190,7 +191,7 @@
 
 .section-content {
   overflow-y: auto;
-  font-size: 14px;
+  font-size: 18px;
   overflow-wrap: break-word; /* Break long words */
   word-break: break-word; /* Ensure words break to prevent overflow */
   width: 100%; /* Take full width of the container */
@@ -279,13 +280,12 @@
 }
 
 .tippy-box[data-theme="custom-tippy-theme"] {
-  font-size: 11px; /* Smaller font size */
+  font-size: 14px; 
   background-color: #dadada; 
   color:#3d3d3d;
   border-radius: 4px; /* Optional: Add rounded corners */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* Optional: Add shadow */
   border: 1px solid #d5d5d5; 
-
 }
 
 /* Arrow customization (optional) */

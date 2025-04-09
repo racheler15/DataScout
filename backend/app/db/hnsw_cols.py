@@ -45,7 +45,7 @@ def insert_column_embeddings():
         print("✅ pgvector extension enabled successfully.")
 
         table_name = 'paper'
-        csv_file_path = "/Users/raelin/HITS/scripts/paper1_filtered.csv"
+        csv_file_path = "/Users/raelin/HITS/scripts/paper2_filtered.csv"
         if not os.path.exists(csv_file_path):
             print(f"CSV file {csv_file_path} does not exist.")
             return
@@ -112,7 +112,9 @@ def insert_semantics_embeddings():
         db.cursor.execute("CREATE EXTENSION IF NOT EXISTS vector;")
         db.conn.commit()
         
-        csv_file_path = "/Users/raelin/HITS/scripts/paper1_filtered.csv"
+        # csv_file_path = "/Users/raelin/HITS/scripts/paper1_filtered.csv"
+        csv_file_path = "/Users/raelin/HITS/scripts/paper2_filtered.csv"
+
         if not os.path.exists(csv_file_path):
             print(f"CSV file {csv_file_path} does not exist.")
             return

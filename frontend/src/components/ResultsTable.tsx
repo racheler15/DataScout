@@ -281,7 +281,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
         <div
           className="preview-title"
           style={{
-            fontSize: "16px",
+            fontSize: "20px",
             marginBottom: "12px",
             display: "flex",
             alignItems: "center",
@@ -399,7 +399,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
                   border: "none",
                   color: "#007bff",
                   cursor: "pointer",
-                  fontSize: "12px",
+                  fontSize: "14px",
                   position: "absolute",
                   right: "0",
                   bottom: "0",
@@ -570,7 +570,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
             <span
               style={{
                 fontWeight: "bold",
-                fontSize: "24px",
+                fontSize: "28px",
                 marginRight: "1rem",
               }}
             >
@@ -583,7 +583,7 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
             />
           </div>
           <span
-            style={{ paddingLeft: "4px", color: "black", fontSize: "12px" }}
+            style={{ paddingLeft: "4px", color: "black", fontSize: "16px" }}
           >
             <i>
               Showing {startIndex + 1} to {Math.min(endIndex, results.length)}{" "}

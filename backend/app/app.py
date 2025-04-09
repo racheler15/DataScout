@@ -955,8 +955,9 @@ def task_semantic_suggestion():
     logging.info("SEMANTIC SEARCH")
     task_description = request.json.get('task')  
     results_data = request.json.get('results')  
+    goal = request.json.get('goal')
 
-    semantic_results = hnsw_semantics_search(task_description, results_data)
+    semantic_results = hnsw_semantics_search(goal + task_description, results_data)
     df = pd.DataFrame(semantic_results)
     
     # Initialize lists to store embeddings and dataset names
@@ -1048,7 +1049,7 @@ def task_semantic_suggestion():
     }
 
     # Prepare consolidated results (modify consolidate function accordingly)
-    consolidated_results = consolidate_semantics(top_datasets_by_cluster.values(), task_description)
+    consolidated_results = consolidate_semantics(top_datasets_by_cluster.values(), task_description, goal)
     logging.info(consolidated_results)
 
     response_data = {
@@ -1059,7 +1060,7 @@ def task_semantic_suggestion():
     
     return jsonify(response_data)
 
-def consolidate_semantics(clusters, task):
+def consolidate_semantics(clusters, task, goal):
     logging.info("CONSOLIDATION")
     logging.info(clusters)
     clusters_serializable = [list(cluster) for cluster in clusters]
@@ -1100,7 +1101,7 @@ def consolidate_semantics(clusters, task):
                     
                     Original task: {task}
                     
-                    Please generate one vague search query and reason for this database cluster.
+                    Please generate one vague search query and reason for this database cluster. If goal: {goal} is not an empty string, all queries should be related to that but vary slightly with different variations of the task.
                     """
                 }
             ]

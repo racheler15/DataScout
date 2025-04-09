@@ -80,7 +80,6 @@ const LandingPage: React.FC<LandingPageProps> = ({
     <div className="landing-container">
       <div className="search-path">
         <h1 style={{ fontSize: "50px" }}>DataScout</h1>
-        <p>Finding datasets dynamically with ease.</p>
         <form className="search-form">
           <input
             type="text"
